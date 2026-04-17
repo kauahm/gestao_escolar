@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================
+   PERSONALIZAÇÃO DA BARRA DE ROLAGEM 
+   ========================================== */
+
+/* 1. Largura da barra no site inteiro */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* 2. Fundo da barra (transparente fica mais moderno) */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 3. A "peça" que a gente clica e arrasta (Thumb) no site geral */
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Cinza claro */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Cinza mais escurinho ao passar o mouse */
+}
+
+/* 4. Ajuste ESPECIAL apenas para a sua Sidebar (fundo azul) */
+aside ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2); /* Branco transparente para combinar com o azul */
+}
+
+aside ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4); /* Fica mais branquinho ao passar o mouse */
+}
