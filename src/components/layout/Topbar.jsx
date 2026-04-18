@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { UserCircle } from 'lucide-react';
 
-export default function TopBar() {
+export default function Topbar() {
   const location = useLocation();
   const { userProfile } = useAuth();
 
