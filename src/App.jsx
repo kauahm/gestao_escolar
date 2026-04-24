@@ -15,6 +15,7 @@ import Selecao from './pages/admin/Selecao';
 import Agenda from './pages/admin/Agenda';
 import Usuarios from './pages/admin/Usuarios';
 import BancoTalentos from './pages/admin/BancoTalentos';
+import Prestadores from './pages/admin/Prestadores';
 
 import DiretoraDashboard from './pages/diretora/Dashboard';
 
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="escolas" element={<Escolas />} />
             <Route path="manutencoes" element={<AdminManutencoes />} />
+            <Route path="prestadores" element={<Prestadores />} />
             <Route path="contas" element={<Contas />} />
             <Route path="ciclos" element={<Ciclos />} />
             <Route path="selecao" element={<Selecao />} />
