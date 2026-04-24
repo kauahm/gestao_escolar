@@ -7,11 +7,16 @@ export default function PrivateRoute({ children, allowedRole }) {
   const { currentUser, userProfile, loading } = useAuth();
 
   if (loading) {
-    return <div className="h-screen flex items-center"><LoadingSpinner size="lg" /></div>;
+    return <div className="h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
   }
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
+  }
+
+  // A MÁGICA ESTÁ AQUI: Trava a renderização se o perfil ainda estiver a ser descarregado
+  if (allowedRole && !userProfile) {
+    return <div className="h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
   }
 
   if (allowedRole && userProfile?.perfil !== allowedRole) {

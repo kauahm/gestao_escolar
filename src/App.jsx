@@ -6,7 +6,6 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import Login from './pages/Login';
 import { useAuth } from './hooks/useAuth';
 
-// --- PÁGINAS DE ADMIN ---
 import AdminDashboard from './pages/admin/Dashboard';
 import Escolas from './pages/admin/Escolas';
 import AdminManutencoes from './pages/admin/Manutencoes';
@@ -15,18 +14,31 @@ import Ciclos from './pages/admin/Ciclos';
 import Selecao from './pages/admin/Selecao';
 import Agenda from './pages/admin/Agenda';
 import Usuarios from './pages/admin/Usuarios';
+import BancoTalentos from './pages/admin/BancoTalentos';
 
-// --- PÁGINAS DE DIRETORA ---
 import DiretoraDashboard from './pages/diretora/Dashboard';
 
 function RootRedirect() {
   const { currentUser, userProfile, loading } = useAuth();
-  if (loading) return null;
+  
+  if (loading) return <div className="h-screen flex items-center justify-center">Verificando...</div>;
   if (!currentUser) return <Navigate to="/login" replace />;
   
-  return userProfile?.perfil === 'admin' 
-    ? <Navigate to="/admin/dashboard" replace /> 
-    : <Navigate to="/diretora/dashboard" replace />;
+  if (!userProfile) {
+    return (
+      <div className="h-screen flex items-center justify-center flex-col">
+        <p>A carregar o seu perfil...</p>
+        <button onClick={() => window.location.reload()} className="mt-4 text-blue-500 underline">
+          Recarregar página
+        </button>
+      </div>
+    );
+  }
+  
+  if (userProfile.perfil === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (userProfile.perfil === 'administrativo') return <Navigate to="/admin/talentos" replace />;
+  
+  return <Navigate to="/diretora/dashboard" replace />;
 }
 
 export default function App() {
@@ -37,8 +49,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<RootRedirect />} />
 
-          {/* ROTAS ADMIN */}
-          <Route path="/admin" element={<PrivateRoute allowedRole="admin"><DashboardLayout /></PrivateRoute>}>
+          <Route path="/admin" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><DashboardLayout /></PrivateRoute>}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="escolas" element={<Escolas />} />
             <Route path="manutencoes" element={<AdminManutencoes />} />
@@ -47,12 +58,11 @@ export default function App() {
             <Route path="selecao" element={<Selecao />} />
             <Route path="agenda" element={<Agenda />} />
             <Route path="usuarios" element={<Usuarios />} />
+            <Route path="talentos" element={<BancoTalentos />} />
           </Route>
 
-          {/* ROTAS DIRETORA */}
-          <Route path="/diretora" element={<PrivateRoute allowedRole="diretora"><DashboardLayout /></PrivateRoute>}>
+          <Route path="/diretora" element={<PrivateRoute allowedRoles={['diretora']}><DashboardLayout /></PrivateRoute>}>
             <Route path="dashboard" element={<DiretoraDashboard />} />
-            {/* Se você criar o arquivo Manutencoes.jsx na pasta diretora depois, adicione a rota aqui */}
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
