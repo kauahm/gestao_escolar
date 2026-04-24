@@ -39,12 +39,13 @@ const CATEGORIAS_CORES = {
 const AUTO_CORES = {
   contas: '#E24B4A',
   ciclos: '#EF9F27',
-  manutencoes: '#378ADD'
+  manutencoes: '#378ADD',
+  rh: '#10B981' // Verde para as entrevistas do RH
 };
 
 const PALETA_CORES = [
   '#185FA5', '#3B6D11', '#A32D2D', '#534AB7', 
-  '#5F5E5A', '#E24B4A', '#EF9F27', '#378ADD'
+  '#5F5E5A', '#E24B4A', '#EF9F27', '#378ADD', '#10B981'
 ];
 
 const initialFormState = {
@@ -70,7 +71,7 @@ export default function Agenda() {
   const [eventosAutomaticos, setEventosAutomaticos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados de Filtros
+  // Estados de Filtros (Incluímos o RH aqui)
   const [filtros, setFiltros] = useState({
     'Reunião': true,
     'Visita': true,
@@ -79,7 +80,8 @@ export default function Agenda() {
     'Outro': true,
     'contas': true,
     'ciclos': true,
-    'manutencoes': true
+    'manutencoes': true,
+    'rh': true
   });
 
   // Modais e Form
@@ -109,7 +111,7 @@ export default function Agenda() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Buscar Eventos Automáticos (getDocs)
+  // 2. Buscar Eventos Automáticos (Corrigido para tratar Datas corretamente)
   const fetchAutomaticEvents = async () => {
     try {
       const autoEvents = [];
@@ -122,14 +124,14 @@ export default function Agenda() {
         const data = doc.data();
         if (data.status === 'A enviar' && data.vencimento) {
           const [ano, mes, dia] = data.vencimento.split('-');
-          const vDate = new Date(ano, mes - 1, dia);
+          const vDate = new Date(ano, mes - 1, dia); // CORREÇÃO: Transforma a string em Data real
           const diffDias = Math.ceil((vDate - hoje) / (1000 * 60 * 60 * 24));
           
           if (diffDias <= 7) {
             autoEvents.push({
               id: `conta_${doc.id}`,
               title: `Vencto: ${data.tipo} — ${data.escolaNome}`,
-              start: data.vencimento,
+              start: vDate,
               allDay: true,
               backgroundColor: AUTO_CORES.contas,
               borderColor: AUTO_CORES.contas,
@@ -145,14 +147,14 @@ export default function Agenda() {
         const data = doc.data();
         if (data.proximaExecucao) {
           const [ano, mes, dia] = data.proximaExecucao.split('-');
-          const pDate = new Date(ano, mes - 1, dia);
+          const pDate = new Date(ano, mes - 1, dia); // CORREÇÃO: Transforma a string em Data real
           const diffDias = Math.ceil((pDate - hoje) / (1000 * 60 * 60 * 24));
           
-          if (diffDias <= 30) { // Vencendo em breve (<= 30) ou Vencido (< 0)
+          if (diffDias <= 30) {
             autoEvents.push({
               id: `ciclo_${doc.id}`,
               title: `Ciclo: ${data.tipo} — ${data.escolaNome}`,
-              start: data.proximaExecucao,
+              start: pDate,
               allDay: true,
               backgroundColor: AUTO_CORES.ciclos,
               borderColor: AUTO_CORES.ciclos,
@@ -167,14 +169,41 @@ export default function Agenda() {
       manuSnap.forEach(doc => {
         const data = doc.data();
         if (data.prazo && data.status !== 'Concluído') {
+          const [ano, mes, dia] = data.prazo.split('-');
+          const mDate = new Date(ano, mes - 1, dia); // CORREÇÃO: Transforma a string em Data real
           autoEvents.push({
             id: `manu_${doc.id}`,
             title: `Prazo: ${data.descricao} — ${data.escolaNome}`,
-            start: data.prazo,
+            start: mDate,
             allDay: true,
             backgroundColor: AUTO_CORES.manutencoes,
             borderColor: AUTO_CORES.manutencoes,
             extendedProps: { ...data, type: 'manutencao', isManual: false, originalId: doc.id }
+          });
+        }
+      });
+
+      // 2.4 Processo Seletivo (Novo!)
+      const rhSnap = await getDocs(collection(db, 'curriculos'));
+      rhSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.status === 'Entrevista Agendada' && data.dataEntrevista) {
+          const [ano, mes, dia] = data.dataEntrevista.split('-');
+          const rhDate = new Date(ano, mes - 1, dia); // Transforma em Data real
+          
+          if (data.horaEntrevista) {
+            const [hora, min] = data.horaEntrevista.split(':');
+            rhDate.setHours(hora, min, 0, 0); // Aplica a hora certinha
+          }
+          
+          autoEvents.push({
+            id: `rh_${doc.id}`,
+            title: `Entrevista: ${data.nome} (${data.vaga})`,
+            start: rhDate,
+            allDay: !data.horaEntrevista,
+            backgroundColor: AUTO_CORES.rh,
+            borderColor: AUTO_CORES.rh,
+            extendedProps: { ...data, type: 'rh', isManual: false, originalId: doc.id }
           });
         }
       });
@@ -213,6 +242,7 @@ export default function Agenda() {
       if (e.extendedProps.type === 'conta') return filtros['contas'];
       if (e.extendedProps.type === 'ciclo') return filtros['ciclos'];
       if (e.extendedProps.type === 'manutencao') return filtros['manutencoes'];
+      if (e.extendedProps.type === 'rh') return filtros['rh']; // Filtro do RH
       return true;
     });
 
@@ -319,7 +349,6 @@ export default function Agenda() {
 
     setIsSubmitting(true);
     try {
-      // Montar datas
       let inicioDate = new Date(`${formData.dataInicio}T00:00:00`);
       let fimDate = formData.dataFim ? new Date(`${formData.dataFim}T00:00:00`) : null;
 
@@ -412,9 +441,10 @@ export default function Agenda() {
     if (type === 'conta') navigate('/admin/contas');
     if (type === 'ciclo') navigate('/admin/ciclos');
     if (type === 'manutencao') navigate('/admin/manutencoes');
+    if (type === 'rh') navigate('/admin/selecao'); // Navega para as Entrevistas
   };
 
-  // Renderização Auxiliar
+  // Renderização Auxiliar (Corrigida e livre de erros!)
   const renderProximosEventos = () => {
     const hoje = new Date();
     const proximos = fullCalendarEvents
@@ -450,7 +480,7 @@ export default function Agenda() {
         {/* Painel de Filtros */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
-            <Tag size={18} className="text-primary" /> Filtros e Categorias
+            <Tag size={18} className="text-primary" /> Filtros
           </h3>
           
           <div className="space-y-4">
@@ -468,22 +498,27 @@ export default function Agenda() {
             </div>
 
             <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Eventos Automáticos</h4>
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sistema Automático</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
                   <input type="checkbox" checked={filtros['contas']} onChange={() => toggleFiltro('contas')} className="rounded text-primary focus:ring-primary" />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: AUTO_CORES.contas }}></span>
-                  Vencimentos de contas
+                  Vencimentos
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
                   <input type="checkbox" checked={filtros['ciclos']} onChange={() => toggleFiltro('ciclos')} className="rounded text-primary focus:ring-primary" />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: AUTO_CORES.ciclos }}></span>
-                  Ciclos vencendo
+                  Ciclos
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
                   <input type="checkbox" checked={filtros['manutencoes']} onChange={() => toggleFiltro('manutencoes')} className="rounded text-primary focus:ring-primary" />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: AUTO_CORES.manutencoes }}></span>
-                  Prazos de manutenção
+                  Manutenções
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
+                  <input type="checkbox" checked={filtros['rh']} onChange={() => toggleFiltro('rh')} className="rounded text-primary focus:ring-primary" />
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: AUTO_CORES.rh }}></span>
+                  Entrevistas (RH)
                 </label>
               </div>
             </div>
@@ -525,7 +560,7 @@ export default function Agenda() {
               eventClick={handleEventClick}
               eventDrop={handleEventDropOrResize}
               eventResize={handleEventDropOrResize}
-              datesSet={() => fetchAutomaticEvents()} // Atualiza os automáticos ao mudar o mês
+              datesSet={() => fetchAutomaticEvents()} 
               height="100%"
             />
           </div>
@@ -686,7 +721,7 @@ export default function Agenda() {
                   <div className="flex gap-2">
                     <button onClick={() => setIsDetailsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Fechar</button>
                     <button onClick={navigateToModule} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors">
-                      Ver detalhes completos <ExternalLink size={16} />
+                      Ver no módulo <ExternalLink size={16} />
                     </button>
                   </div>
                 </>
