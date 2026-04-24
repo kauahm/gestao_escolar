@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import logoImg from '../../assets/logo-topo.png'; 
 import { 
   LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
-  Users, Calendar, UserCog, LogOut, FileText, X
+  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase 
 } from 'lucide-react';
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
@@ -17,6 +17,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     { to: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/admin/escolas', icon: <School size={20} />, label: 'Escolas' },
     { to: '/admin/manutencoes', icon: <Wrench size={20} />, label: 'Manutenções' },
+    { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: 'Prestadores' },
     { to: '/admin/contas', icon: <Receipt size={20} />, label: 'Contas a Pagar' },
     { to: '/admin/ciclos', icon: <RefreshCcw size={20} />, label: 'Ciclos' },
     { to: '/admin/talentos', icon: <FileText size={20} />, label: 'Banco de Talentos' },

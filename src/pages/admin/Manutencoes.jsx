@@ -16,8 +16,8 @@ import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
-// Ícones
-import { Plus, Search, Eye, Edit2, Trash2, AlertTriangle, X, Filter, Printer } from 'lucide-react';
+// Ícones (Adicionado o Send para o WhatsApp)
+import { Plus, Search, Eye, Edit2, Trash2, AlertTriangle, X, Filter, Printer, Send } from 'lucide-react';
 
 const initialFormState = {
   escolaId: '', escolaNome: '', descricao: '', localDentroEscola: '',
@@ -30,6 +30,7 @@ export default function AdminManutencoes() {
   // Estados
   const [manutencoes, setManutencoes] = useState([]);
   const [escolas, setEscolas] = useState([]);
+  const [prestadores, setPrestadores] = useState([]); // NOVO: Estado dos Prestadores
   const [loading, setLoading] = useState(true);
 
   // Filtros
@@ -51,6 +52,7 @@ export default function AdminManutencoes() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // Busca Escolas
   useEffect(() => {
     const q = collection(db, 'escolas');
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -63,6 +65,18 @@ export default function AdminManutencoes() {
     return () => unsubscribe();
   }, []);
 
+  // NOVO: Busca Prestadores de Serviço
+  useEffect(() => {
+    const q = collection(db, 'prestadores');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const prestadoresData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      prestadoresData.sort((a, b) => a.nome.localeCompare(b.nome));
+      setPrestadores(prestadoresData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Busca Manutenções
   useEffect(() => {
     const q = collection(db, 'manutencoes');
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -174,7 +188,21 @@ export default function AdminManutencoes() {
     }
   };
 
-  // =============== GERADOR DE ARQUIVO (DESIGN PREMIUM CLAUDE + CORES AEMC) ===============
+  // NOVO: Função para enviar O.S via WhatsApp para o Prestador
+  const enviarWhatsApp = (item) => {
+    const prestador = prestadores.find(p => p.nome === item.responsavel);
+    
+    if (!prestador || !prestador.telefone) {
+      return showToast('O prestador selecionado não possui WhatsApp cadastrado.', 'error');
+    }
+
+    const numero = prestador.telefone.replace(/\D/g, ''); // Remove formatação (traços, parênteses)
+    const mensagem = `Olá, ${prestador.nome}!\n\nTemos uma nova Ordem de Serviço na Associação:\n\n🏫 *Unidade:* ${item.escolaNome}\n📍 *Local:* ${item.localDentroEscola}\n⚠️ *Problema:* ${item.descricao}\n🔴 *Prioridade:* ${item.prioridade}\n\nPor favor, acesse o sistema ou entre em contato com a diretoria para mais detalhes.`;
+    
+    window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+  };
+
+  // =============== GERADOR DE ARQUIVO PREMIUM (MANTIDO INTACTO) ===============
   const gerarArquivo = (item) => {
     let dataCriacao = new Date();
     if (item.criadoEm) {
@@ -194,6 +222,7 @@ export default function AdminManutencoes() {
     }
 
     const dataFormatada = dataCriacao.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const mesAno = dataCriacao.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     const escola = item.escolaNome || 'Escola não informada';
     const responsavelTecnico = item.responsavel || 'A definir';
     const solicitante = item.solicitadaPorNome || 'Direção';
@@ -823,11 +852,13 @@ export default function AdminManutencoes() {
             <option value="Todas">Todas as Unidades</option>
             {escolas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
           </select>
+          {/* ALTERADO: Mapeamento dinâmico dos Prestadores no Filtro */}
           <select value={filterResponsavel} onChange={(e) => setFilterResponsavel(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
             <option value="Todos">Todos os Responsáveis</option>
-            <option value="Vitor">Vitor</option>
-            <option value="Eduardo">Eduardo</option>
             <option value="A definir">A definir</option>
+            {prestadores.map(p => (
+              <option key={p.id} value={p.nome}>{p.nome}</option>
+            ))}
           </select>
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
             <option value="Todos">Todos os Status</option>
@@ -888,6 +919,16 @@ export default function AdminManutencoes() {
                     <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                       
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* NOVO: Botão de Enviar WhatsApp */}
+                        <button 
+                          onClick={() => enviarWhatsApp(item)} 
+                          className="flex items-center gap-1 bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 hover:text-green-800 px-2.5 py-1.5 rounded-md transition-colors shadow-sm" 
+                          title="Enviar O.S. pelo WhatsApp"
+                        >
+                          <Send size={16} />
+                          <span className="text-xs font-bold hidden sm:inline">WhatsApp</span>
+                        </button>
+
                         <button 
                           onClick={() => gerarArquivo(item)} 
                           className="flex items-center gap-1 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 hover:text-blue-800 px-2.5 py-1.5 rounded-md transition-colors shadow-sm mr-2" 
@@ -956,10 +997,12 @@ export default function AdminManutencoes() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
+              {/* ALTERADO: Mapeamento dinâmico dos Prestadores no Formulário */}
               <select name="responsavel" value={formData.responsavel} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
                 <option value="A definir">A definir</option>
-                <option value="Vitor">Vitor</option>
-                <option value="Eduardo">Eduardo</option>
+                {prestadores.map(p => (
+                  <option key={p.id} value={p.nome}>{p.nome}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -994,6 +1037,12 @@ export default function AdminManutencoes() {
               <span className="block text-xs text-gray-500 uppercase mb-1">Descrição do Problema</span>
               <p className="text-sm text-gray-800 bg-white border p-3 rounded-md">{selectedManutencao.descricao}</p>
             </div>
+            {selectedManutencao.observacoes && (
+              <div>
+                <span className="block text-xs text-gray-500 uppercase mb-1">Observações Internas</span>
+                <p className="text-sm text-gray-700 bg-yellow-50 p-3 rounded-md border border-yellow-100">{selectedManutencao.observacoes}</p>
+              </div>
+            )}
             <div className="flex justify-end gap-3 pt-4 border-t">
               <button onClick={() => setIsConfirmDeleteOpen(true)} className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-md hover:bg-red-50">Excluir</button>
             </div>

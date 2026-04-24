@@ -23,10 +23,11 @@ export default function BancoTalentos() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const estadoInicialForm = { nome: '', telefone: '', email: '', vaga: '', exp: 'Não', indicacao: '' };
+  // 1. Estado Inicial atualizado com Observações
+  const estadoInicialForm = { nome: '', telefone: '', email: '', vaga: '', exp: 'Não', indicacao: '', observacoes: '' };
   const [formData, setFormData] = useState(estadoInicialForm);
 
-  // 1. Buscar os dados no Firebase
+  // 2. Buscar os dados no Firebase
   useEffect(() => {
     const q = query(collection(db, 'curriculos'), orderBy('dataCadastro', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -39,7 +40,7 @@ export default function BancoTalentos() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Salvar ou Editar currículo
+  // 3. Salvar ou Editar currículo
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -64,7 +65,7 @@ export default function BancoTalentos() {
     }
   };
 
-  // 3. Abrir modal para NOVO
+  // 4. Abrir modal para NOVO
   const abrirModalNovo = () => {
     setIsEditMode(false);
     setEditId(null);
@@ -72,18 +73,23 @@ export default function BancoTalentos() {
     setIsModalOpen(true);
   };
 
-  // 4. Abrir modal para EDITAR
+  // 5. Abrir modal para EDITAR (Carregando as observações)
   const abrirModalEditar = (curriculo) => {
     setIsEditMode(true);
     setEditId(curriculo.id);
     setFormData({
-      nome: curriculo.nome, telefone: curriculo.telefone, email: curriculo.email || '',
-      vaga: curriculo.vaga, exp: curriculo.exp, indicacao: curriculo.indicacao || ''
+      nome: curriculo.nome, 
+      telefone: curriculo.telefone, 
+      email: curriculo.email || '',
+      vaga: curriculo.vaga, 
+      exp: curriculo.exp, 
+      indicacao: curriculo.indicacao || '',
+      observacoes: curriculo.observacoes || '' // Puxando as observações salvas
     });
     setIsModalOpen(true);
   };
 
-  // 5. Excluir Currículo
+  // 6. Excluir Currículo
   const handleExcluir = async (id, nome) => {
     if (window.confirm(`Tem certeza que deseja excluir permanentemente o currículo de ${nome}?`)) {
       try {
@@ -95,13 +101,13 @@ export default function BancoTalentos() {
     }
   };
 
-  // 6. Abrir modal de Agendamento
+  // 7. Abrir modal de Agendamento
   const abrirModalAgenda = (curriculo) => {
     setCurriculoSelecionado(curriculo);
     setIsAgendaModalOpen(true);
   };
 
-  // 7. Salvar Agendamento
+  // 8. Salvar Agendamento
   const handleAgendarEntrevista = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -186,7 +192,7 @@ export default function BancoTalentos() {
                             <Calendar size={16} /> <span className="hidden sm:inline">Agendar</span>
                           </button>
                         )}
-                        <button onClick={() => abrirModalEditar(curriculo)} className="p-1.5 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Editar">
+                        <button onClick={() => abrirModalEditar(curriculo)} className="p-1.5 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Editar / Ver Observações">
                           <Edit size={18} />
                         </button>
                         <button onClick={() => handleExcluir(curriculo.id, curriculo.nome)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Excluir">
@@ -202,7 +208,7 @@ export default function BancoTalentos() {
         </div>
       </div>
 
-      {/* MODAL DE AGENDAMENTO AQUI... (mantido igual) */}
+      {/* MODAL DE AGENDAMENTO */}
       {isAgendaModalOpen && curriculoSelecionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
@@ -232,13 +238,13 @@ export default function BancoTalentos() {
       {/* MODAL DE CADASTRO / EDIÇÃO */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 shrink-0">
               <h2 className="text-lg font-bold text-gray-900">{isEditMode ? 'Editar Currículo' : 'Cadastrar Currículo'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
                 <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} />
@@ -274,7 +280,20 @@ export default function BancoTalentos() {
                 <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" value={formData.indicacao} onChange={(e) => setFormData({...formData, indicacao: e.target.value})} />
               </div>
 
-              <div className="pt-4 flex gap-3">
+              {/* CAMPO DE OBSERVAÇÕES ADICIONADO AQUI */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Observações Internas</label>
+                <textarea 
+                  name="observacoes" 
+                  value={formData.observacoes} 
+                  onChange={(e) => setFormData({...formData, observacoes: e.target.value})} 
+                  rows="3" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  placeholder="Notas sobre a entrevista, perfil do candidato, etc..."
+                ></textarea>
+              </div>
+
+              <div className="pt-4 flex gap-3 border-t border-gray-100 mt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancelar</button>
                 <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">{loading ? 'Salvando...' : (isEditMode ? 'Atualizar' : 'Salvar')}</button>
               </div>
@@ -282,6 +301,13 @@ export default function BancoTalentos() {
           </div>
         </div>
       )}
+      
+      {/* Estilo para a barra de rolagem do modal se a tela for pequena */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+      `}} />
     </div>
   );
 }
