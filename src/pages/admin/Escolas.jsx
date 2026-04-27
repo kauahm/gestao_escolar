@@ -124,9 +124,24 @@ export default function Escolas() {
     setSelectedEscola(null);
   };
 
+  const applyMask = (name, value) => {
+    if (name === 'cep') {
+      return value.replace(/\D/g, '').slice(0, 8).replace(/^(\d{5})(\d)/, '$1-$2');
+    }
+    if (name === 'telefone') {
+      const digits = value.replace(/\D/g, '').slice(0, 11);
+      if (digits.length <= 10) {
+        return digits.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+      }
+      return digits.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+    }
+    return value;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const maskedValue = applyMask(name, value);
+    setFormData(prev => ({ ...prev, [name]: maskedValue }));
     // Limpa o erro do campo ao digitar
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
