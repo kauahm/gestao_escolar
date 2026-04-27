@@ -13,6 +13,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
 
   return createPortal(
     <div
+      style={{ marginLeft: 0 }}
       className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
