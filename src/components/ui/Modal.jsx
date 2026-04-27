@@ -13,8 +13,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
 
   return createPortal(
     <div
-      style={{ marginLeft: 0 }}
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black bg-opacity-50"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: 'rgba(0,0,0,0.5)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} overflow-hidden flex flex-col max-h-[90vh]`}>
