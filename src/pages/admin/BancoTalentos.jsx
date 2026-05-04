@@ -209,7 +209,7 @@ export default function BancoTalentos() {
                             title="Conversar no WhatsApp"
                           >
                             <MessageCircle size={16} />
-                            <span className="hidden sm:inline">WhatsApp</span>
+                            
                           </button>
 
                           {curriculo.status === 'Disponível' && (
