@@ -174,7 +174,7 @@ export default function BancoTalentos() {
               <tr>
                 <th className="px-6 py-4">Candidato</th>
                 <th className="px-6 py-4">Vaga Pretendida</th>
-                <th className="px-6 py-4">Contato</th>
+                <th className="px-6 py-4">Indicação</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
@@ -192,7 +192,15 @@ export default function BancoTalentos() {
                       </div>
                     </td>
                     <td className="px-6 py-4"><span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium">{curriculo.vaga}</span></td>
-                    <td className="px-6 py-4 text-gray-500"><div>{curriculo.telefone}</div><div className="text-xs">{curriculo.email}</div></td>
+                    <td className="px-6 py-4 text-gray-500">
+        <div className="flex items-center gap-2">
+          {curriculo.indicacao ? (
+            <span className="text-sm">{curriculo.indicacao}</span>
+          ) : (
+            <span className="text-xs text-gray-400 italic">Candidatura Direta</span>
+          )}
+        </div>
+      </td>
                     <td className="px-6 py-4 text-gray-500">
                       <span className={`px-2 py-1 rounded-md text-xs font-medium ${curriculo.status === 'Disponível' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{curriculo.status}</span>
                     </td>
