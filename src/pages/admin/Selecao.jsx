@@ -10,6 +10,11 @@ export default function Selecao() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
+const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+const [feedbackText, setFeedbackText] = useState('');
+const [statusAlvo, setStatusAlvo] = useState(''); // 'Aprovado' ou 'Reprovado'
+const [candidatoAlvo, setCandidatoAlvo] = useState(null);
+
   // Estados de Edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [candidatoEditando, setCandidatoEditando] = useState(null);
@@ -27,16 +32,31 @@ export default function Selecao() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Finalizar Processo
-  const finalizarProcesso = async (id, novoStatus, nome) => {
-    try {
-      await updateDoc(doc(db, 'curriculos', id), { status: novoStatus });
-      setSuccess(`${nome} foi movido para: ${novoStatus}`);
-    } catch (err) {
-      setError('Erro ao atualizar status.');
-    }
-  };
+  // 2. Abrir modal para coletar feedback antes de finalizar
+const prepararFinalizacao = (item, novoStatus) => {
+  setCandidatoAlvo(item);
+  setStatusAlvo(novoStatus);
+  setFeedbackText(''); // Limpa o campo para o novo feedback
+  setIsFeedbackModalOpen(true);
+};
 
+// 3. Salvar a decisão com o feedback no Firebase
+const confirmarDecisao = async (e) => {
+  e.preventDefault();
+  if (!feedbackText.trim()) return alert("Por favor, insira um feedback.");
+
+  try {
+    await updateDoc(doc(db, 'curriculos', candidatoAlvo.id), { 
+      status: statusAlvo,
+      feedback: feedbackText, // NOVO CAMPO
+      dataDecisao: new Date().toISOString()
+    });
+    setSuccess(`${candidatoAlvo.nome} foi ${statusAlvo === 'Aprovado' ? 'aprovado(a)' : 'reprovado(a)'} com sucesso!`);
+    setIsFeedbackModalOpen(false);
+  } catch (err) {
+    setError('Erro ao atualizar status.');
+  }
+};
   // 3. Excluir Candidato
   const handleExcluir = async (id, nome) => {
     if (window.confirm(`Tem certeza que deseja excluir o currículo de ${nome} e cancelar esta entrevista?`)) {
@@ -109,6 +129,21 @@ export default function Selecao() {
                   <Trash2 size={14} />
                 </button>
               </div>
+
+              <div className="flex gap-2">
+                    <button 
+                      onClick={() => prepararFinalizacao(item, 'Aprovado')} 
+                      className="flex-1 flex items-center justify-center gap-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors"
+                    >
+                      <CheckCircle size={14} /> Aprovar
+                    </button>
+                    <button 
+                      onClick={() => prepararFinalizacao(item, 'Reprovado')} 
+                      className="flex-1 flex items-center justify-center gap-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors"
+                    >
+                      <XCircle size={14} /> Reprovar
+                    </button>
+          </div>
 
               <div className="p-5">
                 <div className="flex justify-between items-start mb-4 pr-16">
@@ -193,6 +228,38 @@ export default function Selecao() {
         </div>
       )}
 
+      {/* MODAL DE FEEDBACK */}
+{isFeedbackModalOpen && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className={`p-4 border-b text-white flex justify-between items-center ${statusAlvo === 'Aprovado' ? 'bg-green-600' : 'bg-red-600'}`}>
+        <h2 className="text-lg font-bold">Feedback de {statusAlvo}</h2>
+        <button onClick={() => setIsFeedbackModalOpen(false)}><X size={20} /></button>
+      </div>
+      <form onSubmit={confirmarDecisao} className="p-4 space-y-4">
+        <p className="text-sm text-gray-600 font-medium">
+          Justifique a decisão para <strong>{candidatoAlvo?.nome}</strong>:
+        </p>
+        <textarea
+          required
+          rows="4"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+          placeholder={statusAlvo === 'Aprovado' ? "Ex: Ótima didática e proatividade..." : "Ex: Falta de experiência com educação infantil..."}
+          value={feedbackText}
+          onChange={(e) => setFeedbackText(e.target.value)}
+        />
+        <div className="flex gap-3">
+          <button type="button" onClick={() => setIsFeedbackModalOpen(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancelar</button>
+          <button type="submit" className={`flex-1 px-4 py-2 text-white rounded-lg font-bold ${statusAlvo === 'Aprovado' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
+            Confirmar {statusAlvo}
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
+)}
+
+    </div>
+    
   );
 }
