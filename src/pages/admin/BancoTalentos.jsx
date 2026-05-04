@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2, MessageCircle } from 'lucide-react';
 import { db } from '../../services/firebase'; 
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import Toast from '../../components/ui/Toast';
@@ -132,6 +132,17 @@ export default function BancoTalentos() {
     c.vaga.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const openWhatsApp = (telefone) => {
+  
+  const num = telefone.replace(/\D/g, '');
+  if (num) {
+    
+    window.open(`https://wa.me/55${num}`, '_blank');
+  } else {
+    alert("Número de telefone inválido ou não informado.");
+  }
+};
+
   return (
     <div className="space-y-6 mt-4 relative">
       {error && <Toast message={error} type="error" onClose={() => setError('')} />}
@@ -192,6 +203,19 @@ export default function BancoTalentos() {
                             <Calendar size={16} /> <span className="hidden sm:inline">Agendar</span>
                           </button>
                         )}
+                        <button 
+                            onClick={() => openWhatsApp(curriculo.telefone)} 
+                            className="inline-flex items-center gap-1.5 bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                            title="Conversar no WhatsApp"
+                          >
+                            <MessageCircle size={16} />
+                            <span className="hidden sm:inline">WhatsApp</span>
+                          </button>
+
+                          {curriculo.status === 'Disponível' && (
+                            <button onClick={() => abrirModalAgenda(curriculo)} className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" title="Agendar Entrevista">
+                              <Calendar size={16} /> <span className="hidden sm:inline">Agendar</span>
+                            </button>)}
                         <button onClick={() => abrirModalEditar(curriculo)} className="p-1.5 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Editar / Ver Observações">
                           <Edit size={18} />
                         </button>
@@ -200,6 +224,9 @@ export default function BancoTalentos() {
                         </button>
                       </div>
                     </td>
+                    
+
+                    
                   </tr>
                 ))
               )}
