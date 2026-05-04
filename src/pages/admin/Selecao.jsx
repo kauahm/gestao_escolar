@@ -130,20 +130,7 @@ const confirmarDecisao = async (e) => {
                 </button>
               </div>
 
-              <div className="flex gap-2">
-                    <button 
-                      onClick={() => prepararFinalizacao(item, 'Aprovado')} 
-                      className="flex-1 flex items-center justify-center gap-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors"
-                    >
-                      <CheckCircle size={14} /> Aprovar
-                    </button>
-                    <button 
-                      onClick={() => prepararFinalizacao(item, 'Reprovado')} 
-                      className="flex-1 flex items-center justify-center gap-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors"
-                    >
-                      <XCircle size={14} /> Reprovar
-                    </button>
-          </div>
+            
 
               <div className="p-5">
                 <div className="flex justify-between items-start mb-4 pr-16">
@@ -171,14 +158,20 @@ const confirmarDecisao = async (e) => {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <button onClick={() => finalizarProcesso(item.id, 'Aprovado', item.nome)} className="flex-1 flex items-center justify-center gap-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors">
-                    <CheckCircle size={14} /> Aprovar
-                  </button>
-                  <button onClick={() => finalizarProcesso(item.id, 'Reprovado', item.nome)} className="flex-1 flex items-center justify-center gap-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
-                    <XCircle size={14} /> Reprovar
-                  </button>
-                </div>
+                 <div className="flex gap-2">
+                    <button 
+                      onClick={() => prepararFinalizacao(item, 'Aprovado')} 
+                      className="flex-1 flex items-center justify-center gap-1 bg-green-50 text-green-600 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors"
+                    >
+                      <CheckCircle size={14} /> Aprovar
+                    </button>
+                    <button 
+                      onClick={() => prepararFinalizacao(item, 'Reprovado')} 
+                      className="flex-1 flex items-center justify-center gap-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors"
+                    >
+                      <XCircle size={14} /> Reprovar
+                    </button>
+          </div>
               </div>
               <div className="bg-gray-50 p-3 flex justify-center">
                  <button className="text-[10px] text-gray-400 uppercase tracking-widest font-bold flex items-center gap-1">
