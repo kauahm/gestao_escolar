@@ -212,10 +212,7 @@ export default function BancoTalentos() {
                             
                           </button>
 
-                          {curriculo.status === 'Disponível' && (
-                            <button onClick={() => abrirModalAgenda(curriculo)} className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" title="Agendar Entrevista">
-                              <Calendar size={16} /> <span className="hidden sm:inline">Agendar</span>
-                            </button>)}
+              
                         <button onClick={() => abrirModalEditar(curriculo)} className="p-1.5 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Editar / Ver Observações">
                           <Edit size={18} />
                         </button>
