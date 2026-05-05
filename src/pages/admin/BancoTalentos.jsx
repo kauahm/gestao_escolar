@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2, MessageCircle, Briefcase, Phone, Mailg } from 'lucide-react';
 import { db } from '../../services/firebase'; 
+import { 
+  Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2, 
+  MessageCircle, Briefcase, Phone, Mail 
+} from 'lucide-react';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import Toast from '../../components/ui/Toast';
 
