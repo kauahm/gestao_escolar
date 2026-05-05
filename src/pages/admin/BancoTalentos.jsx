@@ -27,6 +27,17 @@ export default function BancoTalentos() {
   const estadoInicialForm = { nome: '', telefone: '', email: '', vaga: '', exp: 'Não', indicacao: '', observacoes: '' };
   const [formData, setFormData] = useState(estadoInicialForm);
 
+ // Vizualizar curriculo e feedBack
+
+ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+const [curriculoView, setCurriculoView] = useState(null);
+
+// Função para abrir o card de detalhes
+const abrirDetalhes = (curriculo) => {
+  setCurriculoView(curriculo);
+  setIsViewModalOpen(true);
+};
+
   // 2. Buscar os dados no Firebase
   useEffect(() => {
     const q = query(collection(db, 'curriculos'), orderBy('dataCadastro', 'desc'));
@@ -180,62 +191,100 @@ export default function BancoTalentos() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {curriculosFiltrados.length === 0 ? (
-                <tr><td colSpan="5" className="text-center py-8 text-gray-500">Nenhum currículo encontrado.</td></tr>
-              ) : (
-                curriculosFiltrados.map((curriculo) => (
-                  <tr key={curriculo.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 p-2 rounded-full text-primary"><FileText size={18} /></div>
-                        {curriculo.nome}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4"><span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium">{curriculo.vaga}</span></td>
-                    <td className="px-6 py-4 text-gray-500">
-        <div className="flex items-center gap-2">
-          {curriculo.indicacao ? (
-            <span className="text-sm">{curriculo.indicacao}</span>
-          ) : (
-            <span className="text-xs text-gray-400 italic">Candidatura Direta</span>
-          )}
-        </div>
+  {curriculosFiltrados.length === 0 ? (
+    <tr>
+      <td colSpan="5" className="text-center py-8 text-gray-500">
+        Nenhum currículo encontrado.
       </td>
-                    <td className="px-6 py-4 text-gray-500">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${curriculo.status === 'Disponível' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{curriculo.status}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {curriculo.status === 'Disponível' && (
-                          <button onClick={() => abrirModalAgenda(curriculo)} className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" title="Agendar Entrevista">
-                            <Calendar size={16} /> <span className="hidden sm:inline">Agendar</span>
-                          </button>
-                        )}
-                        <button 
-                            onClick={() => openWhatsApp(curriculo.telefone)} 
-                            className="inline-flex items-center gap-1.5 bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                            title="Conversar no WhatsApp"
-                          >
-                            <MessageCircle size={16} />
-                            
-                          </button>
+    </tr>
+  ) : (
+    curriculosFiltrados.map((curriculo) => (
+      <tr 
+        key={curriculo.id} 
+        // 1. Torna a linha clicável para abrir os detalhes
+        onClick={() => abrirDetalhes(curriculo)} 
+        className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
+      >
+        <td className="px-6 py-4 font-medium text-gray-900">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <FileText size={18} />
+            </div>
+            {curriculo.nome}
+          </div>
+        </td>
+        
+        <td className="px-6 py-4">
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium">
+            {curriculo.vaga}
+          </span>
+        </td>
 
-              
-                        <button onClick={() => abrirModalEditar(curriculo)} className="p-1.5 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Editar / Ver Observações">
-                          <Edit size={18} />
-                        </button>
-                        <button onClick={() => handleExcluir(curriculo.id, curriculo.nome)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Excluir">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                    
+        <td className="px-6 py-4 text-gray-500">
+          <div className="flex items-center gap-2">
+            {curriculo.indicacao ? (
+              <span className="text-sm">{curriculo.indicacao}</span>
+            ) : (
+              <span className="text-xs text-gray-400 italic">Candidatura Direta</span>
+            )}
+          </div>
+        </td>
 
-                    
-                  </tr>
-                ))
-              )}
-            </tbody>
+        <td className="px-6 py-4 text-gray-500">
+          <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+            curriculo.status === 'Disponível' ? 'bg-green-100 text-green-700' : 
+            curriculo.status === 'Aprovado' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'
+          }`}>
+            {curriculo.status}
+          </span>
+        </td>
+
+        <td className="px-6 py-4 text-right">
+          {/* 2. O stopPropagation impede que o clique no botão abra o modal de detalhes por engano */}
+          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Botão WhatsApp */}
+            <button 
+              onClick={() => openWhatsApp(curriculo.telefone)} 
+              className="inline-flex items-center gap-1.5 bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              title="Conversar no WhatsApp"
+            >
+              <MessageCircle size={16} />
+              <span className="hidden lg:inline">WhatsApp</span>
+            </button>
+
+            {curriculo.status === 'Disponível' && (
+              <button 
+                onClick={() => abrirModalAgenda(curriculo)} 
+                className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" 
+                title="Agendar Entrevista"
+              >
+                <Calendar size={16} /> 
+                <span className="hidden lg:inline">Agendar</span>
+              </button>
+            )}
+
+            <button 
+              onClick={() => abrirModalEditar(curriculo)} 
+              className="p-1.5 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" 
+              title="Editar / Ver Observações"
+            >
+              <Edit size={18} />
+            </button>
+
+            <button 
+              onClick={() => handleExcluir(curriculo.id, curriculo.nome)} 
+              className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+              title="Excluir"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
           </table>
         </div>
       </div>
@@ -340,6 +389,108 @@ export default function BancoTalentos() {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
       `}} />
+
+      {isViewModalOpen && curriculoView && (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200">
+      {/* Header do Card */}
+      <div className="bg-primary p-6 text-white flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">
+              ID: {curriculoView.id.slice(0,8)}
+            </span>
+            <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+              curriculoView.status === 'Disponível' ? 'bg-green-500' : 'bg-orange-500'
+            }`}>
+              {curriculoView.status}
+            </span>
+          </div>
+          <h2 className="text-2xl font-bold">{curriculoView.nome}</h2>
+          <p className="text-blue-100 flex items-center gap-1 mt-1">
+            <Briefcase size={16} /> {curriculoView.vaga}
+          </p>
+        </div>
+        <button onClick={() => setIsViewModalOpen(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
+          <X size={24} />
+        </button>
+      </div>
+
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        {/* Informações de Contato */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Contato e Origem</h3>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700 flex items-center gap-3">
+              <Phone size={18} className="text-primary" /> <strong>Telefone:</strong> {curriculoView.telefone}
+            </p>
+            <p className="text-sm text-gray-700 flex items-center gap-3">
+              <Mail size={18} className="text-primary" /> <strong>E-mail:</strong> {curriculoView.email || 'Não informado'}
+            </p>
+            <p className="text-sm text-gray-700 flex items-center gap-3">
+              <UserCheck size={18} className="text-primary" /> <strong>Indicação:</strong> {curriculoView.indicacao || 'Candidatura Direta'}
+            </p>
+          </div>
+        </div>
+
+        {/* Experiência e Observações de Cadastro */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Perfil</h3>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700"><strong>Possui experiência?</strong> {curriculoView.exp}</p>
+            <div>
+              <p className="text-xs font-bold text-gray-500 mb-1">Observações de Cadastro:</p>
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg italic">
+                "{curriculoView.observacoes || 'Sem observações adicionais.'}"
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ÁREA DE FEEDBACK (PROCESSO SELETIVO) */}
+        <div className="col-span-full mt-2">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-2 mb-3">
+            Resultado do Processo Seletivo
+          </h3>
+          <div className={`p-4 rounded-xl border ${curriculoView.feedback ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
+            <div className="flex items-start gap-3">
+              <div className={`p-2 rounded-lg ${curriculoView.feedback ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500'}`}>
+                <MessageCircle size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-800 text-sm mb-1">Avaliação do Gestor:</p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {curriculoView.feedback || "Candidato ainda disponível para entrevista ou aguardando avaliação inicial."}
+                </p>
+                {curriculoView.dataDecisao && (
+                  <p className="text-[10px] text-gray-400 mt-2">
+                    Decisão registrada em: {new Date(curriculoView.dataDecisao).toLocaleDateString('pt-BR')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer do Card */}
+      <div className="p-4 bg-gray-50 border-t flex justify-end gap-3">
+        <button 
+          onClick={() => openWhatsApp(curriculoView.telefone)}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors"
+        >
+          <MessageCircle size={18} /> Iniciar Conversa
+        </button>
+        <button 
+          onClick={() => setIsViewModalOpen(false)}
+          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-300 transition-colors"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
