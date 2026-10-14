@@ -67,8 +67,8 @@ Sem isso, nada mais importa: um erro de segurança numa demo com dados reais cus
 | # | Item | Por quê | Esforço |
 |---|---|---|---|
 | 2.1 | **Anexos** em contas (boleto/NF em PDF/foto) e em chamados | Comprovante = prestação de contas | M |
-| 2.2 | **Ciclo vencido → cria chamado automaticamente** (Cloud Function agendada) | Brecha do FMX; hoje a "vencida" só atualiza quando alguém abre a tela | M |
-| 2.3 | **Alertas automáticos** (conta vence em 7/3/1 dias; chamado parado; ciclo perto de vencer) | Hoje depende de alguém olhar | M |
+| 2.2 | ✅ **Feito em parte (14/10)** ([17](17-alertas.md)): um clique abre o chamado do ciclo e concluir atualiza o ciclo; a criação sozinha (Cloud Function) fica para depois da venda — **Ciclo vencido → cria chamado automaticamente** (Cloud Function agendada) | Brecha do FMX; hoje a "vencida" só atualiza quando alguém abre a tela | M |
+| 2.3 | ✅ **Feito em parte (14/10)** ([17](17-alertas.md)): alertas no painel e no início da diretora, com ações; e-mail/celular ficam para depois da venda — **Alertas automáticos** (conta vence em 7/3/1 dias; chamado parado; ciclo perto de vencer) | Hoje depende de alguém olhar | M |
 | 2.4 | **Link do prestador** (sem conta) para ver a O.S., aceitar, atualizar status, anexar foto | Visibilidade do trabalho de terceiros (queixa do Fiix) | M |
 | 2.5 | **SLA por prioridade** (ex.: alta = 48h) com escalonamento | Governança | M |
 | 2.6 | Aprovação de **custos** em chamados acima de um valor | Controle financeiro | M |

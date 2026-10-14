@@ -69,6 +69,19 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Alertas que cobram (bloco E)
+
+- **Quadro "Precisa de atenção hoje"** no painel, do mais grave para o menos, com a ação de cada item (abrir chamado, "já foi feito" no ciclo, abrir chamado do ciclo, marcar conta como enviada, ver contas vencidas).
+- **Prazos por prioridade** para cobrar chamado pendente: Alta 2 dias, Média 5, Baixa 10. Novos alertas: prazo estourado, em andamento parado há 7 dias, ciclo perto de vencer, conta perto de vencer.
+- **Ciclo vencido → chamado → concluir atualiza o ciclo.**
+- **"Ciente, lembrar depois"** (1, 3 ou 7 dias), com a nova coleção `alertasAdiados` nas regras.
+- **Contador** no menu e na aba do navegador; **alertas da escola** no início da diretora.
+- **Regras publicadas** nos dois projetos antes do envio do código. Testes: 63 em `npm test`, 55 de regras.
+
+Detalhes em [17](17-alertas.md).
+
+---
+
 ## 14/10/2026 — Dados e fluxo dos chamados (bloco D)
 
 - **Competência** escolhida em mês e ano, sempre gravada como "Outubro/2026", com aviso quando está longe do vencimento; filtro em ordem de data.
