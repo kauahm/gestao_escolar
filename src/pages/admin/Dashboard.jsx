@@ -4,6 +4,8 @@ import { collection, doc, query } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
+import { useAlertas } from '../../contexts/AlertasContext';
+import PainelDeAlertas from '../../components/shared/PainelDeAlertas';
 import { formatarMoeda, formatarDataHora, dataPorExtenso, primeiroNome } from '../../utils/formatters';
 import { diasEmAberto, statusCiclo, situacaoConta, somarValores, diasAte, paraData, hojeZerado } from '../../utils/calcularStatus';
 
@@ -16,9 +18,8 @@ export default function AdminDashboard() {
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   
-  const [manutencoes, setManutencoes] = useState([]);
-  const [contas, setContas] = useState([]);
-  const [ciclos, setCiclos] = useState([]);
+  // Chamados, contas e ciclos já são lidos uma vez para os alertas (contexts/AlertasContext).
+  const { manutencoes, contas, ciclos, carregando: carregandoAlertas } = useAlertas();
   const [candidatos, setCandidatos] = useState([]);
   const [eventos, setEventos] = useState([]);
   const [backup, setBackup] = useState(undefined); // undefined = carregando
@@ -27,15 +28,6 @@ export default function AdminDashboard() {
     // Escutar todas as coleções necessárias em tempo real
     const unsubs = [];
 
-    unsubs.push(ouvir(collection(db, 'manutencoes'), snap => {
-      setManutencoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }));
-    unsubs.push(ouvir(collection(db, 'contas'), snap => {
-      setContas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }));
-    unsubs.push(ouvir(collection(db, 'ciclos'), snap => {
-      setCiclos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }));
     unsubs.push(ouvir(collection(db, 'candidatos'), snap => {
       setCandidatos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
@@ -104,49 +96,6 @@ export default function AdminDashboard() {
     };
   }, [manutencoes, contas, ciclos, candidatos]);
 
-  // Alertas Críticos
-  const alertas = useMemo(() => {
-    const itens = [];
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    // Contas vencidas: um alerta só, resumido (em vez de uma linha por conta)
-    if (metricas.contasVencidas.length > 0) {
-      const n = metricas.contasVencidas.length;
-      itens.push({
-        id: 'contas_vencidas',
-        tipo: 'conta',
-        texto: `${n} ${n === 1 ? 'conta vencida' : 'contas vencidas'} somando ${formatarMoeda(metricas.valorVencido)} ainda sem envio`,
-        link: '/admin/contas'
-      });
-    }
-
-    // Manutenções pendentes há mais de 5 dias (descrição resumida)
-    metricas.manutencoes.filter(m => m.status === 'Pendente' && diasEmAberto(m.criadoEm) > 5).forEach(m => {
-      const resumo = (m.descricao || '').length > 70 ? `${m.descricao.slice(0, 70)}…` : (m.descricao || '');
-      itens.push({ id: `man_${m.id}`, tipo: 'manutencao', texto: `Manutenção parada há ${diasEmAberto(m.criadoEm)} dias: ${m.escolaNome} — ${resumo}`, link: `/admin/manutencoes/${m.id}` });
-    });
-
-    // Ciclos vencidos
-    metricas.ciclos.forEach(c => {
-      const [ano, mes, dia] = c.proximaExecucao.split('-');
-      const pDate = new Date(ano, mes - 1, dia);
-      if (pDate < hoje) {
-        itens.push({ id: `cic_${c.id}`, tipo: 'ciclo', texto: `Ciclo vencido: ${c.tipo} na ${c.escolaNome}`, link: '/admin/ciclos' });
-      }
-    });
-
-    // Contas no prazo com vencimento <= 3 dias
-    metricas.contasNoPrazo.forEach(c => {
-      const diff = diasAte(c.vencimento);
-      if (diff !== null && diff >= 0 && diff <= 3) {
-        const quando = diff === 0 ? 'vence hoje' : (diff === 1 ? 'vence amanhã' : `vence em ${diff} dias`);
-        itens.push({ id: `con_${c.id}`, tipo: 'conta', texto: `Conta a enviar ${quando}: ${c.tipo === 'Outro' ? c.tipoCustomizado : c.tipo} - ${c.escolaNome}`, link: '/admin/contas' });
-      }
-    });
-
-    return itens;
-  }, [metricas]);
 
   // Estruturas de Listagens
   const getUltimasManutencoes = () => {
@@ -191,7 +140,7 @@ export default function AdminDashboard() {
     }).slice(0, 5);
   };
 
-  if (loading) {
+  if (loading || carregandoAlertas) {
     return (
       <div className="w-full space-y-6">
         <div className="h-20 bg-gray-200 animate-pulse rounded-lg"></div>
@@ -279,26 +228,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Alertas Críticos */}
-      <div className={`p-4 rounded-lg border ${alertas.length > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
-        <h3 className={`font-bold flex items-center gap-2 mb-2 ${alertas.length > 0 ? 'text-yellow-800' : 'text-green-800'}`}>
-          {alertas.length > 0 ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
-          {alertas.length > 0 ? 'Atenção: Itens Críticos' : 'Tudo em dia!'}
-        </h3>
-        {alertas.length > 0 ? (
-          <ul className="space-y-2">
-            {alertas.map(alerta => (
-              <li key={alerta.id} className="text-sm text-yellow-700 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-                <span>{alerta.texto}</span>
-                <Link to={alerta.link} className="text-yellow-800 font-medium hover:underline ml-1">Resolver &rarr;</Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-green-700">Nenhum item crítico no momento no sistema.</p>
-        )}
-      </div>
+      {/* O que precisa de atenção hoje, com a ação de cada item */}
+      <PainelDeAlertas />
 
       {/* Grid Principal de Tabelas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

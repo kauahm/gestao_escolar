@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import logoImg from '../../assets/logo-topo.png'; 
 import { TELAS, ROTULO_DO_PERFIL } from '../../config/telas';
+import { useAlertas } from '../../contexts/AlertasContext';
 import { 
   LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
   Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck 
@@ -10,6 +11,7 @@ import {
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
   const { userProfile, logout } = useAuth();
+  const { pendencias } = useAlertas();
   
   const isAdmin = userProfile?.perfil === 'admin';
   const isAdministrativo = userProfile?.perfil === 'administrativo';
@@ -90,6 +92,11 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
             >
               {link.icon}
               {link.label}
+              {link.to === '/admin/dashboard' && pendencias > 0 && (
+                <span className="ml-auto min-w-6 h-6 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center" aria-label={`${pendencias} pendências`}>
+                  {pendencias}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

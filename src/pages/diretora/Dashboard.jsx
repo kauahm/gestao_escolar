@@ -6,6 +6,7 @@ import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { formatarMoeda, formatarDataHora, dataPorExtenso, primeiroNome } from '../../utils/formatters';
 import { situacaoConta } from '../../utils/calcularStatus';
+import { calcularAlertas, GRAVIDADE } from '../../utils/alertas';
 
 // Ícones e Componentes UI
 import { 
@@ -63,6 +64,12 @@ export default function DiretoraDashboard() {
   };
 
   const dataAtualFormatada = dataPorExtenso(new Date());
+
+  // O que precisa de atenção na escola (mesmas regras do painel da administração).
+  const alertasDaEscola = useMemo(
+    () => calcularAlertas({ manutencoes, contas, ciclos }),
+    [manutencoes, contas, ciclos],
+  );
 
   // Métricas
   const metricas = useMemo(() => {
@@ -134,6 +141,31 @@ export default function DiretoraDashboard() {
           <Plus size={20} /> Solicitar Nova Manutenção
         </button>
       </div>
+
+      {alertasDaEscola.length > 0 && (
+        <section className="bg-white rounded-xl border border-amber-200 shadow-sm">
+          <h2 className="p-4 border-b border-amber-100 font-bold text-gray-900 flex items-center gap-2">
+            <AlertTriangle size={20} className="text-amber-500" /> Precisa de atenção ({alertasDaEscola.length})
+          </h2>
+          <ul className="divide-y divide-gray-100">
+            {alertasDaEscola.map((a) => (
+              <li key={a.chave} className="p-3 sm:px-4 flex items-start gap-3">
+                <span className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${a.gravidade === GRAVIDADE.CRITICO ? 'bg-red-500' : a.gravidade === GRAVIDADE.ATENCAO ? 'bg-amber-500' : 'bg-blue-500'}`} aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900">{a.titulo}</p>
+                  <p className="text-xs text-gray-600">
+                    {a.detalhe}
+                    {a.tipo === 'chamado' && ' · a administração também está vendo este atraso'}
+                  </p>
+                </div>
+                {a.tipo === 'chamado' && (
+                  <Link to="/diretora/manutencoes" className="text-xs font-medium text-primary hover:underline whitespace-nowrap">Ver chamado</Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

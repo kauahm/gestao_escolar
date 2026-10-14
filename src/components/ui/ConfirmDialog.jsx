@@ -1,12 +1,14 @@
 import React from 'react';
 import Modal from './Modal';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-export default function ConfirmDialog({ isOpen, onConfirm, onCancel, title, message }) {
+// tom="normal" para confirmações que não apagam nada (botão azul, ícone de confirmação).
+export default function ConfirmDialog({ isOpen, onConfirm, onCancel, title, message, tom = 'perigo', rotuloConfirmar = 'Confirmar' }) {
+  const perigo = tom === 'perigo';
   return (
     <Modal isOpen={isOpen} onClose={onCancel} title="Confirmação" size="sm">
       <div className="flex flex-col items-center text-center">
-        <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
+        {perigo ? <AlertTriangle className="w-12 h-12 text-red-500 mb-4" /> : <CheckCircle2 className="w-12 h-12 text-primary mb-4" />}
         <h4 className="text-lg font-semibold text-gray-900 mb-2">{title}</h4>
         <p className="text-gray-600 mb-6">{message}</p>
         
@@ -21,9 +23,9 @@ export default function ConfirmDialog({ isOpen, onConfirm, onCancel, title, mess
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none"
+            className={`px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md focus:outline-none ${perigo ? 'bg-red-600 hover:bg-red-700' : 'bg-primary hover:bg-primary-dark'}`}
           >
-            Confirmar
+            {rotuloConfirmar}
           </button>
         </div>
       </div>

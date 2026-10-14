@@ -93,7 +93,8 @@ export default function Contas() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEscola, setFilterEscola] = useState('Todas');
   const [filterTipo, setFilterTipo] = useState('Todos');
-  const [filterStatus, setFilterStatus] = useState('Todos');
+  // ?status=Vencida (vindo do alerta do painel) abre a tela já filtrada.
+  const [filterStatus, setFilterStatus] = useState(() => new URLSearchParams(window.location.search).get('status') || 'Todos');
   const [filterCompetencia, setFilterCompetencia] = useState('Todas');
 
   // Modais e Form

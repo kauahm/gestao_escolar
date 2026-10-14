@@ -14,6 +14,7 @@ import { diasEmAberto, diasAte } from '../../utils/calcularStatus';
 import { prestadorDoChamado, nomeDoResponsavel, responsavelNaoCadastrado } from '../../utils/responsavel';
 import { abrirWhatsAppDaOS, imprimirOrdemDeServico } from '../../utils/ordemDeServico';
 import { linhaDoTempoDoChamado } from '../../utils/linhaDoTempo';
+import { registrarExecucaoDoCicloPorId } from '../../services/acoesDosAlertas';
 
 import Badge from '../../components/ui/Badge';
 import Toast from '../../components/ui/Toast';
@@ -96,6 +97,14 @@ export default function ManutencaoDetalhe() {
         concluidoEm: novo === 'Concluído' ? serverTimestamp() : null,
         atualizadoEm: serverTimestamp(),
       });
+      // Chamado aberto a partir de um ciclo vencido: concluir registra a execução do ciclo.
+      if (novo === 'Concluído' && chamado.cicloId) {
+        const ciclo = await registrarExecucaoDoCicloPorId(chamado.cicloId);
+        if (ciclo) {
+          avisar(`Chamado concluído e ciclo atualizado: próximo serviço em ${ciclo.proxima.split('-').reverse().join('/')}.`);
+          return;
+        }
+      }
       avisar(`Status alterado para "${novo}".`);
     } catch (erro) {
       console.error(erro);

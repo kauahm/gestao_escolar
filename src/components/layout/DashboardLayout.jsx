@@ -1,19 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import AvisoDeConexao from '../shared/AvisoDeConexao';
+import { AlertasProvider, useAlertas } from '../../contexts/AlertasContext';
 import { NOME_DO_SISTEMA, nomeDaTela } from '../../config/telas';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 export default function DashboardLayout() {
+  return (
+    <AlertasProvider>
+      <Estrutura />
+    </AlertasProvider>
+  );
+}
+
+function Estrutura() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
 
   // Título da aba do navegador com o nome da tela (ex.: "Escolas · Gestão Escolar").
+  // Com pendências, o número aparece antes: "(7) Painel · Gestão Escolar".
+  const { pendencias } = useAlertas();
   useEffect(() => {
     const tela = nomeDaTela(pathname);
-    document.title = tela ? `${tela} · ${NOME_DO_SISTEMA}` : NOME_DO_SISTEMA;
-  }, [pathname]);
+    const base = tela ? `${tela} · ${NOME_DO_SISTEMA}` : NOME_DO_SISTEMA;
+    document.title = pendencias > 0 ? `(${pendencias}) ${base}` : base;
+  }, [pathname, pendencias]);
+  // Ao sair (logout), a aba volta ao nome do sistema, sem o contador.
+  useEffect(() => () => { document.title = NOME_DO_SISTEMA; }, []);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-clip">

@@ -593,6 +593,32 @@ describe('importação de planilhas', () => {
   });
 });
 
+describe('alertas adiados ("ciente, lembrar depois")', () => {
+  const adiar = (uid, extra = {}) => ({ ate: '2026-10-20', porUid: uid, porEmail: emailDe(uid), em: serverTimestamp(), ...extra });
+
+  test('admin adia, muda a data e cancela', async () => {
+    const bd = como('admin');
+    await assertSucceeds(setDoc(doc(bd, 'alertasAdiados', 'ciclo:k1'), adiar('admin')));
+    await assertSucceeds(setDoc(doc(bd, 'alertasAdiados', 'ciclo:k1'), adiar('admin', { ate: '2026-10-25' })));
+    await assertSucceeds(getDocs(collection(bd, 'alertasAdiados')));
+    await assertSucceeds(deleteDoc(doc(bd, 'alertasAdiados', 'ciclo:k1')));
+  });
+
+  test('data em formato errado, campo extra ou em nome de outro são recusados', async () => {
+    const bd = como('admin');
+    await assertFails(setDoc(doc(bd, 'alertasAdiados', 'x'), adiar('admin', { ate: '20/10/2026' })));
+    await assertFails(setDoc(doc(bd, 'alertasAdiados', 'x'), adiar('admin', { lixo: 1 })));
+    await assertFails(setDoc(doc(bd, 'alertasAdiados', 'x'), adiar('rh')));
+  });
+
+  test('RH e diretora não usam', async () => {
+    for (const uid of ['rh', 'diretoraA']) {
+      await assertFails(setDoc(doc(como(uid), 'alertasAdiados', 'x'), adiar(uid)));
+      await assertFails(getDocs(collection(como(uid), 'alertasAdiados')));
+    }
+  });
+});
+
 describe('admin: uso normal das telas', () => {
   test('lê todas as coleções que o painel, a agenda e a cópia de segurança usam', async () => {
     const bd = como('admin');
