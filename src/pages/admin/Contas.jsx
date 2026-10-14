@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
 import { useEstadoDasLeituras } from '../../hooks/useEstadoDasLeituras';
+import {
+  MESES, chave, partesDaCompetencia, competenciaDe, ordemDaCompetencia,
+  mesesEntreCompetenciaEVencimento, DISTANCIA_SUSPEITA_DE_COMPETENCIA,
+} from '../../importacao/normalizar';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -36,6 +40,45 @@ const initialFormState = {
   status: 'A enviar',
   observacoes: ''
 };
+
+/** Mês e ano da competência em seletores; grava sempre como "Outubro/2026". */
+function SeletorDeCompetencia({ valor, vencimento, erro, aoMudar }) {
+  const partes = partesDaCompetencia(valor);
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const anos = [];
+  for (let a = anoAtual - 5; a <= anoAtual + 1; a++) anos.push(a);
+  if (partes && !anos.includes(partes.ano)) anos.push(partes.ano);
+  anos.sort((a, b) => b - a);
+
+  const mudar = (mes, ano) => aoMudar(competenciaDe(mes || hoje.getMonth() + 1, ano || anoAtual));
+  const distancia = mesesEntreCompetenciaEVencimento(valor, vencimento);
+  const classe = `w-full px-3 py-2 border rounded-md outline-none focus:border-primary bg-white ${erro ? 'border-red-500' : 'border-gray-300'}`;
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-2">
+        <select aria-label="Mês da competência" value={partes?.mes || ''} onChange={(e) => mudar(Number(e.target.value), partes?.ano)} className={classe}>
+          <option value="" disabled>Mês</option>
+          {MESES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+        </select>
+        <select aria-label="Ano da competência" value={partes?.ano || ''} onChange={(e) => mudar(partes?.mes, Number(e.target.value))} className={classe}>
+          <option value="" disabled>Ano</option>
+          {anos.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+      </div>
+      {valor && !partes && (
+        <p className="text-amber-700 text-xs mt-1">O valor antigo "{valor}" não foi reconhecido. Escolha o mês e o ano.</p>
+      )}
+      {distancia !== null && Math.abs(distancia) > DISTANCIA_SUSPEITA_DE_COMPETENCIA && (
+        <p className="text-amber-700 text-xs mt-1">
+          A competência está a {Math.abs(distancia)} meses do vencimento. Confira se o mês ou o ano estão certos.
+        </p>
+      )}
+      {erro && <p className="text-red-500 text-xs mt-1">{erro}</p>}
+    </>
+  );
+}
 
 export default function Contas() {
   // Estados de dados
@@ -113,9 +156,21 @@ export default function Contas() {
   const showToast = (message, type = 'success') => setToast({ show: true, message, type });
 
   // Listas Dinâmicas para Filtros
+  // Tipos "Outro" já usados, para sugerir e evitar variações ("TAXA DE LICENÇA" x "Taxa de licença").
+  const tiposJaUsados = useMemo(() => {
+    const porChave = new Map();
+    contas.forEach(c => {
+      if (c.tipo === 'Outro' && c.tipoCustomizado && !porChave.has(chave(c.tipoCustomizado))) {
+        porChave.set(chave(c.tipoCustomizado), c.tipoCustomizado.trim());
+      }
+    });
+    return [...porChave.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [contas]);
+
   const competenciasDisponiveis = useMemo(() => {
     const unicas = [...new Set(contas.map(c => c.competencia).filter(Boolean))];
-    return unicas.sort(); // Ordenação simples alfabética (pode ser ajustada para data real se necessário)
+    // Mais recente primeiro (antes era em ordem alfabética: "Abril" antes de "Janeiro").
+    return unicas.sort((a, b) => ordemDaCompetencia(b) - ordemDaCompetencia(a));
   }, [contas]);
 
   // Filtragem
@@ -179,6 +234,8 @@ export default function Contas() {
         ...conta,
         // Registros antigos podem ter "Vencida" gravado; hoje isso é calculado.
         status: conta.status === 'Enviada' ? 'Enviada' : 'A enviar',
+        // Competência digitada à mão no passado ("ABRIL/2026", "MAIO/26") vira "Abril/2026".
+        competencia: partesDaCompetencia(conta.competencia)?.texto || conta.competencia || '',
       });
       setSelectedConta(conta);
     } else {
@@ -223,7 +280,8 @@ export default function Contas() {
   const validateForm = () => {
     const errors = {};
     if (!formData.escolaId) errors.escolaId = 'Selecione uma escola';
-    if (!formData.competencia.trim()) errors.competencia = 'Competência é obrigatória';
+    if (!formData.competencia.trim()) errors.competencia = 'Escolha o mês e o ano da competência';
+    else if (!partesDaCompetencia(formData.competencia)) errors.competencia = 'Escolha o mês e o ano da competência';
     if (!formData.valor || Number(formData.valor) <= 0) errors.valor = 'Valor inválido';
     if (!formData.vencimento) errors.vencimento = 'Vencimento é obrigatório';
     if (formData.tipo === 'Outro' && !formData.tipoCustomizado.trim()) {
@@ -243,6 +301,9 @@ export default function Contas() {
       const dataToSave = {
         ...formData,
         valor: Number(formData.valor),
+        tipoCustomizado: formData.tipo === 'Outro'
+          ? (tiposJaUsados.find(t => chave(t) === chave(formData.tipoCustomizado)) || formData.tipoCustomizado.trim())
+          : '',
         // Só existem dois status gravados: "A enviar" e "Enviada".
         status: formData.status === 'Enviada' ? 'Enviada' : 'A enviar',
         atualizadoEm: serverTimestamp()
@@ -528,14 +589,24 @@ export default function Contas() {
             {formData.tipo === 'Outro' && (
               <div className="col-span-2 sm:col-span-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Especifique o tipo *</label>
-                <input type="text" name="tipoCustomizado" value={formData.tipoCustomizado} onChange={handleInputChange} className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.tipoCustomizado ? 'border-red-500' : 'border-gray-300'}`} placeholder="Ex: Internet" />
+                <input type="text" name="tipoCustomizado" list="tipos-ja-usados" value={formData.tipoCustomizado} onChange={handleInputChange} className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.tipoCustomizado ? 'border-red-500' : 'border-gray-300'}`} placeholder="Ex.: Internet" />
+                <datalist id="tipos-ja-usados">
+                  {tiposJaUsados.map(t => <option key={t} value={t} />)}
+                </datalist>
                 {formErrors.tipoCustomizado && <p className="text-red-500 text-xs mt-1">{formErrors.tipoCustomizado}</p>}
               </div>
             )}
             <div className={formData.tipo === 'Outro' ? "col-span-2" : "col-span-2 sm:col-span-1"}>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mês de Competência *</label>
-              <input type="text" name="competencia" value={formData.competencia} onChange={handleInputChange} placeholder="Ex: Abril/2025" className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.competencia ? 'border-red-500' : 'border-gray-300'}`} />
-              {formErrors.competencia && <p className="text-red-500 text-xs mt-1">{formErrors.competencia}</p>}
+              <SeletorDeCompetencia
+                valor={formData.competencia}
+                vencimento={formData.vencimento}
+                erro={formErrors.competencia}
+                aoMudar={(valor) => {
+                  setFormData(prev => ({ ...prev, competencia: valor }));
+                  if (formErrors.competencia) setFormErrors(prev => ({ ...prev, competencia: '' }));
+                }}
+              />
             </div>
           </div>
 

@@ -39,6 +39,17 @@ const nomeDaColecao = (ref) => (ref.type === 'collection' ? ref.id : ref.parent.
 
 export { tituloDoRegistro };
 
+/**
+ * As telas montam o formulário copiando o registro inteiro, inclusive o `id`
+ * (que é o nome do documento, não um campo dele). Sem este filtro, editar um
+ * registro gravava um campo "id" dentro do próprio documento.
+ */
+const semId = (dados = {}) => {
+  if (!dados || typeof dados !== 'object' || !('id' in dados)) return dados;
+  const { id, ...resto } = dados; // eslint-disable-line no-unused-vars
+  return resto;
+};
+
 /** Remove sentinelas do Firebase (ex.: serverTimestamp) para guardar no histórico. */
 const limparParaHistorico = (dados = {}) => {
   const saida = {};
@@ -88,7 +99,8 @@ const registrar = async (entrada) => {
 // Mesmas assinaturas do Firebase
 // ---------------------------------------------------------------------------
 
-export async function addDoc(collectionRef, dados) {
+export async function addDoc(collectionRef, dadosRecebidos) {
+  const dados = semId(dadosRecebidos);
   const ref = await fbAddDoc(collectionRef, dados);
   const limpo = limparParaHistorico(dados);
   registrar({
@@ -102,7 +114,8 @@ export async function addDoc(collectionRef, dados) {
   return ref;
 }
 
-export async function setDoc(docRef, dados, opcoes) {
+export async function setDoc(docRef, dadosRecebidos, opcoes) {
+  const dados = semId(dadosRecebidos);
   let anterior = null;
   try {
     const snap = await getDoc(docRef);
@@ -125,7 +138,8 @@ export async function setDoc(docRef, dados, opcoes) {
   });
 }
 
-export async function updateDoc(docRef, dados) {
+export async function updateDoc(docRef, dadosRecebidos) {
+  const dados = semId(dadosRecebidos);
   // Lê o estado anterior para o histórico mostrar "era X, ficou Y".
   let anterior = {};
   try {

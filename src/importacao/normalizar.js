@@ -168,3 +168,36 @@ export const somarDias = (ymd, dias) => {
   const r = new Date(a, m - 1, d + Number(dias));
   return formatarYmd(r.getFullYear(), r.getMonth() + 1, r.getDate());
 };
+
+// ------------------------------------------------------------ competência ----
+
+/** "Outubro/2026" (ou qualquer formato aceito em competencia()) -> { mes: 10, ano: 2026, texto }. */
+export const partesDaCompetencia = (valor) => {
+  const r = competencia(valor);
+  if (!r.valor) return null;
+  const [nome, ano] = r.valor.split('/');
+  return { mes: MESES.indexOf(nome) + 1, ano: Number(ano), texto: r.valor };
+};
+
+export const competenciaDe = (mes, ano) => `${MESES[mes - 1]}/${ano}`;
+
+/** Número para ordenar competências por data (as que não forem reconhecidas vão para o fim). */
+export const ordemDaCompetencia = (valor) => {
+  const p = partesDaCompetencia(valor);
+  return p ? p.ano * 12 + p.mes : -Infinity;
+};
+
+/**
+ * Quantos meses separam a competência do mês do vencimento (positivo = vence depois).
+ * null se faltar algum dos dois.
+ */
+export const mesesEntreCompetenciaEVencimento = (comp, vencimentoYmd) => {
+  const p = partesDaCompetencia(comp);
+  if (!p || !vencimentoYmd) return null;
+  const [a, m] = String(vencimentoYmd).split('-').map(Number);
+  if (!a || !m) return null;
+  return (a * 12 + m) - (p.ano * 12 + p.mes);
+};
+
+/** Distância (em meses) a partir da qual a competência provavelmente foi digitada errada. */
+export const DISTANCIA_SUSPEITA_DE_COMPETENCIA = 3;

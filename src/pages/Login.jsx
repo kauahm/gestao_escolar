@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Mail, Lock } from 'lucide-react';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Toast from '../components/ui/Toast';
+import EsqueciSenha from '../components/shared/EsqueciSenha';
 
 // Importe a sua logo
 import logoImg from '../assets/logo-topo.png'; 
@@ -14,6 +15,7 @@ export default function Login() {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [esqueciAberto, setEsqueciAberto] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -31,7 +33,12 @@ export default function Login() {
       await login(email, senha);
       navigate('/');
     } catch (err) {
-      setError('E-mail ou senha incorretos.');
+      const mensagens = {
+        'auth/network-request-failed': 'Sem conexão com a internet. Confira a conexão e tente de novo.',
+        'auth/too-many-requests': 'Muitas tentativas seguidas. Espere alguns minutos ou use "Esqueci minha senha".',
+        'auth/user-disabled': 'Esta conta está desativada. Fale com a administração.',
+      };
+      setError(mensagens[err?.code] || 'E-mail ou senha incorretos.');
       setLoading(false);
     }
   };
@@ -40,6 +47,7 @@ export default function Login() {
     // Container Principal: Agora ocupa 100% da tela (h-screen w-full) sem margens
     <div className="h-screen w-full relative overflow-hidden bg-white font-sans flex flex-col md:block">
       {error && <Toast message={error} type="error" onClose={() => setError('')} />}
+      <EsqueciSenha isOpen={esqueciAberto} onClose={() => setEsqueciAberto(false)} emailInicial={email} />
       
       {/* === MODO MOBILE: Botão no topo === */}
       <div className="md:hidden absolute top-0 left-0 w-full z-30 bg-primary p-4 text-center text-white shadow-md">
@@ -128,6 +136,13 @@ export default function Login() {
           >
             {loading ? <LoadingSpinner size="sm" color="text-white" /> : 'Entrar no Sistema'}
           </button>
+          <button
+            type="button"
+            onClick={() => setEsqueciAberto(true)}
+            className="w-full text-center text-sm text-primary hover:underline"
+          >
+            Esqueci minha senha
+          </button>
         </form>
       </div>
 
@@ -170,6 +185,13 @@ export default function Login() {
             className="w-full bg-primary text-white font-bold py-3 rounded-full hover:bg-primary-dark transition-colors uppercase text-xs tracking-wider mt-4"
           >
             {loading ? <LoadingSpinner size="sm" color="text-white" /> : 'Acessar Portal'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEsqueciAberto(true)}
+            className="w-full text-center text-sm text-primary hover:underline"
+          >
+            Esqueci minha senha
           </button>
         </form>
       </div>

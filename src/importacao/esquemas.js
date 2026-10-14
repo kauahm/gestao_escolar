@@ -162,6 +162,10 @@ const contas = {
     if (!valor.erro && (valor.valor === null || valor.valor <= 0)) r.erros.push('Valor precisa ser maior que zero');
     aplicar(r, 'vencimento', 'Vencimento', n.data, linha.vencimento);
     if (!r.erros.some((e) => e.startsWith('Vencimento'))) exigir(r, 'vencimento', 'Vencimento');
+    const distancia = n.mesesEntreCompetenciaEVencimento(r.dados.competencia, r.dados.vencimento);
+    if (distancia !== null && Math.abs(distancia) > n.DISTANCIA_SUSPEITA_DE_COMPETENCIA) {
+      r.avisos.push(`competência ${r.dados.competencia} a ${Math.abs(distancia)} meses do vencimento (confira)`);
+    }
     r.dados.numeroDocumento = n.texto(linha.numeroDocumento);
     const status = n.chave(linha.status);
     r.dados.status = ['enviada', 'enviado', 'paga', 'pago', 'sim', 'quitada'].includes(status) ? 'Enviada' : 'A enviar';

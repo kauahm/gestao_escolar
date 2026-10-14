@@ -124,7 +124,7 @@ export default function AdminDashboard() {
     // Manutenções pendentes há mais de 5 dias (descrição resumida)
     metricas.manutencoes.filter(m => m.status === 'Pendente' && diasEmAberto(m.criadoEm) > 5).forEach(m => {
       const resumo = (m.descricao || '').length > 70 ? `${m.descricao.slice(0, 70)}…` : (m.descricao || '');
-      itens.push({ id: `man_${m.id}`, tipo: 'manutencao', texto: `Manutenção parada há ${diasEmAberto(m.criadoEm)} dias: ${m.escolaNome} — ${resumo}`, link: '/admin/manutencoes' });
+      itens.push({ id: `man_${m.id}`, tipo: 'manutencao', texto: `Manutenção parada há ${diasEmAberto(m.criadoEm)} dias: ${m.escolaNome} — ${resumo}`, link: `/admin/manutencoes/${m.id}` });
     });
 
     // Ciclos vencidos

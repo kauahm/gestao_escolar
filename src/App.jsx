@@ -17,8 +17,10 @@ import Usuarios from './pages/admin/Usuarios';
 import BancoTalentos from './pages/admin/BancoTalentos';
 import Prestadores from './pages/admin/Prestadores';
 import Seguranca from './pages/admin/Seguranca';
+import ManutencaoDetalhe from './pages/admin/ManutencaoDetalhe';
 
 import DiretoraDashboard from './pages/diretora/Dashboard';
+import MeusChamados from './pages/diretora/MeusChamados';
 import { EH_DEMO, DEMO_MAL_CONFIGURADA } from './services/ambiente';
 import FalhaNoPerfil from './components/shared/FalhaNoPerfil';
 
@@ -81,6 +83,7 @@ export default function App() {
             <Route path="dashboard" element={<PrivateRoute allowedRoles={['admin']}><AdminDashboard /></PrivateRoute>} />
             <Route path="escolas" element={<PrivateRoute allowedRoles={['admin']}><Escolas /></PrivateRoute>} />
             <Route path="manutencoes" element={<PrivateRoute allowedRoles={['admin']}><AdminManutencoes /></PrivateRoute>} />
+            <Route path="manutencoes/:id" element={<PrivateRoute allowedRoles={['admin']}><ManutencaoDetalhe /></PrivateRoute>} />
             <Route path="prestadores" element={<PrivateRoute allowedRoles={['admin']}><Prestadores /></PrivateRoute>} />
             <Route path="contas" element={<PrivateRoute allowedRoles={['admin']}><Contas /></PrivateRoute>} />
             <Route path="ciclos" element={<PrivateRoute allowedRoles={['admin']}><Ciclos /></PrivateRoute>} />
@@ -93,6 +96,7 @@ export default function App() {
 
           <Route path="/diretora" element={<PrivateRoute allowedRoles={['diretora']}><DashboardLayout /></PrivateRoute>}>
             <Route path="dashboard" element={<DiretoraDashboard />} />
+            <Route path="manutencoes" element={<MeusChamados />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

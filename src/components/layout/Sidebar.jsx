@@ -35,7 +35,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
 
   const diretoraLinks = [
     { to: '/diretora/dashboard', icon: <LayoutDashboard size={20} />, label: TELAS['/diretora/dashboard'] },
-    { to: '/diretora/manutencoes', icon: <Wrench size={20} />, label: 'Solicitar Manutenção' },
+    { to: '/diretora/manutencoes', icon: <Wrench size={20} />, label: TELAS['/diretora/manutencoes'] },
   ];
 
   let links = [];

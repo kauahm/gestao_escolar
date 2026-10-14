@@ -35,6 +35,8 @@ const DE_PORTUGAL = [
   [/\bactualiza/i, 'atualiza...'],
   [/\bmorada\b/i, 'endereço'],
   [/\bsecção\b/i, 'seção'],
+  [/\bavari(a|ou|ado|ada)\b/i, 'quebrou / com defeito'],
+  [/\breparaç(ão|ões)\b/i, 'conserto(s)'],
 ];
 
 describe('português do Brasil na interface', () => {

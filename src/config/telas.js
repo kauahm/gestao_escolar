@@ -16,10 +16,15 @@ export const TELAS = {
   '/admin/usuarios': 'Usuários',
   '/admin/seguranca': 'Segurança dos dados',
   '/diretora/dashboard': 'Início',
+  '/diretora/manutencoes': 'Meus chamados',
 };
 
 /** Nome da tela de um endereço (ou null, se não for uma tela conhecida). */
-export const nomeDaTela = (caminho = '') => TELAS[caminho.replace(/\/+$/, '')] || null;
+export const nomeDaTela = (caminho = '') => {
+  const limpo = caminho.replace(/\/+$/, '');
+  // Endereço com identificador (ex.: /admin/manutencoes/abc123): usa o nome da tela de cima.
+  return TELAS[limpo] || TELAS[limpo.replace(/\/[^/]+$/, '')] || null;
+};
 
 export const ROTULO_DO_PERFIL = {
   admin: 'Administração',

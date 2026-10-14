@@ -249,6 +249,7 @@ describe('diretora: abertura de chamado', () => {
 
   test('já atribuído a alguém ou com data forjada é recusado', async () => {
     await assertFails(abrir(chamadoDaDiretora({ responsavel: 'Meu cunhado' })));
+    await assertFails(abrir(chamadoDaDiretora({ responsavelId: 'p1' })));
     await assertFails(abrir(chamadoDaDiretora({ criadoEm: new Date('2020-01-01') })));
     await assertFails(abrir(chamadoDaDiretora({ atualizadoEm: new Date('2020-01-01') })));
   });

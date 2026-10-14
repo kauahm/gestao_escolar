@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
-// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
-import { addDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { formatarMoeda, formatarDataHora, dataPorExtenso, primeiroNome } from '../../utils/formatters';
@@ -13,17 +11,10 @@ import { situacaoConta } from '../../utils/calcularStatus';
 import { 
   Wrench, RefreshCcw, Receipt, Plus, ArrowRight, MapPin, CheckCircle, AlertTriangle 
 } from 'lucide-react';
-import Modal from '../../components/ui/Modal';
+import SolicitarManutencao from '../../components/shared/SolicitarManutencao';
 import Toast from '../../components/ui/Toast';
 import Badge from '../../components/ui/Badge';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
-const initialFormState = {
-  descricao: '',
-  localDentroEscola: '',
-  prioridade: 'Média',
-  observacoes: ''
-};
 
 export default function DiretoraDashboard() {
   const { userProfile, currentUser } = useAuth();
@@ -35,9 +26,6 @@ export default function DiretoraDashboard() {
 
   // Estados do Modal
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [formData, setFormData] = useState(initialFormState);
-  const [formErrors, setFormErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
@@ -111,50 +99,6 @@ export default function DiretoraDashboard() {
       .slice(0, 5);
   };
 
-  // Handlers do Modal de Manutenção (Reaproveitado)
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }));
-  };
-
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.descricao.trim()) errors.descricao = 'A descrição do problema é obrigatória';
-    if (!formData.localDentroEscola.trim()) errors.localDentroEscola = 'Informe o local exato na escola';
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    try {
-      const dataToSave = {
-        ...formData,
-        escolaId: userProfile.unidadeId,
-        escolaNome: userProfile.unidadeNome,
-        responsavel: 'A definir',
-        status: 'Pendente',
-        solicitadaPor: currentUser.uid,
-        solicitadaPorNome: userProfile.nome,
-        criadoEm: serverTimestamp(),
-        atualizadoEm: serverTimestamp(),
-      };
-
-      await addDoc(collection(db, 'manutencoes'), dataToSave);
-      showToast('Solicitação enviada com sucesso! Aguarde o retorno da administração.');
-      setIsFormModalOpen(false);
-      setFormData(initialFormState);
-    } catch (error) {
-      console.error("Erro ao enviar solicitação:", error);
-      showToast('Erro ao enviar solicitação. Tente novamente.', 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -309,75 +253,7 @@ export default function DiretoraDashboard() {
         </div>
       </div>
 
-      {/* Modal: Nova Solicitação (Reaproveitado do Prompt 3) */}
-      <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} title="Nova Solicitação de Manutenção" size="md">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-blue-50 p-3 rounded-md mb-4 border border-blue-100">
-            <p className="text-sm text-blue-800 flex items-center gap-2">
-              <MapPin size={16} /> Solicitando para: <strong>{userProfile?.unidadeNome}</strong>
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Local exato na escola *</label>
-            <input 
-              type="text" 
-              name="localDentroEscola" 
-              value={formData.localDentroEscola} 
-              onChange={handleInputChange} 
-              placeholder="Ex.: banheiro das crianças, cozinha, sala 4..." 
-              className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.localDentroEscola ? 'border-red-500' : 'border-gray-300'}`} 
-            />
-            {formErrors.localDentroEscola && <p className="text-red-500 text-xs mt-1">{formErrors.localDentroEscola}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descrição detalhada do problema *</label>
-            <textarea 
-              name="descricao" 
-              value={formData.descricao} 
-              onChange={handleInputChange} 
-              rows="4" 
-              placeholder="Descreva o que se avariou, deixou de funcionar ou necessita de reparação..." 
-              className={`w-full px-3 py-2 border rounded-md outline-none resize-none focus:border-primary ${formErrors.descricao ? 'border-red-500' : 'border-gray-300'}`}
-            ></textarea>
-            {formErrors.descricao && <p className="text-red-500 text-xs mt-1">{formErrors.descricao}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade sugerida *</label>
-            <select 
-              name="prioridade" 
-              value={formData.prioridade} 
-              onChange={handleInputChange} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary"
-            >
-              <option value="Baixa">Baixa - Pode aguardar</option>
-              <option value="Média">Média - Necessita de atenção em breve</option>
-              <option value="Alta">Alta - Urgente / Impede atividades</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Observações adicionais (Opcional)</label>
-            <textarea 
-              name="observacoes" 
-              value={formData.observacoes} 
-              onChange={handleInputChange} 
-              rows="2" 
-              placeholder="Horário preferencial de atendimento, aviso sobre alunos na sala..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none resize-none focus:border-primary"
-            ></textarea>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-            <button type="button" onClick={() => setIsFormModalOpen(false)} className="px-4 py-2 text-sm text-gray-700 border rounded-md hover:bg-gray-50">Cancelar</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-sm text-white bg-primary rounded-md hover:bg-primary-dark w-40 flex justify-center">
-              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Enviar Solicitação'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <SolicitarManutencao isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} onEnviado={showToast} />
 
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
     </div>
