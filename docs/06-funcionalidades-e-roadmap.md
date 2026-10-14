@@ -54,14 +54,14 @@ Sem isso, nada mais importa: um erro de segurança numa demo com dados reais cus
 ### Fase 1 — "Uau" para a sede (demonstração)
 | # | Item | Por quê | Esforço |
 |---|---|---|---|
-| 1.1 | **Design system** novo (tokens, componentes, tema claro/escuro) | [05](05-referencias-de-design.md) | G |
+| 1.1 | ✅ **Feito em parte (14/10)** ([18](18-design.md)): base visual, cores, fonte e acessibilidade; tema escuro e componentes padronizados ficam para depois — **Design system** novo (tokens, componentes, tema claro/escuro) | [05](05-referencias-de-design.md) | G |
 | 1.2 | **Painel da sede**: número-estrela, "precisa de atenção hoje" com ação direta, visão por unidade | Quem decide a compra olha isto primeiro | G |
 | 1.3 | **Município → Contrato → Unidade** no modelo de dados | A AEMC atua em ~16 municípios ([02](02-associacao-aemc.md)) | G |
 | 1.4 | **Relatório mensal de prestação de contas** (por contrato, por categoria; PDF/Excel) | Maior dor e maior brecha de mercado ([04](04-pesquisa-de-mercado.md)) | G |
 | 1.5 | **Chamado com foto** + linha do tempo + comentários | Padrão de mercado, grande ganho de clareza | M |
-| 1.6 | **Início da diretora** simplificado, mobile-first | Garantir adoção nas escolas | M |
+| 1.6 | ✅ **Feito (14/10)** ([16](16-dados-e-fluxo-dos-chamados.md), [18](18-design.md)) — **Início da diretora** simplificado, mobile-first | Garantir adoção nas escolas | M |
 | 1.7 | Busca global (Ctrl+K) e filtros salvos | Sensação de produto maduro | M |
-| 1.8 | Responsivo/PWA instalável | Diretora usa o celular | M |
+| 1.8 | ✅ **Feito em parte (14/10)** ([18](18-design.md)): instalável na tela inicial; sem modo offline — Responsivo/PWA instalável | Diretora usa o celular | M |
 
 ### Fase 2 — Fluxos que o dia a dia exige
 | # | Item | Por quê | Esforço |

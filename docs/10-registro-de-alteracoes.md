@@ -69,6 +69,20 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Design e polimento (bloco F)
+
+- **Base visual** para todas as telas: fonte Inter, cinzas azulados, escala do azul da marca, sombras suaves, foco visível no teclado, 83 rótulos com maiúsculas corrigidas, esqueletos de carregamento.
+- **Login** mais limpo e, no celular, abrindo direto na área da escola; **painel** com cartões clicáveis; **menu** que cabe na tela.
+- **Celular da diretora:** barra inferior com o botão "Pedir manutenção".
+- **Instalável no celular** (ícone próprio e manifesto), sem cache offline, de propósito.
+- **Acessibilidade:** auditoria com axe em todas as telas; zero violações fora da biblioteca do calendário (Agenda).
+- **Defeito corrigido:** o cartão "Entrevistas do mês" do painel lia uma coleção vazia e mostrava sempre 0.
+- Prints de antes e depois em `docs/design/`.
+
+Detalhes em [18](18-design.md).
+
+---
+
 ## 14/10/2026 — Alertas que cobram (bloco E)
 
 - **Quadro "Precisa de atenção hoje"** no painel, do mais grave para o menos, com a ação de cada item (abrir chamado, "já foi feito" no ciclo, abrir chamado do ciclo, marcar conta como enviada, ver contas vencidas).
