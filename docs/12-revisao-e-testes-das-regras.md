@@ -35,7 +35,7 @@ Nenhum é brecha entre perfis. São endurecimentos e pontos de atenção. T1, T2
 | T2 | `historico`: qualquer usuário ativo cria linhas com qualquer conteúdo e tamanho (só `porUid`, `acao` e `colecao` são conferidos) | Baixo: uma conta mal-intencionada poderia poluir o histórico | ✅ **Feito:** lista fechada de campos, hora do servidor, e-mail igual ao do login, limites de tamanho. O conteúdo de `antes`/`depois` continua sem limite |
 | T3 | Admin pode apagar direto, sem passar pela lixeira, se usar outra ferramenta que não o app | Baixo: no app toda exclusão passa por `db.js` | Aceitar; as regras não conseguem amarrar a exclusão à cópia sem custo extra |
 | T4 | Um admin pode desativar a si mesmo ou o último admin, ficando sem ninguém para reativar | Médio para o uso real | ✅ **Feito:** a tela de Usuários impede desativar a própria conta (o último admin ativo é sempre quem está logado). Pelo console do Firebase ainda é possível |
-| T5 | Conta sem documento em `/usuarios` fica presa numa tela de carregamento eterna, em vez de ver uma mensagem | Baixo (experiência) | Tratar junto com os estados de erro (bloco C) |
+| T5 | Conta sem documento em `/usuarios` fica presa numa tela de carregamento eterna, em vez de ver uma mensagem | Baixo (experiência) | ✅ **Feito (14/10):** a tela explica a conta sem perfil (com o UID); falha de conexão ao ler o perfil tem outra tela ([15](15-textos-e-estados-de-tela.md)) |
 | T6 | Cada operação lê o perfil do usuário (`get`), o que consome leituras da cota gratuita | Conhecido (R3 em [09](09-auditoria-de-seguranca-e-infraestrutura.md)) | *Custom claims*, depois da venda |
 
 ## 4. Testes

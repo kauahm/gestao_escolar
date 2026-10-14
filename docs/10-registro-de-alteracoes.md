@@ -69,6 +69,20 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Textos em PT-BR e estados de tela (item 0.6)
+
+- **Português do Brasil** em todos os textos encontrados, com um teste que barra palavras de Portugal no código.
+- **Um nome por tela** (`src/config/telas.js`): menu, barra superior ("Gestão Escolar › Escolas") e aba do navegador; perfil em português (Administração, RH, Diretora).
+- **Data e saudação:** "Terça-feira, 13 de outubro de 2026" e "Boa tarde, Alessandra!".
+- **Estados vazios** com título, explicação e botões, separando "ainda não há cadastros" (com Importar planilha) de "nada com estes filtros" (com Limpar filtros).
+- **Quando os dados não chegam:** aviso no alto da tela (sem internet, sem servidor, sem permissão, demorando) e, principalmente, **a tela não diz mais "nenhum cadastro" quando o problema é a conexão**. Antes, com o servidor fora do ar, a tela de contas afirmava "Nenhuma conta registrada".
+- **Login sem conexão** mostra "Não foi possível carregar o seu perfil... seus dados continuam guardados", separado de "perfil não encontrado".
+- **Testes:** 42 em `npm test`; conferência na tela no emulador, inclusive desligando e religando o servidor.
+
+Detalhes em [15](15-textos-e-estados-de-tela.md).
+
+---
+
 ## 14/10/2026 — Importação de planilhas (item 0.7)
 
 - **Botão "Importar planilha"** em Escolas, Contas a pagar, Ciclos e Banco de Talentos: modelo para baixar, envio de Excel ou CSV, conferência das colunas, pré-visualização com cada linha marcada como pronta, com aviso ou com erro, relatório para corrigir e **desfazer a importação inteira** (vai para a lixeira).

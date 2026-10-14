@@ -63,16 +63,16 @@
 
 | # | Achado | Proposta |
 |---|---|---|
-| V1 | **Títulos duplicados e diferentes**: barra superior diz "Gestão de Escolas", "Sistema de Gestão", "Ciclos Periódicos", "Agenda Escolar", "Gestão de Usuários"; o título da página diz "Escolas", "Prestadores de Serviço", "Controle de Ciclos"… | Um título por tela; barra superior com **migalhas** e busca global |
-| V2 | **Data com maiúsculas indevidas**: "Terça-Feira, 13 De Outubro De 2026" | "terça-feira, 13 de outubro de 2026" |
-| V3 | **Saudação usa nome completo** ("Boa noite, Alessandra Martins!") | Primeiro nome |
+| V1 | ✅ Feito em 14/10 ([15](15-textos-e-estados-de-tela.md)). **Títulos duplicados e diferentes**: barra superior diz "Gestão de Escolas", "Sistema de Gestão", "Ciclos Periódicos", "Agenda Escolar", "Gestão de Usuários"; o título da página diz "Escolas", "Prestadores de Serviço", "Controle de Ciclos"… | Um título por tela; barra superior com **migalhas** e busca global |
+| V2 | ✅ Feito em 14/10 ([15](15-textos-e-estados-de-tela.md)). **Data com maiúsculas indevidas**: "Terça-Feira, 13 De Outubro De 2026" | "terça-feira, 13 de outubro de 2026" |
+| V3 | ✅ Feito em 14/10 ([15](15-textos-e-estados-de-tela.md)). **Saudação usa nome completo** ("Boa noite, Alessandra Martins!") | Primeiro nome |
 | V4 | **Painel sem hierarquia**: quatro cartões iguais, uma caixa amarela com texto longo; sem número-estrela, tendência, visão por escola ou gráfico | Painel da sede ([05](05-referencias-de-design.md)): 1 indicador principal, lista "precisa de atenção" com ação, ranking de unidades |
 | V5 | **Caixa de alerta com o texto inteiro de uma descrição** (linhas e linhas) | Resumir (título + local + dias) e abrir o detalhe |
 | V6 | **Escolas**: nomes em CAIXA ALTA e truncados com "…" (ex.: "E.E.I DAVID MIGUEL LINARDI…"); "Não informado" repetido em todo cartão | Cartão com **mini-status da escola** (chamados abertos, contas, ciclos) em vez de campos vazios; nome completo ao passar o mouse; padronizar caixa |
 | V7 | **Barra lateral**: o item **Usuários** não aparece sem rolar a própria barra (em tela de ~760px de altura); o logo tem o texto "Associação Educacional" quase ilegível | Agrupar menu (Operação / Pessoas / Administração), fixar itens, versão compacta do logo |
 | V8 | **Tabelas**: Contas lista 20 linhas sem agrupamento, todas com o mesmo selo "Vencida", sem destaque por valor ou dias de atraso; ícones de ação (olho, lápis, lixeira vermelha) sempre visíveis | Ordenar por urgência, agrupar por unidade ou mês, ações em menu "⋯", seleção em lote |
 | V9 | **Usuários**: ícones de ação (chave, lápis, desligar) sem rótulo visível; "Acesso Geral" em itálico cinza | Rótulos/tooltips e selos de perfil mais claros |
-| V10 | **Estados vazios fracos** (Banco de Talentos, Processo Seletivo, Prestadores): só texto cinza (Prestadores tem botão) | Estados vazios que ensinam o próximo passo, com ilustração e botão "Importar planilha" |
+| V10 | ✅ Feito em 14/10 ([15](15-textos-e-estados-de-tela.md)). **Estados vazios fracos** (Banco de Talentos, Processo Seletivo, Prestadores): só texto cinza (Prestadores tem botão) | Estados vazios que ensinam o próximo passo, com ilustração e botão "Importar planilha" |
 | V11 | **Ciclos**: bom agrupamento por unidade/tipo, mas os contadores do topo são minúsculos e a ação "Hoje" não é autoexplicativa | Cartões de resumo maiores; botão "Marcar como feito" com data |
 
 ### 3.4 Média: celular (simulado a 390px)
