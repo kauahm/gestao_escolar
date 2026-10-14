@@ -44,11 +44,7 @@ As travas 4 e 5 e a restauração completa estão cobertas por testes automatiza
 
 ## 4. Passo a passo para criar o projeto
 
-**Situação em 14/10/2026:** o projeto `gestao-escolar-demo` já foi criado (plano Spark, sem Gemini e sem Analytics). Estão **feitos** os passos 1, 2, 3, 4, 6 e 8. **Faltam** três coisas, que dependem de você:
-
-- **Passo 5:** o arquivo `.env.demo` já existe na pasta do projeto com tudo preenchido, **menos a chave de API**. Copie o valor de `apiKey` em *Configurações do projeto → Seus aplicativos → Gestao Escolar Demo* e cole na linha `VITE_FIREBASE_API_KEY=`.
-- **Passo 7:** criar o primeiro administrador (envolve escolher uma senha).
-- **Passos 9 e 10:** entrar, restaurar os dados e criar a diretora e o RH de demonstração.
+**Situação em 14/10/2026: ambiente pronto e conferido.** O projeto `gestao-escolar-demo` foi criado no plano Spark (sem Gemini e sem Analytics), todos os passos abaixo foram concluídos e a restauração foi feita na tela, gravando os 118 registros fictícios esperados. Falta apenas o passo 10 (diretora e RH de demonstração), se ainda não tiver sido feito.
 
 O roteiro completo fica abaixo como referência. Nada aqui pede cartão de crédito.
 
@@ -85,7 +81,7 @@ O endereço fica no formato `https://gestao-escolar-demo.web.app`. **Atenção:*
 
 ## 6. Limites e pontos a confirmar
 
-- **Não testei no navegador a restauração contra um projeto Firebase de verdade**, porque o projeto de demonstração ainda não existe. A lógica e as regras foram testadas no emulador local; o selo foi conferido no navegador em modo demonstração.
+- A restauração foi conferida na tela em 14/10/2026, contra o projeto real de demonstração: 118 registros fictícios gravados, lixeira e histórico zerados.
 - A restauração apaga e grava cerca de 120 registros por vez, bem abaixo da cota diária gratuita (20 mil gravações e 20 mil exclusões por dia, **a confirmar** os valores atuais na página de preços do Firebase).
 - Fotos de chamados e anexos não fazem parte da demonstração: dependem do Storage, que exige o plano pago ([06](06-funcionalidades-e-roadmap.md), "Pendente para depois da venda").
 - O login de demonstração usa senha comum; não use nele nenhuma senha que você usa em outro lugar.

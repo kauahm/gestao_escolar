@@ -80,7 +80,7 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 **Feito no console (14/10):** projeto `gestao-escolar-demo` criado no plano Spark, login por e-mail/senha ativado, banco em São Paulo, regras publicadas, app web registrado e `config/ambiente` marcado como demonstração.
 
-**Falta fazer (você, uma vez):** colar a chave de API no `.env.demo`, criar o primeiro administrador e restaurar os dados ([13](13-ambiente-de-demonstracao.md), seção 4).
+**Concluído em 14/10:** chave no `.env.demo`, primeiro administrador criado e restauração feita na tela (118 registros fictícios). O ambiente de demonstração está pronto ([13](13-ambiente-de-demonstracao.md)).
 
 ### Pendências antigas resolvidas em 14/10
 - **Regras publicadas no projeto real** (`gestaoescolar-b84c2`), com o mesmo conteúdo de `firestore.rules` (conferido por hash). A versão anterior continua no histórico do console, caso seja preciso voltar.
