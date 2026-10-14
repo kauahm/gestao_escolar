@@ -69,6 +69,21 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Importação de planilhas (item 0.7)
+
+- **Botão "Importar planilha"** em Escolas, Contas a pagar, Ciclos e Banco de Talentos: modelo para baixar, envio de Excel ou CSV, conferência das colunas, pré-visualização com cada linha marcada como pronta, com aviso ou com erro, relatório para corrigir e **desfazer a importação inteira** (vai para a lixeira).
+- **Leitor de planilhas próprio** (`src/utils/lerPlanilha.js`), sem biblioteca nova.
+- **Regras:** nova coleção `importacoes`. Admin importa tudo; RH só currículos; diretora nada.
+- **Modo emulador** (`npm run emulador`, `npm run emulador:dados`, `npm run dev:emulador`): o sistema inteiro roda no computador, com usuários e dados de teste, sem tocar em nenhum projeto Firebase.
+- Escola inativa passa a ser informada como tal na importação, em vez de "não encontrada".
+- **Testes:** 35 de leitura e validação (`npm test`) e 52 de regras (`npm run test:regras`), todos passando; fluxo conferido na tela no emulador.
+
+**Falta fazer:** publicar as regras novas (projeto real e demonstração) **antes** de enviar o código: sem a regra de `importacoes`, importar dá erro de permissão (nada é gravado).
+
+Detalhes em [14](14-importacao-de-planilhas.md).
+
+---
+
 ## 14/10/2026 — Ambiente de demonstração (item 0.5)
 
 - **Modo demonstração:** `npm run dev:demo` e `npm run build:demo` leem o arquivo `.env.demo` (fora do Git; modelo em `.env.demo.example`), que aponta para um segundo projeto Firebase gratuito.

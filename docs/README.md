@@ -15,7 +15,8 @@ Toda a documentação do projeto fica nesta pasta.
 | [09-auditoria-de-seguranca-e-infraestrutura.md](09-auditoria-de-seguranca-e-infraestrutura.md) | Regras do Firestore, backup, Storage, autenticação, `.env` no Git e plano do Firebase: achados e ações priorizadas |
 | [10-registro-de-alteracoes.md](10-registro-de-alteracoes.md) | O que já foi alterado no código, por data (base segura, painel honesto, lixeira, histórico, cópia em Excel), e o que falta você fazer uma vez |
 | [11-prompt-para-claude-code.md](11-prompt-para-claude-code.md) | Texto pronto para retomar o projeto numa nova sessão, com as regras de trabalho e a ordem das próximas entregas |
-| [12-revisao-e-testes-das-regras.md](12-revisao-e-testes-das-regras.md) | Revisão das regras do Firestore contra o código das telas, achados, e os testes automatizados (45 passando no emulador; como rodar) |
+| [12-revisao-e-testes-das-regras.md](12-revisao-e-testes-das-regras.md) | Revisão das regras do Firestore contra o código das telas, achados, e os testes automatizados (52 passando no emulador; como rodar) |
 | [13-ambiente-de-demonstracao.md](13-ambiente-de-demonstracao.md) | Segundo projeto Firebase só com dados fictícios: o que vem nos dados, travas contra mistura com o sistema real, passo a passo para criar o projeto e como restaurar |
+| [14-importacao-de-planilhas.md](14-importacao-de-planilhas.md) | Importação de Excel/CSV em Escolas, Contas, Ciclos e Banco de Talentos: o que cada módulo aceita, conversões, desfazer, leitor próprio de planilhas, testes e como testar no emulador local |
 
 **Convenção:** arquivos numerados em ordem de criação (`NN-assunto.md`), escritos em português, com "(a confirmar)" onde houver inferência.

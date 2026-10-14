@@ -6,7 +6,7 @@
 ## 1. Situação
 
 - **Revisão por leitura: concluída.** Não encontrei nenhuma tela que as regras bloqueiem por engano, nem acesso indevido entre perfis.
-- **Testes automatizados: 45 testes, todos passando** no emulador local (executados em 13/10/2026, com Java 21 portátil em `%USERPROFILE%\.local\java`).
+- **Testes automatizados: 52 testes, todos passando** no emulador local (última execução em 14/10/2026, incluindo a importação de planilhas ([14](14-importacao-de-planilhas.md)); primeira execução em 13/10/2026, com Java 21 portátil em `%USERPROFILE%\.local\java`).
 - **Endurecimentos T1 e T2 aplicados** nas regras depois de os testes rodarem; T4 corrigido na tela de Usuários.
 
 ## 2. O que cada perfil lê e grava (código × regras)
