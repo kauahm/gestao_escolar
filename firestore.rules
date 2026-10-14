@@ -1,21 +1,178 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+rules_version = '2';
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCth4rT2YCERCYMwL44ZuOpDrXvYk1xyyI",
-  authDomain: "gestaoescolar-b84c2.firebaseapp.com",
-  projectId: "gestaoescolar-b84c2",
-  storageBucket: "gestaoescolar-b84c2.firebasestorage.app",
-  messagingSenderId: "1048317935338",
-  appId: "1:1048317935338:web:0550e7aeb0dc18f2f6a193",
-  measurementId: "G-B5SJXW29NG"
-};
+// Regras de segurança do Firestore — Gestão Escolar
+// Publicar com:  firebase deploy --only firestore:rules
+//
+// Princípios:
+// - Nega tudo por padrão (coleção sem match fica inacessível).
+// - A proteção real está aqui, não no front-end.
+// - Perfis: admin (tudo), administrativo (RH), diretora (só a própria escola).
+// - Toda operação exige conta ativa (situacao == 'ativa').
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Identidade e perfil ----------
+
+    function isAutenticado() {
+      return request.auth != null;
+    }
+
+    function getUsuario() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+    }
+
+    // Se o usuário não tiver documento em /usuarios, o get() falha e o acesso é negado.
+    function isAtiva() {
+      return isAutenticado() && getUsuario().situacao == 'ativa';
+    }
+
+    function isAdmin() {
+      return isAtiva() && getUsuario().perfil == 'admin';
+    }
+
+    function isAdministrativo() {
+      return isAtiva() && getUsuario().perfil == 'administrativo';
+    }
+
+    function isDiretora() {
+      return isAtiva() && getUsuario().perfil == 'diretora';
+    }
+
+    function minhaEscola(escolaId) {
+      return getUsuario().unidadeId == escolaId;
+    }
+
+    // ---------- Validações ----------
+
+    function texto(valor, maximo) {
+      return valor is string && valor.size() <= maximo;
+    }
+
+    // Campos que a diretora pode enviar ao abrir um chamado.
+    // Impede que ela crie o chamado já "Concluído", em outra escola,
+    // em nome de outra pessoa, já atribuído a alguém, com data forjada
+    // ou com texto gigante.
+    function solicitacaoDaDiretoraValida() {
+      let d = request.resource.data;
+      return d.keys().hasOnly([
+               'descricao', 'localDentroEscola', 'prioridade', 'observacoes',
+               'escolaId', 'escolaNome', 'responsavel', 'status',
+               'solicitadaPor', 'solicitadaPorNome', 'criadoEm', 'atualizadoEm'
+             ])
+             && d.keys().hasAll(['descricao', 'escolaId', 'status', 'solicitadaPor'])
+             && d.status == 'Pendente'
+             && d.responsavel == 'A definir'
+             && d.criadoEm == request.time
+             && d.atualizadoEm == request.time
+             && texto(d.escolaNome, 200)
+             && texto(d.solicitadaPorNome, 200)
+             && d.solicitadaPor == request.auth.uid
+             && minhaEscola(d.escolaId)
+             && d.descricao is string && d.descricao.size() > 0 && d.descricao.size() <= 2000
+             && texto(d.localDentroEscola, 300)
+             && texto(d.observacoes, 2000)
+             && d.prioridade in ['Baixa', 'Média', 'Alta', 'Urgente'];
+    }
+
+    // ---------- Coleções ----------
+
+    // Escolas: todos os usuários ativos leem; só admin escreve.
+    match /escolas/{id} {
+      allow read: if isAtiva();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Manutenções: a diretora abre e acompanha os chamados da própria escola.
+    match /manutencoes/{id} {
+      allow read: if isAdmin() ||
+                     (isDiretora() && minhaEscola(resource.data.escolaId));
+      allow create: if isAdmin() ||
+                       (isDiretora() && solicitacaoDaDiretoraValida());
+      allow update, delete: if isAdmin();
+    }
+
+    // Contas a pagar: a diretora só lê as da própria escola.
+    match /contas/{id} {
+      allow read: if isAdmin() ||
+                     (isDiretora() && minhaEscola(resource.data.escolaId));
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Ciclos periódicos: a diretora só lê os da própria escola.
+    match /ciclos/{id} {
+      allow read: if isAdmin() ||
+                     (isDiretora() && minhaEscola(resource.data.escolaId));
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Prestadores de serviço (nomes, telefones, documentos):
+    // antes estava aberta a qualquer usuário autenticado. Agora é só da administração.
+    match /prestadores/{id} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // Processo seletivo: administração e RH (o menu do perfil 'administrativo'
+    // inclui Processo Seletivo).
+    match /candidatos/{id} {
+      allow read, create, update, delete: if isAdmin() || isAdministrativo();
+    }
+
+    // Banco de currículos: administração e RH.
+    match /curriculos/{id} {
+      allow read, create, update, delete: if isAdmin() || isAdministrativo();
+    }
+
+    // Agenda: somente administração.
+    match /eventos/{id} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // ---------- Rede de segurança ----------
+
+    // Histórico de alterações: só se acrescenta, nunca se altera nem apaga.
+    // Cada pessoa só registra em nome próprio, com a hora do servidor
+    // e apenas os campos que o app grava (ver src/services/db.js).
+    match /historico/{id} {
+      allow read: if isAdmin();
+      allow create: if isAtiva()
+                    && request.resource.data.keys().hasOnly([
+                         'acao', 'colecao', 'docId', 'titulo', 'antes', 'depois',
+                         'porUid', 'porEmail', 'em'
+                       ])
+                    && request.resource.data.porUid == request.auth.uid
+                    && request.resource.data.porEmail == request.auth.token.email
+                    && request.resource.data.em == request.time
+                    && request.resource.data.acao in ['criar', 'alterar', 'excluir', 'restaurar']
+                    && texto(request.resource.data.colecao, 100)
+                    && texto(request.resource.data.docId, 200)
+                    && texto(request.resource.data.titulo, 200);
+      allow update, delete: if false;
+    }
+
+    // Lixeira: o que é "excluído" vem para cá antes de sair do lugar original.
+    // Restaurar (apagar daqui e recriar no original) é só do admin.
+    match /lixeira/{id} {
+      allow read: if isAdmin() ||
+                     (isAdministrativo() && resource.data.colecao in ['curriculos', 'candidatos']);
+      allow create: if request.resource.data.excluidoPor == request.auth.uid
+                    && (isAdmin() ||
+                        (isAdministrativo() && request.resource.data.colecao in ['curriculos', 'candidatos']));
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Configurações do sistema (ex.: data da última cópia de segurança).
+    match /config/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Usuários: cada um lê o próprio perfil; só admin cria e edita.
+    // Apagar é proibido para todos (desativar em vez de excluir).
+    match /usuarios/{uid} {
+      allow read: if isAutenticado() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+  }
+}
