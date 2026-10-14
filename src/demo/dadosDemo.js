@@ -1,0 +1,274 @@
+// Dados FICTÍCIOS do ambiente de demonstração.
+//
+// Nenhuma escola, pessoa, telefone, e-mail ou valor aqui é real. As datas são
+// calculadas a partir de "hoje", para a demonstração parecer viva em qualquer
+// dia: sempre há contas vencidas, contas a vencer, ciclos atrasados, chamados
+// parados e compromissos nos próximos dias.
+//
+// Os identificadores são fixos (demo-...), então restaurar os dados não quebra
+// o vínculo da diretora de demonstração com a escola dela.
+
+import { Timestamp } from 'firebase/firestore';
+
+const pad = (n) => String(n).padStart(2, '0');
+
+/** Data local a `dias` de hoje (negativo = passado), no horário indicado. */
+const dia = (dias, hora = 9, minuto = 0) => {
+  const d = new Date();
+  d.setHours(hora, minuto, 0, 0);
+  d.setDate(d.getDate() + dias);
+  return d;
+};
+
+/** "AAAA-MM-DD", o formato que as telas gravam. */
+const ymd = (dias) => {
+  const d = dia(dias);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const carimbo = (dias, hora, minuto) => Timestamp.fromDate(dia(dias, hora, minuto));
+
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+/** Competência "Mês/Ano" de `mesesAtras` meses atrás. */
+const competencia = (mesesAtras) => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - mesesAtras);
+  return `${MESES[d.getMonth()]}/${d.getFullYear()}`;
+};
+
+const ESCOLAS = [
+  { nome: 'CEI Pequenos Passos', bairro: 'Jardim Amanda', diretora: 'Helena Barros', alunos: 182, caixa: 5000 },
+  { nome: 'CEI Girassol', bairro: 'Jardim Rosolém', diretora: 'Marta Queiroz', alunos: 146, caixa: 3000 },
+  { nome: 'CEI Arco-Íris', bairro: 'Remanso Campineiro', diretora: 'Cláudia Teles', alunos: 210, caixa: 5000 },
+  { nome: 'CEI Semear', bairro: 'Vila Real', diretora: 'Patrícia Lemos', alunos: 124, caixa: 2000 },
+  { nome: 'CEI Casa da Criança', bairro: 'Jardim Nova Hortolândia', diretora: 'Sônia Figueira', alunos: 168, caixa: 3000 },
+  { nome: 'CEI Recanto do Saber', bairro: 'Parque Ortolândia', diretora: 'Luciana Prado', alunos: 96, caixa: 2000 },
+  { nome: 'CEI Estrela Guia', bairro: 'Jardim São Sebastião', diretora: 'Renata Coelho', alunos: 154, caixa: 3000 },
+  { nome: 'CEI Mundo Encantado', bairro: 'Jardim Boa Esperança', diretora: 'Débora Antunes', alunos: 132, caixa: 3000, inativa: true },
+];
+
+const idEscola = (i) => `demo-escola-${pad(i + 1)}`;
+
+const escolas = () => ESCOLAS.map((e, i) => ({
+  id: idEscola(i),
+  nome: e.nome,
+  codigo: `UE-${pad(i + 1)}`,
+  situacao: e.inativa ? 'Inativa' : 'Ativa',
+  endereco: `Rua Exemplo ${i + 1}, ${100 + i * 37}`,
+  bairro: e.bairro,
+  cep: `13180-0${pad(i + 1)}`,
+  telefone: `(19) 3000-00${pad(i + 1)}`,
+  email: `escola${pad(i + 1)}@exemplo.org`,
+  nomeDiretora: e.diretora,
+  celularDiretora: `(19) 99000-00${pad(i + 1)}`,
+  emailDiretora: `diretora${pad(i + 1)}@exemplo.org`,
+  numeroAlunos: e.alunos,
+  capacidadeCaixaDagua: e.caixa,
+  observacoes: e.inativa ? 'Unidade em reforma; atendimento transferido temporariamente.' : '',
+  criadoEm: carimbo(-200),
+  atualizadoEm: carimbo(-30),
+}));
+
+const PRESTADORES = [
+  { nome: 'José Carlos (manutenção geral)', especialidade: 'Geral', tipo: 'Interno' },
+  { nome: 'Elétrica Luz Certa', especialidade: 'Eletricista', tipo: 'Externo' },
+  { nome: 'Hidráulica Bom Fluxo', especialidade: 'Encanador', tipo: 'Externo' },
+  { nome: 'Antônio Pinturas', especialidade: 'Pintor', tipo: 'Externo' },
+  { nome: 'Rede & Micro Informática', especialidade: 'TI / Informática', tipo: 'Externo' },
+];
+
+const prestadores = () => PRESTADORES.map((p, i) => ({
+  id: `demo-prestador-${pad(i + 1)}`,
+  ...p,
+  telefone: `(19) 99111-00${pad(i + 1)}`,
+  documento: p.tipo === 'Interno' ? '' : `00.000.000/0001-${pad(i + 1)}`,
+  pix: p.tipo === 'Interno' ? '' : `prestador${pad(i + 1)}@exemplo.org`,
+  criadoEm: carimbo(-180),
+  atualizadoEm: carimbo(-180),
+}));
+
+// Chamados: [escola, descrição, local, prioridade, status, responsável, aberto há N dias, prazo em N dias, concluído há N dias]
+const CHAMADOS = [
+  [0, 'Vazamento na torneira do lavatório infantil', 'Banheiro infantil, bloco A', 'Alta', 'Pendente', 'A definir', 9, null, null],
+  [2, 'Lâmpadas queimadas no corredor principal', 'Corredor de acesso às salas', 'Média', 'Pendente', 'A definir', 7, null, null],
+  [4, 'Portão de entrada não fecha direito', 'Entrada principal', 'Alta', 'Pendente', 'A definir', 2, null, null],
+  [1, 'Infiltração no teto da sala 3', 'Sala 3 (maternal)', 'Alta', 'Em andamento', 'Antônio Pinturas', 12, 3, null],
+  [3, 'Tomada sem energia na cozinha', 'Cozinha', 'Alta', 'Em andamento', 'Elétrica Luz Certa', 4, 1, null],
+  [5, 'Computador da secretaria não liga', 'Secretaria', 'Média', 'Em andamento', 'Rede & Micro Informática', 6, -1, null],
+  [6, 'Descarga do banheiro dos funcionários quebrada', 'Banheiro dos funcionários', 'Média', 'Em andamento', 'Hidráulica Bom Fluxo', 3, 5, null],
+  [0, 'Pintura do muro externo', 'Muro da frente', 'Baixa', 'Pendente', 'A definir', 1, 20, null],
+  [2, 'Troca do vidro trincado da janela', 'Sala 1 (berçário)', 'Alta', 'Concluído', 'José Carlos (manutenção geral)', 20, null, 15],
+  [4, 'Conserto do bebedouro', 'Pátio coberto', 'Média', 'Concluído', 'Hidráulica Bom Fluxo', 16, null, 11],
+  [1, 'Reparo na fechadura do almoxarifado', 'Almoxarifado', 'Baixa', 'Concluído', 'José Carlos (manutenção geral)', 14, null, 10],
+  [6, 'Troca de disjuntor do quadro de energia', 'Quadro de energia', 'Alta', 'Concluído', 'Elétrica Luz Certa', 30, null, 27],
+  [3, 'Limpeza das calhas antes das chuvas', 'Telhado', 'Média', 'Concluído', 'José Carlos (manutenção geral)', 25, null, 18],
+  [5, 'Ajuste nas dobradiças do armário da cozinha', 'Cozinha', 'Baixa', 'Concluído', 'José Carlos (manutenção geral)', 8, null, 5],
+];
+
+const manutencoes = () => CHAMADOS.map(([e, descricao, local, prioridade, status, responsavel, aberto, prazo, concluido], i) => ({
+  id: `demo-chamado-${pad(i + 1)}`,
+  escolaId: idEscola(e),
+  escolaNome: ESCOLAS[e].nome,
+  descricao,
+  localDentroEscola: local,
+  prioridade,
+  status,
+  responsavel,
+  prazo: prazo === null ? '' : ymd(prazo),
+  observacoes: '',
+  solicitadaPor: 'demo',
+  solicitadaPorNome: ESCOLAS[e].diretora,
+  criadoEm: carimbo(-aberto, 8 + (i % 8), (i * 7) % 60),
+  atualizadoEm: carimbo(concluido === null ? -Math.min(aberto, 1) : -concluido, 15),
+  concluidoEm: concluido === null ? null : carimbo(-concluido, 16),
+}));
+
+/** Valor estável (não muda a cada restauração) em torno de `base`. */
+const valor = (base, semente) => Math.round((base + ((semente * 37) % 100) * (base / 250)) * 100) / 100;
+
+const contas = () => {
+  const lista = [];
+  const nova = (dados) => lista.push({
+    id: `demo-conta-${pad(lista.length + 1)}`,
+    tipoCustomizado: '',
+    observacoes: '',
+    criadoEm: carimbo(-3),
+    atualizadoEm: carimbo(-3),
+    ...dados,
+  });
+
+  ESCOLAS.forEach((e, i) => {
+    if (e.inativa) return;
+    const base = { escolaId: idEscola(i), escolaNome: e.nome };
+    // Energia e água de três meses: o mais antigo já enviado, o do mês passado
+    // com algumas vencidas, o deste mês ainda no prazo.
+    [2, 1, 0].forEach((mesesAtras) => {
+      const vencEnergia = mesesAtras === 2 ? -48 + i : mesesAtras === 1 ? -14 + i * 3 : 4 + i * 2;
+      const vencAgua = vencEnergia + 5;
+      const enviada = (venc) => mesesAtras === 2 || (mesesAtras === 1 && venc >= -5);
+      nova({
+        ...base, tipo: 'CPFL', competencia: competencia(mesesAtras),
+        valor: valor(e.alunos * 6.2, i + mesesAtras), vencimento: ymd(vencEnergia),
+        numeroDocumento: `CPFL-${2600 + lista.length}`, status: enviada(vencEnergia) ? 'Enviada' : 'A enviar',
+      });
+      nova({
+        ...base, tipo: 'SABESP', competencia: competencia(mesesAtras),
+        valor: valor(e.alunos * 3.4, i * 3 + mesesAtras), vencimento: ymd(vencAgua),
+        numeroDocumento: `SAB-${7100 + lista.length}`, status: enviada(vencAgua) ? 'Enviada' : 'A enviar',
+      });
+    });
+  });
+
+  // Algumas contas avulsas.
+  nova({ escolaId: idEscola(0), escolaNome: ESCOLAS[0].nome, tipo: 'Taxa de Limpeza', competencia: competencia(0), valor: 412.5, vencimento: ymd(2), numeroDocumento: 'TL-0098', status: 'A enviar' });
+  nova({ escolaId: idEscola(2), escolaNome: ESCOLAS[2].nome, tipo: 'Nota Fiscal de Serviço', competencia: competencia(0), valor: 1280, vencimento: ymd(6), numeroDocumento: 'NF-000451', status: 'A enviar', observacoes: 'Troca do vidro da janela do berçário.' });
+  nova({ escolaId: idEscola(4), escolaNome: ESCOLAS[4].nome, tipo: 'Nota Fiscal de Serviço', competencia: competencia(1), valor: 640, vencimento: ymd(-9), numeroDocumento: 'NF-000437', status: 'A enviar', observacoes: 'Conserto do bebedouro.' });
+  nova({ escolaId: idEscola(1), escolaNome: ESCOLAS[1].nome, tipo: 'Outro', tipoCustomizado: 'Dedetização', competencia: competencia(1), valor: 890, vencimento: ymd(-20), numeroDocumento: 'NF-000420', status: 'Enviada' });
+
+  return lista;
+};
+
+const TIPOS_DE_CICLO = [
+  ["Limpeza de caixa d'água", 180],
+  ['Inspeção de DR e DS', 365],
+  ['Troca/recarga de extintores', 365],
+  ['Troca de filtros de água', 90],
+];
+
+const ciclos = () => {
+  const lista = [];
+  ESCOLAS.forEach((e, i) => {
+    if (e.inativa) return;
+    TIPOS_DE_CICLO.forEach(([tipo, periodicidade], t) => {
+      // Dias até a próxima execução: a maioria em dia, algumas perto, poucas vencidas.
+      const combinacao = (i * 4 + t) % 9;
+      const faltam = combinacao === 2 ? -12 - i : combinacao === 5 ? 6 + i : combinacao === 7 ? 21 : 45 + ((i * 13 + t * 29) % (periodicidade - 60));
+      lista.push({
+        id: `demo-ciclo-${pad(lista.length + 1)}`,
+        escolaId: idEscola(i),
+        escolaNome: e.nome,
+        tipo,
+        periodicidadeDias: periodicidade,
+        ultimaExecucao: ymd(faltam - periodicidade),
+        proximaExecucao: ymd(faltam),
+        observacoes: '',
+        criadoEm: carimbo(-200),
+        atualizadoEm: carimbo(-40),
+      });
+    });
+  });
+  return lista;
+};
+
+// Agenda: [título, categoria, cor, local, em N dias, hora de início, duração em horas (0 = dia inteiro)]
+const EVENTOS = [
+  ['Reunião mensal com as diretoras', 'Reunião', '#185FA5', 'Escritório de Hortolândia', 2, 9, 2],
+  ['Visita técnica ao CEI Arco-Íris', 'Visita', '#3B6D11', 'CEI Arco-Íris', 4, 14, 2],
+  ['Entrega da prestação de contas do mês', 'Prazo', '#A32D2D', '', 8, 0, 0],
+  ['Alinhamento com a equipe de manutenção', 'Compromisso', '#534AB7', 'Escritório de Hortolândia', 1, 8, 1],
+  ['Formação de educadoras', 'Outro', '#5F5E5A', 'CEI Pequenos Passos', 12, 0, 0],
+  ['Vistoria dos extintores com o fornecedor', 'Visita', '#3B6D11', 'CEI Girassol', 6, 10, 1],
+  ['Reunião com a Secretaria de Educação', 'Reunião', '#185FA5', 'Paço Municipal', 15, 15, 2],
+  ['Reunião mensal com as diretoras', 'Reunião', '#185FA5', 'Escritório de Hortolândia', -26, 9, 2],
+];
+
+const eventos = () => EVENTOS.map(([titulo, categoria, cor, local, em, hora, duracao], i) => ({
+  id: `demo-evento-${pad(i + 1)}`,
+  titulo,
+  descricao: '',
+  local,
+  categoria,
+  cor,
+  diaInteiro: duracao === 0,
+  inicio: carimbo(em, duracao === 0 ? 0 : hora),
+  fim: duracao === 0 ? null : carimbo(em, hora + duracao),
+  criadoPor: 'demo',
+  criadoEm: carimbo(-10),
+  atualizadoEm: carimbo(-10),
+}));
+
+// Currículos: [nome, vaga, experiência, indicação, status, entrevista em N dias, hora, feedback]
+const CURRICULOS = [
+  ['Aline Moreira', 'Auxiliar de educação infantil', 'Sim', '', 'Entrevista Agendada', 2, '10:00', ''],
+  ['Bruno Tavares', 'Auxiliar de limpeza', 'Sim', 'Indicação da diretora do CEI Girassol', 'Entrevista Agendada', 3, '14:30', ''],
+  ['Camila Rocha', 'Professora de educação infantil', 'Sim', '', 'Entrevista Agendada', 5, '09:00', ''],
+  ['Daniela Freitas', 'Cozinheira', 'Sim', '', 'Disponível', null, '', ''],
+  ['Eduardo Lima', 'Auxiliar administrativo', 'Não', '', 'Disponível', null, '', ''],
+  ['Fabiana Souza', 'Auxiliar de educação infantil', 'Não', 'Indicação de funcionária', 'Disponível', null, '', ''],
+  ['Gabriela Nunes', 'Professora de educação infantil', 'Sim', '', 'Aprovado', -6, '10:00', 'Ótima didática e experiência com berçário. Encaminhada para admissão.'],
+  ['Heloísa Pinto', 'Auxiliar de limpeza', 'Não', '', 'Reprovado', -8, '15:00', 'Sem disponibilidade para o período da manhã.'],
+  ['Isabela Campos', 'Cozinheira', 'Sim', '', 'Disponível', null, '', ''],
+];
+
+const curriculos = () => CURRICULOS.map(([nome, vaga, exp, indicacao, status, entrevista, hora, feedback], i) => ({
+  id: `demo-curriculo-${pad(i + 1)}`,
+  nome,
+  telefone: `(19) 99222-00${pad(i + 1)}`,
+  email: `candidato${pad(i + 1)}@exemplo.org`,
+  vaga,
+  exp,
+  indicacao,
+  observacoes: '',
+  status,
+  dataCadastro: carimbo(-40 + i * 3, 11),
+  ...(entrevista === null ? {} : { dataEntrevista: ymd(entrevista), horaEntrevista: hora }),
+  ...(feedback ? { feedback } : {}),
+}));
+
+/**
+ * Tudo o que entra no ambiente de demonstração, por coleção.
+ * Cada registro traz o `id` do documento; o resto são os campos.
+ */
+export function gerarDadosDemo() {
+  return {
+    escolas: escolas(),
+    prestadores: prestadores(),
+    manutencoes: manutencoes(),
+    contas: contas(),
+    ciclos: ciclos(),
+    eventos: eventos(),
+    curriculos: curriculos(),
+  };
+}

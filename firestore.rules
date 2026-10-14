@@ -43,6 +43,13 @@ service cloud.firestore {
       return getUsuario().unidadeId == escolaId;
     }
 
+    // Só o projeto de DEMONSTRAÇÃO tem o documento config/ambiente com demo: true.
+    // Ele é criado à mão no console; o app não consegue gravá-lo (ver /config).
+    // No projeto real ele não existe, o get() falha e a resposta é "não".
+    function ambienteDeDemonstracao() {
+      return get(/databases/$(database)/documents/config/ambiente).data.demo == true;
+    }
+
     // ---------- Validações ----------
 
     function texto(valor, maximo) {
@@ -147,7 +154,9 @@ service cloud.firestore {
                     && texto(request.resource.data.colecao, 100)
                     && texto(request.resource.data.docId, 200)
                     && texto(request.resource.data.titulo, 200);
-      allow update, delete: if false;
+      allow update: if false;
+      // Apagar o histórico só existe para "restaurar dados de demonstração".
+      allow delete: if isAdmin() && ambienteDeDemonstracao();
     }
 
     // Lixeira: o que é "excluído" vem para cá antes de sair do lugar original.
@@ -163,8 +172,11 @@ service cloud.firestore {
     }
 
     // Configurações do sistema (ex.: data da última cópia de segurança).
+    // config/ambiente marca o projeto de demonstração e não pode ser gravado
+    // pelo app, nem pelo admin: só pelo console do Firebase.
     match /config/{id} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if isAdmin() && id != 'ambiente';
     }
 
     // Usuários: cada um lê o próprio perfil; só admin cria e edita.

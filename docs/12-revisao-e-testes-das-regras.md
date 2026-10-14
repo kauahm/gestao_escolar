@@ -6,7 +6,7 @@
 ## 1. Situação
 
 - **Revisão por leitura: concluída.** Não encontrei nenhuma tela que as regras bloqueiem por engano, nem acesso indevido entre perfis.
-- **Testes automatizados: 38 testes, todos passando** no emulador local (executados em 13/10/2026, com Java 21 portátil em `%USERPROFILE%\.local\java`).
+- **Testes automatizados: 45 testes, todos passando** no emulador local (executados em 13/10/2026, com Java 21 portátil em `%USERPROFILE%\.local\java`).
 - **Endurecimentos T1 e T2 aplicados** nas regras depois de os testes rodarem; T4 corrigido na tela de Usuários.
 
 ## 2. O que cada perfil lê e grava (código × regras)
@@ -52,7 +52,8 @@ O que cobrem:
 - ninguém se promove nem troca a própria escola; ninguém apaga usuário;
 - histórico imutável (nem o admin altera ou apaga), sem data forjada, sem e-mail de outra pessoa e sem campo extra;
 - lixeira e restauração, reproduzindo os lotes de `src/services/db.js`;
-- uso normal do admin em todas as coleções.
+- uso normal do admin em todas as coleções;
+- ambiente de demonstração ([13](13-ambiente-de-demonstracao.md)): ninguém marca o projeto como demonstração pelo app; sem a marca o histórico não pode ser apagado; a restauração completa roda de ponta a ponta com as regras ligadas e preserva os usuários.
 
 ### Como rodar
 1. Ter Java 11 ou superior. Neste computador há um Java 21 portátil (Temurin, gratuito) em `%USERPROFILE%\.local\java`, que não está no PATH. No PowerShell, antes de rodar:

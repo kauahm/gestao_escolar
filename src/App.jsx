@@ -19,6 +19,7 @@ import Prestadores from './pages/admin/Prestadores';
 import Seguranca from './pages/admin/Seguranca';
 
 import DiretoraDashboard from './pages/diretora/Dashboard';
+import { EH_DEMO, DEMO_MAL_CONFIGURADA } from './services/ambiente';
 
 function RootRedirect() {
   const { currentUser, userProfile, loading } = useAuth();
@@ -46,6 +47,17 @@ function RootRedirect() {
 export default function App() {
   return (
     <AuthProvider>
+      {/* Selo fixo: quem está no ambiente de demonstração sempre sabe disso. */}
+      {EH_DEMO && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60] pointer-events-none bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap print:hidden">
+          Ambiente de demonstração · dados fictícios
+        </div>
+      )}
+      {DEMO_MAL_CONFIGURADA && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60] bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg max-w-[92vw] text-center">
+          Atenção: o modo demonstração foi pedido, mas a configuração aponta para o sistema real. Confira o arquivo .env.demo.
+        </div>
+      )}
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />

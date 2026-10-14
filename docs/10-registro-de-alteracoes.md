@@ -69,6 +69,19 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Ambiente de demonstração (item 0.5)
+
+- **Modo demonstração:** `npm run dev:demo` e `npm run build:demo` leem o arquivo `.env.demo` (fora do Git; modelo em `.env.demo.example`), que aponta para um segundo projeto Firebase gratuito.
+- **Dados fictícios** em `src/demo/dadosDemo.js`: 8 escolas, 5 prestadores, 14 chamados, 46 contas, 28 ciclos, 8 compromissos e 9 currículos, com datas relativas ao dia da restauração.
+- **Botão "Restaurar dados de demonstração"** na tela Segurança dos dados e **selo roxo fixo** em todas as telas. Ambos só existem no modo demonstração; o build do sistema real não os contém.
+- **Regras:** novo documento `config/ambiente`, que o app não consegue gravar (só o console). O histórico só pode ser apagado onde esse documento existe com `demo: true`, ou seja, só na demonstração.
+- **`firebase.json`** ganhou a seção de hospedagem, para publicar a demonstração gratuitamente no Firebase Hosting.
+- **Testes:** 45 passando no emulador, incluindo a restauração completa.
+
+**Falta fazer (você, uma vez):** criar o projeto de demonstração, seguindo o passo a passo de [13](13-ambiente-de-demonstracao.md).
+
+---
+
 ## Como testar
 1. `npm run dev` na pasta do projeto.
 2. Painel: o cartão "Contas a Enviar" deve mostrar **20** e o valor, com a linha vermelha de vencidas.

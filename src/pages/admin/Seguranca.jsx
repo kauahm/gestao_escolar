@@ -3,6 +3,7 @@ import { collection, doc, onSnapshot, orderBy, query, limit } from 'firebase/fir
 import { db } from '../../services/firebase';
 import { restaurarDaLixeira, COLECAO_LIXEIRA, COLECAO_HISTORICO } from '../../services/db';
 import { baixarExcel, baixarJson, rotuloDaColecao } from '../../utils/exportarDados';
+import { EH_DEMO } from '../../services/ambiente';
 
 import Toast from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -10,7 +11,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 import {
   ShieldCheck, Download, FileSpreadsheet, FileJson, Trash2, RotateCcw,
-  History, ChevronDown, ChevronRight, CheckCircle2, AlertTriangle,
+  History, ChevronDown, ChevronRight, CheckCircle2, AlertTriangle, FlaskConical,
 } from 'lucide-react';
 
 const ACOES = {
@@ -53,6 +54,8 @@ export default function Seguranca() {
   const [paraRestaurar, setParaRestaurar] = useState(null);
   const [filtroColecao, setFiltroColecao] = useState('Todas');
   const [aberto, setAberto] = useState(null);
+  const [confirmarDemo, setConfirmarDemo] = useState(false);
+  const [restaurandoDemo, setRestaurandoDemo] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const avisar = (message, type = 'success') => setToast({ show: true, message, type });
@@ -125,6 +128,24 @@ export default function Seguranca() {
     }
   };
 
+  // Só existe no ambiente de demonstração. O código é carregado sob demanda,
+  // então nem chega ao navegador de quem usa o sistema real.
+  const restaurarDemo = async () => {
+    setConfirmarDemo(false);
+    if (!EH_DEMO) return;
+    setRestaurandoDemo(true);
+    try {
+      const { resetarDemo } = await import('../../demo/resetarDemo.js');
+      const { criados } = await resetarDemo(db);
+      avisar(`Dados de demonstração restaurados: ${criados} registros fictícios.`);
+    } catch (erro) {
+      console.error(erro);
+      avisar(erro?.message?.startsWith('Recusado') ? erro.message : 'Não foi possível restaurar os dados de demonstração.', 'error');
+    } finally {
+      setRestaurandoDemo(false);
+    }
+  };
+
   const dias = diasDesde(backup?.ultimoEm);
   const copiaEmDia = dias !== null && dias <= 7;
 
@@ -140,6 +161,29 @@ export default function Seguranca() {
           uma cópia completa</strong> de tudo a qualquer momento.
         </p>
       </div>
+
+      {EH_DEMO && (
+        <section className="bg-purple-50 rounded-xl border border-purple-200 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-lg bg-purple-100 text-purple-700"><FlaskConical size={24} /></div>
+            <div>
+              <h2 className="font-bold text-purple-900">Ambiente de demonstração</h2>
+              <p className="text-sm text-purple-900/80 mt-0.5">
+                Todos os dados aqui são fictícios. Depois de uma apresentação, restaure para voltar ao ponto de partida:
+                tudo é apagado (inclusive lixeira e histórico) e os dados de exemplo são gravados de novo. As contas de usuário são mantidas.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setConfirmarDemo(true)}
+            disabled={restaurandoDemo}
+            className="shrink-0 bg-purple-700 hover:bg-purple-800 disabled:opacity-60 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium shadow-sm transition-colors"
+          >
+            {restaurandoDemo ? <LoadingSpinner size="sm" color="text-white" /> : <RotateCcw size={18} />}
+            Restaurar dados de demonstração
+          </button>
+        </section>
+      )}
 
       {/* Cópia de segurança */}
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -291,6 +335,14 @@ export default function Seguranca() {
         message={`"${paraRestaurar?.titulo || 'Registro'}" volta para ${rotuloDaColecao(paraRestaurar?.colecao)} exatamente como estava quando foi excluído.`}
         onConfirm={restaurar}
         onCancel={() => setParaRestaurar(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmarDemo}
+        title="Restaurar dados de demonstração"
+        message="Tudo o que foi lançado neste ambiente de demonstração será apagado e os dados de exemplo voltam ao início. As contas de usuário são mantidas."
+        onConfirm={restaurarDemo}
+        onCancel={() => setConfirmarDemo(false)}
       />
 
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}

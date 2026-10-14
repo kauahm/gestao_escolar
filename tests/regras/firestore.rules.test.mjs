@@ -4,6 +4,7 @@
 // Nunca tocam no projeto real. Para rodar:  npm run test:regras
 // (precisa de Java 11+ instalado, exigência do emulador do Firestore).
 
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import {
@@ -25,6 +26,9 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
+
+import { gerarDadosDemo } from '../../src/demo/dadosDemo.js';
+import { resetarDemo } from '../../src/demo/resetarDemo.js';
 
 const PROJETO = 'demo-gestao-escolar';
 
@@ -352,7 +356,7 @@ describe('histórico: só acrescenta', () => {
     await assertSucceeds(addDoc(collection(bd, 'historico'), linhaDeHistorico('admin', { acao: 'restaurar', titulo: '' })));
   });
 
-  test('ninguém altera nem apaga, nem o admin', async () => {
+  test('ninguém altera nem apaga, nem o admin (fora do ambiente de demonstração)', async () => {
     const bd = como('admin');
     await assertFails(updateDoc(doc(bd, 'historico', 'h1'), { acao: 'excluir' }));
     await assertFails(setDoc(doc(bd, 'historico', 'h1'), linhaDeHistorico('admin')));
@@ -426,6 +430,83 @@ describe('lixeira e restauração', () => {
     await assertFails(restaurar('rh', 'lx_cv', 'curriculos', 'cvZ', { nome: 'Currículo Z' }));
     await assertFails(deleteDoc(doc(como('rh'), 'lixeira', 'lx_cv')));
     await assertFails(deleteDoc(doc(como('diretoraA'), 'lixeira', 'lx_escola')));
+  });
+});
+
+describe('ambiente de demonstração', () => {
+  const marcarComoDemo = (valor = { demo: true }) =>
+    ambiente.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'config', 'ambiente'), valor));
+
+  test('ninguém consegue marcar o projeto como demonstração pelo app', async () => {
+    for (const uid of ['admin', 'rh', 'diretoraA']) {
+      await assertFails(setDoc(doc(como(uid), 'config', 'ambiente'), { demo: true }));
+    }
+    await marcarComoDemo({ demo: false });
+    await assertFails(updateDoc(doc(como('admin'), 'config', 'ambiente'), { demo: true }));
+    await assertFails(deleteDoc(doc(como('admin'), 'config', 'ambiente')));
+  });
+
+  test('sem a marca (projeto real), o histórico não pode ser apagado', async () => {
+    await assertFails(deleteDoc(doc(como('admin'), 'historico', 'h1')));
+    await marcarComoDemo({ demo: false });
+    await assertFails(deleteDoc(doc(como('admin'), 'historico', 'h1')));
+  });
+
+  test('com a marca, só o admin apaga o histórico; alterar continua proibido', async () => {
+    await marcarComoDemo();
+    await assertFails(deleteDoc(doc(como('rh'), 'historico', 'h1')));
+    await assertFails(deleteDoc(doc(como('diretoraA'), 'historico', 'h1')));
+    await assertFails(updateDoc(doc(como('admin'), 'historico', 'h1'), { acao: 'excluir' }));
+    await assertSucceeds(deleteDoc(doc(como('admin'), 'historico', 'h1')));
+  });
+
+  test('restaurar dados de demonstração se recusa a rodar sem a marca e não apaga nada', async () => {
+    await assert.rejects(resetarDemo(como('admin')), /não está marcado/);
+    const escola = await getDoc(doc(como('admin'), 'escolas', 'escolaA'));
+    assert.equal(escola.exists(), true);
+  });
+
+  test('restaurar dados de demonstração troca tudo pelos dados fictícios e preserva os usuários', async () => {
+    await marcarComoDemo();
+    const bd = como('admin');
+    const resultado = await resetarDemo(bd);
+    const esperado = gerarDadosDemo();
+    const totalEsperado = Object.values(esperado).reduce((soma, lista) => soma + lista.length, 0);
+    assert.equal(resultado.criados, totalEsperado);
+
+    for (const [colecao, lista] of Object.entries(esperado)) {
+      const snap = await getDocs(collection(bd, colecao));
+      assert.equal(snap.size, lista.length, `coleção ${colecao}`);
+    }
+    for (const colecao of ['historico', 'lixeira', 'candidatos']) {
+      assert.equal((await getDocs(collection(bd, colecao))).size, 0, `coleção ${colecao} deveria estar vazia`);
+    }
+    assert.equal((await getDoc(doc(bd, 'escolas', 'escolaA'))).exists(), false);
+    assert.equal((await getDocs(collection(bd, 'usuarios'))).size, Object.keys(USUARIOS).length);
+    assert.equal((await getDoc(doc(bd, 'config', 'ambiente'))).data().demo, true);
+
+    // Rodar de novo dá no mesmo resultado (identificadores fixos).
+    await resetarDemo(bd);
+    assert.equal((await getDocs(collection(bd, 'escolas'))).size, esperado.escolas.length);
+  });
+
+  test('RH e diretora não conseguem restaurar os dados de demonstração', async () => {
+    await marcarComoDemo();
+    await assert.rejects(resetarDemo(como('rh')));
+    await assert.rejects(resetarDemo(como('diretoraA')));
+    assert.equal((await getDoc(doc(como('admin'), 'escolas', 'escolaA'))).exists(), true);
+  });
+
+  test('dados fictícios: toda conta, ciclo e chamado aponta para uma escola que existe', () => {
+    const dados = gerarDadosDemo();
+    const ids = new Set(dados.escolas.map((e) => e.id));
+    for (const colecao of ['contas', 'ciclos', 'manutencoes']) {
+      for (const registro of dados[colecao]) assert.ok(ids.has(registro.escolaId), `${colecao}/${registro.id}`);
+    }
+    const todosOsIds = Object.values(dados).flatMap((lista) => lista.map((r) => r.id));
+    assert.equal(new Set(todosOsIds).size, todosOsIds.length, 'identificadores repetidos');
+    const prestadores = new Set(dados.prestadores.map((p) => p.nome));
+    for (const m of dados.manutencoes) assert.ok(m.responsavel === 'A definir' || prestadores.has(m.responsavel), m.responsavel);
   });
 });
 

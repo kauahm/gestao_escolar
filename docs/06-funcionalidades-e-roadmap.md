@@ -45,7 +45,7 @@ Sem isso, nada mais importa: um erro de segurança numa demo com dados reais cus
 | 0.2 | ✅ **Feito (13/10)** — Corrigir `PrivateRoute` (`allowedRole` × `allowedRoles`) | Hoje qualquer logado abre `/admin` | P |
 | 0.3 | Perfis como *custom claims* + MFA para administradores | Permissão sólida, sem leituras extras | M |
 | 0.4 | ✅ **Feito (13/10)** — Criar `.gitignore` e `.env.example`; restringir a chave de API por domínio. Verificado: `.env` está no Git, mas só com a configuração pública do Firebase Web ([09](09-auditoria-de-seguranca-e-infraestrutura.md)) | Higiene e boa prática | P |
-| 0.5 | **Ambiente de demonstração** (projeto Firebase separado + dados fictícios + botão "resetar") | Mostrar sem expor nada real | M |
+| 0.5 | ✅ **Feito no código (14/10)**; falta você criar o projeto ([13](13-ambiente-de-demonstracao.md)) — **Ambiente de demonstração** (projeto Firebase separado + dados fictícios + botão "resetar") | Mostrar sem expor nada real | M |
 | 0.6 | Padronizar textos em PT-BR e estados de erro/vazio | Primeira impressão | P |
 | 0.7 | **Importação de planilhas** (Excel/CSV) para escolas, contas, ciclos e currículos, com pré-visualização e validação | A AEMC vive em Excel/Drive; sem importar, a adoção trava | M |
 | 0.8 | ✅ **Feito (13/10)** — **Corrigir a lógica que engana o painel**: "Vencida" como condição calculada (não sobrescreve "A enviar"), painel mostrando contas vencidas com valor, "próximos" só com datas futuras ([08](08-auditoria-visual-do-sistema-atual.md), A1–A3) | Hoje o painel mostra 0 contas enquanto há 20 vencidas | P |

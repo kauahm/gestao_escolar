@@ -1,7 +1,8 @@
 # Variáveis de ambiente (nunca versionar)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.demo.example
 
 # Dependências
 node_modules/
@@ -30,3 +31,6 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Ferramentas locais
+.claude/
