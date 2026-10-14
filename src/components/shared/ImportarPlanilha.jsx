@@ -201,7 +201,7 @@ export default function ImportarPlanilha({ isOpen, onClose, tipo, escolas = NENH
           </button>
 
           <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${lendo ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-primary hover:bg-blue-50/40'}`}>
-            {lendo ? <LoadingSpinner /> : <Upload size={28} className="text-gray-400" />}
+            {lendo ? <LoadingSpinner /> : <Upload size={28} className="text-gray-500" />}
             <span className="font-medium text-gray-800">{lendo ? 'Lendo a planilha...' : 'Escolher arquivo'}</span>
             <span className="text-xs text-gray-500">Excel (.xlsx) ou CSV · até {MAXIMO_DE_LINHAS.toLocaleString('pt-BR')} linhas por vez</span>
             <input ref={entrada} type="file" accept=".xlsx,.xlsm,.csv,.txt" className="sr-only" onChange={aoEscolherArquivo} disabled={lendo} />

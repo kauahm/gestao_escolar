@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { collection, query, where } from 'firebase/firestore';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, MapPin, Clock, User, Calendar, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { db } from '../../services/firebase';
@@ -12,6 +13,7 @@ import Badge from '../../components/ui/Badge';
 import Toast from '../../components/ui/Toast';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeLista } from '../../components/ui/Esqueleto';
 import SolicitarManutencao from '../../components/shared/SolicitarManutencao';
 
 // Todos os chamados de manutenção da escola da diretora, com o andamento de
@@ -41,6 +43,15 @@ export default function MeusChamados() {
   const [filtro, setFiltro] = useState('abertos');
   const [aberto, setAberto] = useState(null);
   const [formularioAberto, setFormularioAberto] = useState(false);
+  const [parametros, setParametros] = useSearchParams();
+
+  // Botão "Pedir manutenção" da barra inferior: abre o formulário direto.
+  useEffect(() => {
+    if (parametros.get('nova')) {
+      setFormularioAberto(true);
+      setParametros({}, { replace: true });
+    }
+  }, [parametros, setParametros]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
@@ -86,7 +97,7 @@ export default function MeusChamados() {
       </div>
 
       {carregando ? (
-        <div className="h-48 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+        <EsqueletoDeLista linhas={4} compacto />
       ) : lista.length === 0 ? (
         chamados.length === 0 ? (
           <EmptyState
@@ -120,18 +131,17 @@ export default function MeusChamados() {
                       <Badge label={m.prioridade || 'Baixa'} color={corDaPrioridade(m.prioridade)} />
                     </div>
                     <p className="font-semibold text-gray-900 truncate">{m.localDentroEscola || 'Local não informado'}</p>
-                    <p className="text-sm text-gray-600 line-clamp-2">{m.descricao}</p>
+                    <p className={`text-sm text-gray-600 whitespace-pre-wrap ${expandido ? '' : 'line-clamp-2'}`}>{m.descricao}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Aberto {m.criadoEm ? `em ${formatarDataHora(m.criadoEm)}` : ''}{m.status !== 'Concluído' && m.criadoEm ? (dias === 0 ? ' · hoje' : ` · há ${dias} ${dias === 1 ? 'dia' : 'dias'}`) : ''}
                     </p>
                   </div>
-                  {expandido ? <ChevronUp size={20} className="text-gray-400 shrink-0" /> : <ChevronDown size={20} className="text-gray-400 shrink-0" />}
+                  {expandido ? <ChevronUp size={20} className="text-gray-500 shrink-0" /> : <ChevronDown size={20} className="text-gray-500 shrink-0" />}
                 </button>
 
                 {expandido && (
                   <div className="px-4 pb-4 border-t border-gray-100 pt-3 text-sm space-y-2">
                     <p className="text-gray-800">{TEXTO_DO_STATUS[m.status] || ''}</p>
-                    <p className="text-gray-700 whitespace-pre-wrap">{m.descricao}</p>
                     <p className="flex items-center gap-1.5 text-gray-700"><User size={15} /> Responsável: {m.responsavel && m.responsavel !== 'A definir' ? m.responsavel : 'ainda não definido'}</p>
                     {m.prazo && <p className="flex items-center gap-1.5 text-gray-700"><Calendar size={15} /> Prazo previsto: {m.prazo.split('-').reverse().join('/')}</p>}
                     <p className="flex items-center gap-1.5 text-gray-700"><Clock size={15} /> Aberto por {m.solicitadaPorNome || 'administração'}{m.criadoEm ? ` em ${formatarDataHora(m.criadoEm)}` : ''}</p>

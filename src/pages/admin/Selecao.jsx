@@ -184,7 +184,7 @@ const confirmarDecisao = async (e) => {
           </div>
               </div>
               <div className="bg-gray-50 p-3 flex justify-center">
-                 <button className="text-[10px] text-gray-400 uppercase tracking-widest font-bold flex items-center gap-1">
+                 <button className="text-[10px] text-gray-500 uppercase tracking-widest font-bold flex items-center gap-1">
                    Ver Currículo completo <ChevronRight size={10}/>
                  </button>
               </div>
@@ -198,13 +198,13 @@ const confirmarDecisao = async (e) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900">Editar Entrevista</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h2 className="text-lg font-bold text-gray-900">Editar entrevista</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-500 hover:text-gray-600"><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSalvarEdicao} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Candidato</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do candidato</label>
                 <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} />
               </div>
               <div>

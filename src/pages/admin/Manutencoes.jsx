@@ -20,6 +20,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeLista, EsqueletoDeCartoes } from '../../components/ui/Esqueleto';
 
 // Ícones (Adicionado o Send para o WhatsApp)
 import { Plus, Search, Eye, Edit2, Trash2, AlertTriangle, X, Filter, Printer, Send } from 'lucide-react';
@@ -256,7 +257,7 @@ export default function AdminManutencoes() {
           <p className="text-gray-500 text-sm mt-1">{manutencoes.length} {manutencoes.length === 1 ? 'registro' : 'registros no total'}</p>
         </div>
         <button onClick={() => handleOpenForm()} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm">
-          <Plus size={20} /> Nova Manutenção
+          <Plus size={20} /> Nova manutenção
         </button>
       </div>
 
@@ -264,33 +265,33 @@ export default function AdminManutencoes() {
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
             <input type="text" placeholder="Buscar por descrição..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary outline-none" />
           </div>
           <button onClick={clearFilters} className="flex items-center justify-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"><X size={16} /> Limpar filtros</button>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <select value={filterEscola} onChange={(e) => setFilterEscola(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todas">Todas as Unidades</option>
+          <select aria-label="Filtrar por escola" value={filterEscola} onChange={(e) => setFilterEscola(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todas">Todas as unidades</option>
             {escolas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
           </select>
           {/* ALTERADO: Mapeamento dinâmico dos Prestadores no Filtro */}
-          <select value={filterResponsavel} onChange={(e) => setFilterResponsavel(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todos">Todos os Responsáveis</option>
+          <select aria-label="Filtrar por responsável" value={filterResponsavel} onChange={(e) => setFilterResponsavel(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todos">Todos os responsáveis</option>
             <option value="A definir">A definir</option>
             {prestadores.map(p => (
               <option key={p.id} value={p.id}>{p.nome}</option>
             ))}
           </select>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todos">Todos os Status</option>
+          <select aria-label="Filtrar por situação" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todos">Todos os status</option>
             <option value="Pendente">Pendente</option>
             <option value="Em andamento">Em andamento</option>
             <option value="Concluído">Concluído</option>
           </select>
-          <select value={filterPrioridade} onChange={(e) => setFilterPrioridade(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todas">Todas as Prioridades</option>
+          <select aria-label="Filtrar por prioridade" value={filterPrioridade} onChange={(e) => setFilterPrioridade(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todas">Todas as prioridades</option>
             <option value="Alta">Alta</option>
             <option value="Média">Média</option>
             <option value="Baixa">Baixa</option>
@@ -300,7 +301,7 @@ export default function AdminManutencoes() {
 
       {/* Tabela */}
       {loading ? (
-        <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+        <EsqueletoDeLista linhas={8} />
       ) : filteredManutencoes.length === 0 ? (
         manutencoes.length === 0 ? (
           <EmptyState
@@ -341,7 +342,7 @@ export default function AdminManutencoes() {
                     <td className="px-6 py-4">
                       <Link to={`/admin/manutencoes/${item.id}`} className="block text-sm text-gray-900 hover:text-primary hover:underline max-w-xs truncate" title={item.descricao}>{item.descricao}</Link>
                       {isAtrasado && (
-                        <div className="flex items-center text-xs text-yellow-600 mt-1">
+                        <div className="flex items-center text-xs text-amber-800 mt-1">
                           <AlertTriangle size={12} className="mr-1" /> Há {diasAberto} dias aberta
                         </div>
                       )}
@@ -390,7 +391,7 @@ export default function AdminManutencoes() {
       )}
 
       {/* Modal Formulário */}
-      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedManutencao ? "Editar Manutenção" : "Nova Manutenção"} size="md">
+      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedManutencao ? "Editar manutenção" : "Nova manutenção"} size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Unidade Escolar *</label>

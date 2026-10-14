@@ -20,7 +20,9 @@ export default function AdminDashboard() {
   
   // Chamados, contas e ciclos já são lidos uma vez para os alertas (contexts/AlertasContext).
   const { manutencoes, contas, ciclos, carregando: carregandoAlertas } = useAlertas();
-  const [candidatos, setCandidatos] = useState([]);
+  // Entrevistas vêm do Banco de Talentos (curriculos). A coleção 'candidatos'
+  // nunca recebe dados, por isso o cartão mostrava sempre 0.
+  const [curriculos, setCurriculos] = useState([]);
   const [eventos, setEventos] = useState([]);
   const [backup, setBackup] = useState(undefined); // undefined = carregando
 
@@ -28,8 +30,8 @@ export default function AdminDashboard() {
     // Escutar todas as coleções necessárias em tempo real
     const unsubs = [];
 
-    unsubs.push(ouvir(collection(db, 'candidatos'), snap => {
-      setCandidatos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    unsubs.push(ouvir(collection(db, 'curriculos'), snap => {
+      setCurriculos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
     unsubs.push(ouvir(collection(db, 'eventos'), snap => {
       setEventos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -78,7 +80,7 @@ export default function AdminDashboard() {
 
     const mesAtual = hoje.getMonth() + 1;
     const anoAtual = hoje.getFullYear();
-    const entrevistasMes = candidatos.filter(c => {
+    const entrevistasMes = curriculos.filter(c => {
       if (!c.dataEntrevista) return false;
       const [ano, mes] = c.dataEntrevista.split('-');
       return Number(ano) === anoAtual && Number(mes) === mesAtual;
@@ -94,7 +96,7 @@ export default function AdminDashboard() {
       ciclos: ciclosCriticos,
       entrevistas: entrevistasMes
     };
-  }, [manutencoes, contas, ciclos, candidatos]);
+  }, [manutencoes, contas, ciclos, curriculos]);
 
 
   // Estruturas de Listagens
@@ -183,14 +185,14 @@ export default function AdminDashboard() {
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
+        <Link to="/admin/manutencoes" className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:shadow-md hover:border-primary-200 transition">
           <div className="p-3 bg-blue-50 rounded-lg text-blue-600"><Wrench size={24} /></div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Manutenções Abertas</p>
+            <p className="text-sm font-medium text-gray-500">Manutenções abertas</p>
             <h3 className="text-2xl font-bold text-gray-900">{metricas.manutencoes.length}</h3>
-            <p className="text-xs text-gray-400 mt-1">{metricas.manutencoes.filter(m => m.status === 'Em andamento').length} em andamento</p>
+            <p className="text-xs text-gray-500 mt-1">{metricas.manutencoes.filter(m => m.status === 'Em andamento').length} em andamento</p>
           </div>
-        </div>
+        </Link>
         
         <Link
           to="/admin/contas"
@@ -198,9 +200,9 @@ export default function AdminDashboard() {
         >
           <div className={`p-3 rounded-lg ${metricas.contasVencidas.length > 0 ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600'}`}><Receipt size={24} /></div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Contas a Enviar</p>
+            <p className="text-sm font-medium text-gray-500">Contas a enviar</p>
             <h3 className="text-2xl font-bold text-gray-900">{metricas.contas.length}</h3>
-            <p className="text-xs text-gray-400 mt-1">{formatarMoeda(metricas.valorContas)} pendentes</p>
+            <p className="text-xs text-gray-500 mt-1">{formatarMoeda(metricas.valorContas)} pendentes</p>
             {metricas.contasVencidas.length > 0 && (
               <p className="text-xs font-semibold text-red-600 mt-1">
                 {metricas.contasVencidas.length} {metricas.contasVencidas.length === 1 ? 'vencida' : 'vencidas'} · {formatarMoeda(metricas.valorVencido)}
@@ -209,23 +211,28 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
+        <Link to="/admin/ciclos" className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:shadow-md hover:border-primary-200 transition">
           <div className="p-3 bg-orange-50 rounded-lg text-orange-600"><RefreshCcw size={24} /></div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Ciclos Críticos</p>
+            <p className="text-sm font-medium text-gray-500">Ciclos críticos</p>
             <h3 className="text-2xl font-bold text-gray-900">{metricas.ciclos.length}</h3>
-            <p className="text-xs text-gray-400 mt-1">Vencidos ou vencendo</p>
+            <p className="text-xs text-gray-500 mt-1">Vencidos ou vencendo em 30 dias</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
+        <Link to="/admin/selecao" className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 hover:shadow-md hover:border-primary-200 transition">
           <div className="p-3 bg-green-50 rounded-lg text-green-600"><Users size={24} /></div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Entrevistas este Mês</p>
+            <p className="text-sm font-medium text-gray-500">Entrevistas do mês</p>
             <h3 className="text-2xl font-bold text-gray-900">{metricas.entrevistas.length}</h3>
-            <p className="text-xs text-gray-400 mt-1">Candidatos cadastrados</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {(() => {
+                const aFazer = metricas.entrevistas.filter(c => c.status === 'Entrevista Agendada').length;
+                return aFazer ? `${aFazer} ainda ${aFazer === 1 ? 'agendada' : 'agendadas'}` : 'nenhuma pendente';
+              })()}
+            </p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* O que precisa de atenção hoje, com a ação de cada item */}
@@ -237,7 +244,7 @@ export default function AdminDashboard() {
         {/* Manutenções */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-800">Últimas Manutenções Abertas</h3>
+            <h3 className="font-bold text-gray-800">Últimas Manutenções abertas</h3>
             <Link to="/admin/manutencoes" className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">Ver todas <ArrowRight size={16} /></Link>
           </div>
           <div className="p-0 flex-1">
@@ -273,7 +280,7 @@ export default function AdminDashboard() {
         {/* Ciclos */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-800">Próximos Ciclos a Vencer</h3>
+            <h3 className="font-bold text-gray-800">Próximos ciclos a vencer</h3>
             <Link to="/admin/ciclos" className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">Ver todos <ArrowRight size={16} /></Link>
           </div>
           <div className="p-0 flex-1">
@@ -355,7 +362,7 @@ export default function AdminDashboard() {
         {/* Mini Agenda */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-800">Próximos Eventos</h3>
+            <h3 className="font-bold text-gray-800">Próximos eventos</h3>
             <Link to="/admin/agenda" className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">Ver agenda <ArrowRight size={16} /></Link>
           </div>
           <div className="p-4 flex-1 space-y-4">

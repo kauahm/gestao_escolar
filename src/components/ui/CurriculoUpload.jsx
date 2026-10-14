@@ -112,7 +112,7 @@ export default function CurriculoUpload({
         <button
           type="button"
           onClick={handleRemoveClick}
-          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+          className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
           title="Remover arquivo"
         >
           <X size={20} />
@@ -142,7 +142,7 @@ export default function CurriculoUpload({
           accept=".pdf, .jpg, .jpeg, .png" 
           onChange={handleChange} 
         />
-        <UploadCloud className={`w-10 h-10 mb-3 ${error ? 'text-red-400' : 'text-gray-400'}`} />
+        <UploadCloud className={`w-10 h-10 mb-3 ${error ? 'text-red-400' : 'text-gray-500'}`} />
         <p className="text-sm font-medium text-gray-900 mb-1">
           Clique ou arraste um arquivo
         </p>

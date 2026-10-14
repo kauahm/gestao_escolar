@@ -27,7 +27,7 @@ export default function Toast({ message, type = 'success', onClose }) {
     <div className={`fixed top-4 right-4 z-50 flex items-center p-4 border rounded shadow-lg transition-all duration-300 ${styles[type]}`}>
       <div className="mr-3">{icons[type]}</div>
       <p className="flex-1 font-medium">{message}</p>
-      <button onClick={onClose} className="ml-4 text-gray-500 hover:text-gray-700">
+      <button onClick={onClose} aria-label="Fechar aviso" className="ml-4 text-gray-500 hover:text-gray-700">
         <X className="w-4 h-4" />
       </button>
     </div>

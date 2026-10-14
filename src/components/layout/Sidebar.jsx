@@ -64,7 +64,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
         
         {/* Botão de Fechar (Mobile) */}
         <div className="absolute top-4 right-4 md:hidden">
-          <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-md">
+          <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Fechar o menu" className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-md">
             <X size={24} />
           </button>
         </div>
@@ -73,19 +73,19 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
         <div className="p-6 flex flex-col items-center border-b border-primary-light bg-primary">
           <img 
             src={logoImg} 
-            alt="Logo Associação" 
+            alt="Associação Educacional Maria do Carmo" 
             className="h-16 w-auto object-contain mb-3 brightness-110" 
           />
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto pb-4 custom-scrollbar">
+        <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto pb-4 custom-scrollbar" aria-label="Menu principal">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
                   isActive ? 'bg-primary-dark text-white font-semibold' : 'text-blue-100 hover:bg-primary-light'
                 }`
               }

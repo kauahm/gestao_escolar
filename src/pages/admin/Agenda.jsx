@@ -36,11 +36,13 @@ const CATEGORIAS_CORES = {
   'Outro': '#5F5E5A'
 };
 
+// Cores dos eventos automáticos: as mesmas famílias de antes, em tons mais
+// fortes, para o texto branco ter contraste suficiente (acessibilidade).
 const AUTO_CORES = {
-  contas: '#E24B4A',
-  ciclos: '#EF9F27',
-  manutencoes: '#378ADD',
-  rh: '#10B981' // Verde para as entrevistas do RH
+  contas: '#B91C1C',
+  ciclos: '#B45309',
+  manutencoes: '#1D4ED8',
+  rh: '#047857' // entrevistas do RH
 };
 
 const PALETA_CORES = [
@@ -96,7 +98,7 @@ export default function Agenda() {
   
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // 1. Buscar Eventos Manuais (Real-time)
+  // 1. Buscar Eventos manuais (Real-time)
   useEffect(() => {
     const q = collection(db, 'eventos');
     const unsubscribe = ouvir(q, (snapshot) => {
@@ -475,7 +477,7 @@ export default function Agenda() {
   return (
     <div className="w-full flex flex-col md:flex-row gap-6">
       
-      {/* Sidebar de Filtros e Próximos Eventos */}
+      {/* Sidebar de Filtros e Próximos eventos */}
       <aside className="w-full md:w-64 flex flex-col gap-6 order-2 md:order-1">
         
         {/* Painel de Filtros */}
@@ -486,7 +488,7 @@ export default function Agenda() {
           
           <div className="space-y-4">
             <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Eventos Manuais</h4>
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Eventos manuais</h4>
               <div className="space-y-2">
                 {Object.keys(CATEGORIAS_CORES).map(cat => (
                   <label key={cat} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
@@ -499,7 +501,7 @@ export default function Agenda() {
             </div>
 
             <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sistema Automático</h4>
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Gerados pelo sistema</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
                   <input type="checkbox" checked={filtros['contas']} onChange={() => toggleFiltro('contas')} className="rounded text-primary focus:ring-primary" />
@@ -526,7 +528,7 @@ export default function Agenda() {
           </div>
         </div>
 
-        {/* Próximos Eventos */}
+        {/* Próximos eventos */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hidden md:block">
           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
             <Clock size={18} className="text-primary" /> Próximos
@@ -569,7 +571,7 @@ export default function Agenda() {
       </main>
 
       {/* Modal: Form de Evento */}
-      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedEvent ? "Editar Evento" : "Novo Evento"} size="md">
+      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedEvent ? "Editar evento" : "Novo evento"} size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Título do Evento *</label>
@@ -596,7 +598,7 @@ export default function Agenda() {
 
           <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-md border border-gray-200">
             <input type="checkbox" id="diaInteiro" name="diaInteiro" checked={formData.diaInteiro} onChange={handleInputChange} className="rounded text-primary focus:ring-primary w-4 h-4" />
-            <label htmlFor="diaInteiro" className="text-sm font-medium text-gray-800 cursor-pointer">Evento de Dia Inteiro</label>
+            <label htmlFor="diaInteiro" className="text-sm font-medium text-gray-800 cursor-pointer">Evento de dia inteiro</label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -616,12 +618,12 @@ export default function Agenda() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim <span className="text-xs text-gray-400">(Opcional)</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data de término <span className="text-xs text-gray-500">(Opcional)</span></label>
               <input type="date" name="dataFim" value={formData.dataFim} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary" />
             </div>
             {!formData.diaInteiro && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hora Fim</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hora de término</label>
                 <input type="time" name="horaFim" value={formData.horaFim} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary" />
               </div>
             )}
@@ -640,15 +642,15 @@ export default function Agenda() {
           <div className="flex justify-end gap-3 pt-4 border-t mt-6">
             <button type="button" onClick={handleCloseForm} className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 bg-white rounded-md hover:bg-gray-50 transition-colors">Cancelar</button>
             <button type="submit" disabled={isSubmitting} className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors flex justify-center items-center min-w-[120px]">
-              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Salvar Evento'}
+              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Salvar evento'}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal: Detalhes do Evento */}
+      {/* Modal: Detalhes do evento */}
       {selectedEvent && !isFormModalOpen && (
-        <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} title="Detalhes do Evento" size="md">
+        <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} title="Detalhes do evento" size="md">
           <div className="space-y-5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: selectedEvent.backgroundColor }}>
@@ -668,7 +670,7 @@ export default function Agenda() {
 
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
               <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Clock className="w-5 h-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-900 font-medium">Quando</p>
                   <p className="text-sm text-gray-600">
@@ -683,7 +685,7 @@ export default function Agenda() {
 
               {selectedEvent.extendedProps.local && (
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-900 font-medium">Local</p>
                     <p className="text-sm text-gray-600">{selectedEvent.extendedProps.local}</p>
@@ -693,7 +695,7 @@ export default function Agenda() {
 
               {selectedEvent.extendedProps.descricao && (
                 <div className="flex items-start gap-3">
-                  <AlignLeft className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <AlignLeft className="w-5 h-5 text-gray-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-900 font-medium">Descrição</p>
                     <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedEvent.extendedProps.descricao}</p>
@@ -718,7 +720,7 @@ export default function Agenda() {
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 italic">Evento gerado automaticamente</p>
+                  <p className="text-xs text-gray-500 italic">Evento gerado automaticamente</p>
                   <div className="flex gap-2">
                     <button onClick={() => setIsDetailsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Fechar</button>
                     <button onClick={navigateToModule} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors">
@@ -735,7 +737,7 @@ export default function Agenda() {
       {/* Confirmação Exclusão */}
       <ConfirmDialog 
         isOpen={isConfirmDeleteOpen} 
-        title="Excluir Evento" 
+        title="Excluir evento" 
         message={`Tem certeza que deseja excluir o evento "${selectedEvent?.title}"?`} 
         onConfirm={handleConfirmDelete} 
         onCancel={() => setIsConfirmDeleteOpen(false)} 

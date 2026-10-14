@@ -138,7 +138,7 @@ export default function DiretoraDashboard() {
           onClick={() => setIsFormModalOpen(true)}
           className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors font-bold shadow-md w-full md:w-auto justify-center"
         >
-          <Plus size={20} /> Solicitar Nova Manutenção
+          <Plus size={20} /> Pedir manutenção
         </button>
       </div>
 
@@ -168,33 +168,33 @@ export default function DiretoraDashboard() {
       )}
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
-          <div className="p-3 bg-blue-50 rounded-full text-blue-600 mb-3"><Wrench size={24} /></div>
-          <h3 className="text-3xl font-bold text-gray-900">{metricas.manutencoes.length}</h3>
-          <p className="text-sm font-medium text-gray-500 mt-1">Manutenções em curso</p>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
+          <div className="p-2 sm:p-3 bg-blue-50 rounded-full text-blue-600 mb-2 sm:mb-3"><Wrench size={24} /></div>
+          <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">{metricas.manutencoes.length}</h3>
+          <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 leading-tight">Manutenções em curso</p>
         </div>
         
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
-          <div className="p-3 bg-orange-50 rounded-full text-orange-600 mb-3"><RefreshCcw size={24} /></div>
-          <h3 className="text-3xl font-bold text-gray-900">{metricas.ciclos.length}</h3>
-          <p className="text-sm font-medium text-gray-500 mt-1">Ciclos críticos</p>
+        <div className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
+          <div className="p-2 sm:p-3 bg-orange-50 rounded-full text-orange-600 mb-2 sm:mb-3"><RefreshCcw size={24} /></div>
+          <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">{metricas.ciclos.length}</h3>
+          <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 leading-tight">Ciclos críticos</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
-          <div className="p-3 bg-yellow-50 rounded-full text-yellow-600 mb-3"><Receipt size={24} /></div>
-          <h3 className="text-3xl font-bold text-gray-900">{metricas.contas.length}</h3>
-          <p className="text-sm font-medium text-gray-500 mt-1">Contas a enviar</p>
+        <div className="bg-white p-3 sm:p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
+          <div className="p-2 sm:p-3 bg-yellow-50 rounded-full text-yellow-600 mb-2 sm:mb-3"><Receipt size={24} /></div>
+          <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">{metricas.contas.length}</h3>
+          <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 leading-tight">Contas a enviar</p>
         </div>
       </div>
 
       {/* Grid de Detalhes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Minhas Solicitações Recentes */}
+        {/* Minhas solicitações recentes */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-800">Minhas Solicitações Recentes</h3>
+            <h3 className="font-bold text-gray-800">Minhas solicitações recentes</h3>
             <Link to="/diretora/manutencoes" className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">Ver todas <ArrowRight size={16} /></Link>
           </div>
           <div className="p-4 flex-1 space-y-4 overflow-y-auto">
@@ -209,7 +209,7 @@ export default function DiretoraDashboard() {
                 <p className="text-sm text-gray-600 line-clamp-2">{m.descricao}</p>
                 <div className="flex justify-between items-center mt-1">
                   <Badge label={m.prioridade} color={m.prioridade === 'Alta' ? 'red' : m.prioridade === 'Média' ? 'yellow' : 'green'} />
-                  <span className="text-xs text-gray-400">{m.criadoEm ? formatarDataHora(m.criadoEm) : ''}</span>
+                  <span className="text-xs text-gray-500">{m.criadoEm ? formatarDataHora(m.criadoEm) : ''}</span>
                 </div>
               </div>
             ))}
@@ -253,7 +253,7 @@ export default function DiretoraDashboard() {
           {/* Contas da Escola */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <h3 className="font-bold text-gray-800">Contas a Enviar (Próximas)</h3>
+              <h3 className="font-bold text-gray-800">Contas a enviar (Próximas)</h3>
             </div>
             <div className="p-0">
               <table className="w-full text-left text-sm">

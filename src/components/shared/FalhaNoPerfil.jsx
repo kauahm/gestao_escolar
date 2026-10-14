@@ -12,7 +12,7 @@ export default function FalhaNoPerfil({ codigo }) {
 
   return (
     <div className="h-screen flex items-center justify-center flex-col px-6 text-center">
-      <CloudOff className="w-12 h-12 text-gray-400 mb-4" aria-hidden="true" />
+      <CloudOff className="w-12 h-12 text-gray-500 mb-4" aria-hidden="true" />
       <p className="font-semibold text-gray-900">Não foi possível carregar o seu perfil</p>
       <p className="mt-2 text-sm text-gray-600 max-w-md">
         {semPermissao

@@ -36,3 +36,6 @@ desktop.ini
 
 # Ferramentas locais
 .claude/
+
+# Saídas de testes de tela (Playwright)
+.playwright-mcp/

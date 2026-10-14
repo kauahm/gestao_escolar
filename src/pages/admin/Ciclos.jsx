@@ -12,6 +12,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeLista, EsqueletoDeCartoes } from '../../components/ui/Esqueleto';
 import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
 import { Upload } from 'lucide-react';
 
@@ -341,7 +342,7 @@ export default function Ciclos() {
             onClick={() => handleOpenForm()}
             className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
           >
-            <Plus size={20} /> Registrar Ciclo
+            <Plus size={20} /> Registrar ciclo
           </button>
         </div>
       </div>
@@ -351,21 +352,21 @@ export default function Ciclos() {
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
           
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <select value={filterEscola} onChange={(e) => setFilterEscola(e.target.value)} className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-              <option value="Todas">Todas as Unidades</option>
+            <select aria-label="Filtrar por escola" value={filterEscola} onChange={(e) => setFilterEscola(e.target.value)} className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+              <option value="Todas">Todas as unidades</option>
               {escolas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
             </select>
-            <select value={filterTipo} onChange={(e) => setFilterTipo(e.target.value)} className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-              <option value="Todos">Todos os Tipos</option>
+            <select aria-label="Filtrar por tipo" value={filterTipo} onChange={(e) => setFilterTipo(e.target.value)} className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+              <option value="Todos">Todos os tipos</option>
               {Object.keys(CICLOS_PADRAO).map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
             </select>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-              <option value="Todos">Todos os Status</option>
+            <select aria-label="Filtrar por situação" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+              <option value="Todos">Todos os status</option>
               <option value="Em dia">Em dia</option>
               <option value="Vencendo em breve">Vencendo em breve</option>
               <option value="Vencido">Vencido</option>
             </select>
-            <button onClick={clearFilters} className="p-2 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-md" title="Limpar Filtros">
+            <button onClick={clearFilters} className="p-2 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-md" title="Limpar filtros">
               <X size={20} />
             </button>
           </div>
@@ -375,13 +376,13 @@ export default function Ciclos() {
               onClick={() => setViewMode('unidade')} 
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'unidade' ? 'bg-white shadow text-primary' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              Agrupar por Unidade
+              Agrupar por unidade
             </button>
             <button 
               onClick={() => setViewMode('tipo')} 
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'tipo' ? 'bg-white shadow text-primary' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              Agrupar por Tipo
+              Agrupar por tipo
             </button>
           </div>
         </div>
@@ -389,7 +390,7 @@ export default function Ciclos() {
 
       {/* Listagem Agrupada */}
       {loading ? (
-        <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+        <EsqueletoDeLista linhas={8} />
       ) : Object.keys(groupedCiclos).length === 0 ? (
         ciclos.length === 0 ? (
           <EmptyState
@@ -424,9 +425,9 @@ export default function Ciclos() {
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{viewMode === 'unidade' ? 'Tipo' : 'Unidade'}</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última Execução</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Próxima Execução</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Próxima execução</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dias Restantes</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dias restantes</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
@@ -442,7 +443,7 @@ export default function Ciclos() {
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {formatDataString(item.ultimaExecucao)}
-                            <div className="text-[10px] text-gray-400 mt-0.5">A cada {item.periodicidadeDias} dias</div>
+                            <div className="text-[10px] text-gray-500 mt-0.5">A cada {item.periodicidadeDias} dias</div>
                           </td>
                           <td className="px-4 py-3 text-sm font-semibold text-gray-900">
                             {formatDataString(item.proximaExecucao)}
@@ -483,8 +484,8 @@ export default function Ciclos() {
         </div>
       )}
 
-      {/* Modal: Registrar/Editar Ciclo */}
-      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedCiclo ? "Editar Ciclo" : "Registrar Ciclo"} size="md">
+      {/* Modal: Registrar/Editar ciclo */}
+      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedCiclo ? "Editar ciclo" : "Registrar ciclo"} size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Unidade Escolar *</label>
@@ -512,7 +513,7 @@ export default function Ciclos() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                Periodicidade <span className="text-gray-400 text-xs font-normal">(dias)</span> *
+                Periodicidade <span className="text-gray-500 text-xs font-normal">(dias)</span> *
               </label>
               <input type="number" min="1" name="periodicidadeDias" value={formData.periodicidadeDias} onChange={handleInputChange} className={`w-full px-3 py-2 border rounded-md focus:ring-primary outline-none ${formErrors.periodicidadeDias ? 'border-red-500' : 'border-gray-300'}`} />
               {formErrors.periodicidadeDias && <p className="text-red-500 text-xs mt-1">{formErrors.periodicidadeDias}</p>}
@@ -520,7 +521,7 @@ export default function Ciclos() {
           </div>
 
           <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg">
-            <label className="block text-xs font-bold text-blue-800 uppercase mb-1">Cálculo Automático: Próxima Execução</label>
+            <label className="block text-xs font-bold text-blue-800 uppercase mb-1">Cálculo Automático: Próxima execução</label>
             <div className="text-lg font-semibold text-blue-900 flex items-center gap-2">
               <CalendarCheck size={20} />
               {formData.proximaExecucao ? formatDataString(formData.proximaExecucao) : '--/--/----'}
@@ -535,7 +536,7 @@ export default function Ciclos() {
           <div className="flex justify-end gap-3 pt-4 border-t mt-6">
             <button type="button" onClick={handleCloseForm} className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 bg-white rounded-md hover:bg-gray-50 transition-colors">Cancelar</button>
             <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark w-32 flex justify-center transition-colors">
-              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Salvar Ciclo'}
+              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Salvar ciclo'}
             </button>
           </div>
         </form>
@@ -544,7 +545,7 @@ export default function Ciclos() {
       {/* Confirmações */}
       <ConfirmDialog 
         isOpen={isConfirmExecucaoOpen} 
-        title="Registrar Nova Execução" 
+        title="Registrar nova execução" 
         message={`Confirma que o serviço '${selectedCiclo?.tipo}' foi realizado HOJE na unidade ${selectedCiclo?.escolaNome}? A próxima data será recalculada automaticamente.`} 
         onConfirm={handleConfirmExecucao} 
         onCancel={() => setIsConfirmExecucaoOpen(false)} 

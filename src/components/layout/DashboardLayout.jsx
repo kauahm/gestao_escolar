@@ -5,6 +5,8 @@ import { AlertasProvider, useAlertas } from '../../contexts/AlertasContext';
 import { NOME_DO_SISTEMA, nomeDaTela } from '../../config/telas';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import MobileNav from './MobileNav';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function DashboardLayout() {
   return (
@@ -17,6 +19,8 @@ export default function DashboardLayout() {
 function Estrutura() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const { userProfile } = useAuth();
+  const ehDiretora = userProfile?.perfil === 'diretora';
 
   // Título da aba do navegador com o nome da tela (ex.: "Escolas · Gestão Escolar").
   // Com pendências, o número aparece antes: "(7) Painel · Gestão Escolar".
@@ -39,13 +43,14 @@ function Estrutura() {
         <Topbar onMenuClick={() => setIsMobileMenuOpen(true)} />
         
         {/* pt-16 (64px) é a altura exata da Topbar. Isso impede a sobreposição */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-24 md:ml-64">
+        <main className={`flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-24 md:ml-64 ${ehDiretora ? 'pb-28 md:pb-8' : ''}`}>
           <div className="max-w-7xl mx-auto">
             <AvisoDeConexao />
             <Outlet />
           </div>
         </main>
       </div>
+      {ehDiretora && <MobileNav />}
     </div>
   );
 }

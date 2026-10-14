@@ -148,8 +148,8 @@ export default function PainelDeAlertas() {
             return (
               <li key={a.chave} className="p-3 sm:px-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <span className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${COR[a.gravidade].ponto}`} title={COR[a.gravidade].rotulo} aria-label={COR[a.gravidade].rotulo} />
-                  <Icone size={16} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
+                  <span role="img" className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ${COR[a.gravidade].ponto}`} title={COR[a.gravidade].rotulo} aria-label={COR[a.gravidade].rotulo} />
+                  <Icone size={16} className="mt-0.5 shrink-0 text-gray-500" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="text-sm text-gray-900">
                       <span className="font-medium">{a.titulo}</span>

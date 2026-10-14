@@ -19,6 +19,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeLista, EsqueletoDeCartoes } from '../../components/ui/Esqueleto';
 import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
 import { Upload } from 'lucide-react';
 
@@ -400,7 +401,7 @@ export default function Contas() {
             onClick={() => handleOpenForm()}
             className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
           >
-            <Plus size={20} /> Registrar Conta
+            <Plus size={20} /> Registrar conta
           </button>
         </div>
       </div>
@@ -409,7 +410,7 @@ export default function Contas() {
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar por Nº do documento ou observação..."
@@ -427,26 +428,26 @@ export default function Contas() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <select value={filterEscola} onChange={(e) => setFilterEscola(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todas">Todas as Unidades</option>
+          <select aria-label="Filtrar por escola" value={filterEscola} onChange={(e) => setFilterEscola(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todas">Todas as unidades</option>
             {escolas.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
           </select>
-          <select value={filterTipo} onChange={(e) => setFilterTipo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todos">Todos os Tipos</option>
+          <select aria-label="Filtrar por tipo" value={filterTipo} onChange={(e) => setFilterTipo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todos">Todos os tipos</option>
             <option value="CPFL">CPFL</option>
             <option value="SABESP">SABESP</option>
             <option value="Taxa de Limpeza">Taxa de Limpeza</option>
             <option value="Nota Fiscal de Serviço">Nota Fiscal de Serviço</option>
             <option value="Outro">Outro</option>
           </select>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todos">Todos os Status</option>
+          <select aria-label="Filtrar por situação" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todos">Todos os status</option>
             <option value="Vencida">Vencidas</option>
             <option value="A enviar">A enviar (no prazo)</option>
             <option value="Enviada">Enviadas</option>
           </select>
-          <select value={filterCompetencia} onChange={(e) => setFilterCompetencia(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-            <option value="Todas">Todas as Competências</option>
+          <select aria-label="Filtrar por competência" value={filterCompetencia} onChange={(e) => setFilterCompetencia(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
+            <option value="Todas">Todas as competências</option>
             {competenciasDisponiveis.map(comp => <option key={comp} value={comp}>{comp}</option>)}
           </select>
         </div>
@@ -454,7 +455,7 @@ export default function Contas() {
 
       {/* Tabela de Contas */}
       {loading ? (
-        <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+        <EsqueletoDeLista linhas={8} />
       ) : filteredContas.length === 0 ? (
         contas.length === 0 ? (
           <EmptyState
@@ -530,7 +531,7 @@ export default function Contas() {
                               <CheckCircle size={18} />
                             </button>
                           )}
-                          <button onClick={() => { setSelectedConta(item); setIsDetailsModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md transition-colors" title="Ver Detalhes">
+                          <button onClick={() => { setSelectedConta(item); setIsDetailsModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md transition-colors" title="Ver detalhes">
                             <Eye size={18} />
                           </button>
                           <button onClick={() => handleOpenForm(item)} className="text-gray-600 hover:bg-gray-100 p-1.5 rounded-md transition-colors" title="Editar">
@@ -565,7 +566,7 @@ export default function Contas() {
       )}
 
       {/* Modal: Form de Registro/Edição */}
-      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedConta ? "Editar Conta" : "Registrar Conta"} size="md">
+      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedConta ? "Editar conta" : "Registrar conta"} size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Unidade Escolar *</label>
@@ -655,7 +656,7 @@ export default function Contas() {
 
       {/* Modal: Detalhes */}
       {selectedConta && !isFormModalOpen && (
-        <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} title="Detalhes do Lançamento" size="md">
+        <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} title="Detalhes do lançamento" size="md">
           <div className="space-y-5">
             {/* Header Conta */}
             <div className="flex justify-between items-start bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -688,19 +689,19 @@ export default function Contas() {
 
             <div className="grid grid-cols-2 gap-y-4 gap-x-6 px-1">
               <div>
-                <span className="block text-xs font-bold text-gray-400 uppercase">Vencimento</span>
+                <span className="block text-xs font-bold text-gray-500 uppercase">Vencimento</span>
                 <p className="text-sm font-medium text-gray-900 mt-1">{formatDataString(selectedConta.vencimento)}</p>
               </div>
               <div>
-                <span className="block text-xs font-bold text-gray-400 uppercase">Competência</span>
+                <span className="block text-xs font-bold text-gray-500 uppercase">Competência</span>
                 <p className="text-sm font-medium text-gray-900 mt-1">{selectedConta.competencia}</p>
               </div>
               <div>
-                <span className="block text-xs font-bold text-gray-400 uppercase">Nº do Documento</span>
+                <span className="block text-xs font-bold text-gray-500 uppercase">Nº do Documento</span>
                 <p className="text-sm font-medium text-gray-900 mt-1">{selectedConta.numeroDocumento || 'Não informado'}</p>
               </div>
               <div>
-                <span className="block text-xs font-bold text-gray-400 uppercase">Prazo</span>
+                <span className="block text-xs font-bold text-gray-500 uppercase">Prazo</span>
                 <p className="text-sm font-medium text-gray-900 mt-1">
                   {situacaoConta(selectedConta).vencida
                     ? `Venceu há ${situacaoConta(selectedConta).diasDeAtraso} dias`
@@ -711,7 +712,7 @@ export default function Contas() {
 
             {selectedConta.observacoes && (
               <div className="px-1">
-                <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Observações</span>
+                <span className="block text-xs font-bold text-gray-500 uppercase mb-1">Observações</span>
                 <div className="text-sm text-gray-700 bg-white border p-3 rounded-md min-h-[60px]">
                   {selectedConta.observacoes}
                 </div>
@@ -737,7 +738,7 @@ export default function Contas() {
       {/* Confirmações e Notificações */}
       <ConfirmDialog 
         isOpen={isConfirmSendOpen} 
-        title="Confirmar Envio" 
+        title="Confirmar envio" 
         message={`Confirma o envio da conta de ${formatarMoeda(selectedConta?.valor)} (${selectedConta?.escolaNome}) para o escritório de SP?`} 
         onConfirm={handleConfirmSend} 
         onCancel={() => setIsConfirmSendOpen(false)} 

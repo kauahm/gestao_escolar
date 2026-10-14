@@ -14,6 +14,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeLista, EsqueletoDeCartoes } from '../../components/ui/Esqueleto';
 
 // Ícones
 import { 
@@ -352,34 +353,34 @@ export default function Usuarios() {
           </div>
         </div>
         <button onClick={() => handleOpenForm()} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm">
-          <Plus size={20} /> Novo Usuário
+          <Plus size={20} /> Novo usuário
         </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
           <input type="text" placeholder="Buscar por nome ou e-mail..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary outline-none" />
         </div>
         <div className="w-full sm:w-48">
-          <select value={filterPerfil} onChange={(e) => setFilterPerfil(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary outline-none bg-white">
-            <option value="Todos">Todos os Perfis</option>
+          <select aria-label="Filtrar por perfil" value={filterPerfil} onChange={(e) => setFilterPerfil(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary outline-none bg-white">
+            <option value="Todos">Todos os perfis</option>
             <option value="admin">Administrador</option>
             <option value="administrativo">Administrativo (RH)</option>
             <option value="diretora">Diretoras</option>
           </select>
         </div>
         <div className="w-full sm:w-48">
-          <select value={filterSituacao} onChange={(e) => setFilterSituacao(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary outline-none bg-white">
-            <option value="Todas">Todas as Situações</option>
-            <option value="Ativas">Apenas Ativos</option>
-            <option value="Inativas">Apenas Inativos</option>
+          <select aria-label="Filtrar por situação" value={filterSituacao} onChange={(e) => setFilterSituacao(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary outline-none bg-white">
+            <option value="Todas">Todas as situações</option>
+            <option value="Ativas">Apenas ativos</option>
+            <option value="Inativas">Apenas inativos</option>
           </select>
         </div>
       </div>
 
       {loading ? (
-        <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+        <EsqueletoDeLista linhas={6} />
       ) : filteredUsuarios.length === 0 ? (
         <EmptyState
           titulo="Nenhum usuário com estes filtros"
@@ -409,7 +410,7 @@ export default function Usuarios() {
                     <Badge label={getPerfilNome(item.perfil)} color={getPerfilBadgeColor(item.perfil)} />
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                    {item.perfil === 'diretora' ? (item.unidadeNome || '-') : <span className="text-gray-400 italic">Acesso Geral</span>}
+                    {item.perfil === 'diretora' ? (item.unidadeNome || '-') : <span className="text-gray-500 italic">Acesso geral</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge label={item.situacao === 'ativa' ? 'Ativo' : 'Inativo'} color={item.situacao === 'ativa' ? 'green' : 'gray'} />
@@ -435,7 +436,7 @@ export default function Usuarios() {
       )}
 
       {/* Modal: Form Cadastrar/Editar */}
-      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedUsuario ? "Editar Usuário" : "Cadastrar Novo Usuário"} size="md">
+      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedUsuario ? "Editar usuário" : "Cadastrar novo usuário"} size="md">
         <form onSubmit={handleSaveFlow} className="space-y-4">
           
           <div>
@@ -465,7 +466,7 @@ export default function Usuarios() {
               <option value="administrativo">Administrativo (Apenas RH)</option>
               <option value="admin">Administrador (Acesso Total)</option>
             </select>
-            {selectedUsuario && <p className="text-xs text-gray-400 mt-1">Não é possível alterar o perfil e e-mail de um usuário existente. Crie um novo se necessário.</p>}
+            {selectedUsuario && <p className="text-xs text-gray-500 mt-1">Não é possível alterar o perfil e e-mail de um usuário existente. Crie um novo se necessário.</p>}
           </div>
 
           {!selectedUsuario && (
@@ -477,7 +478,7 @@ export default function Usuarios() {
                   className={`w-full px-3 py-2 pr-24 border rounded-md outline-none focus:border-primary ${formErrors.senha ? 'border-red-500' : 'border-gray-300'}`} placeholder="Mínimo 6 caracteres" 
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="p-1 text-gray-400 hover:text-gray-600" title="Ver senha">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="p-1 text-gray-500 hover:text-gray-600" title="Ver senha">
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                   <button type="button" onClick={generateRandomPassword} className="p-1 text-blue-600 hover:text-blue-800 bg-blue-50 rounded" title="Gerar senha segura">
@@ -503,7 +504,7 @@ export default function Usuarios() {
 
           {selectedUsuario && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Situação do Acesso</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Situação do acesso</label>
               <select name="situacao" value={formData.situacao} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary bg-white">
                 <option value="ativa">Ativa (Pode acessar)</option>
                 <option value="inativa">Inativa (Acesso bloqueado)</option>
@@ -520,11 +521,11 @@ export default function Usuarios() {
         </form>
       </Modal>
 
-      <ConfirmDialog isOpen={isConfirmResetOpen} title="Redefinir Senha" message={`Deseja enviar um e-mail com instruções de redefinição de senha para ${selectedUsuario?.email}?`} onConfirm={handleResetPassword} onCancel={() => setIsConfirmResetOpen(false)} />
+      <ConfirmDialog isOpen={isConfirmResetOpen} title="Redefinir senha" message={`Deseja enviar um e-mail com instruções de redefinição de senha para ${selectedUsuario?.email}?`} onConfirm={handleResetPassword} onCancel={() => setIsConfirmResetOpen(false)} />
 
       <ConfirmDialog 
         isOpen={isConfirmStatusOpen} 
-        title={selectedUsuario?.situacao === 'ativa' ? 'Desativar Acesso' : 'Ativar Acesso'} 
+        title={selectedUsuario?.situacao === 'ativa' ? 'Desativar acesso' : 'Ativar acesso'} 
         message={selectedUsuario?.situacao === 'ativa' ? `Tem certeza? O usuário ${selectedUsuario?.nome} perderá o acesso ao sistema imediatamente.` : `Deseja reativar o acesso de ${selectedUsuario?.nome} ao sistema?`} 
         onConfirm={handleToggleStatus} 
         onCancel={() => setIsConfirmStatusOpen(false)} 
@@ -543,7 +544,7 @@ export default function Usuarios() {
           <div className="flex w-full gap-3 justify-end pt-4 border-t border-gray-100">
             <button onClick={() => setIsConflictModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex-1">Cancelar</button>
             <button onClick={performSave} disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 flex-1 flex justify-center">
-              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Desativar e Continuar'}
+              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Desativar e continuar'}
             </button>
           </div>
         </div>

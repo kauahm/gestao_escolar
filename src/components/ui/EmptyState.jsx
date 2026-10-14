@@ -26,7 +26,7 @@ export default function EmptyState({
   if (leituras.falha || leituras.semServidor) {
     return (
       <div className={`flex flex-col items-center justify-center text-center bg-white rounded-lg border border-dashed border-gray-300 ${compacto ? 'p-8' : 'p-12'}`}>
-        <CloudOff className="w-12 h-12 text-gray-400 mb-4" aria-hidden="true" />
+        <CloudOff className="w-12 h-12 text-gray-500 mb-4" aria-hidden="true" />
         <p className="text-gray-900 font-semibold">Os dados não carregaram</p>
         <p className="text-gray-600 max-w-md mt-1 text-sm">Por isso esta lista está vazia. Nada foi apagado: veja o aviso no alto da tela.</p>
       </div>
@@ -38,7 +38,7 @@ export default function EmptyState({
 
   return (
     <div className={`flex flex-col items-center justify-center text-center bg-white rounded-lg border border-dashed border-gray-300 ${compacto ? 'p-8' : 'p-12'}`}>
-      <Icone className="w-12 h-12 text-gray-400 mb-4" aria-hidden="true" />
+      <Icone className="w-12 h-12 text-gray-500 mb-4" aria-hidden="true" />
       {titulo && <p className="text-gray-900 font-semibold">{titulo}</p>}
       {texto && <p className={`text-gray-600 max-w-md ${titulo ? 'mt-1 text-sm' : 'font-medium'}`}>{texto}</p>}
       {lista.length > 0 && (

@@ -18,6 +18,7 @@ export default function Topbar({ onMenuClick }) {
         {/* Botão de Menu visível apenas no mobile */}
         <button 
           onClick={onMenuClick} 
+          aria-label="Abrir o menu"
           className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg md:hidden transition-colors"
         >
           <Menu size={24} />
@@ -35,7 +36,7 @@ export default function Topbar({ onMenuClick }) {
           <p className="text-sm font-medium text-gray-900">{userProfile?.nome}</p>
           <p className="text-xs text-gray-500">{ROTULO_DO_PERFIL[userProfile?.perfil] || ''}</p>
         </div>
-        <UserCircle className="w-8 h-8 text-gray-400" />
+        <UserCircle className="w-8 h-8 text-gray-500" />
       </div>
     </header>
   );

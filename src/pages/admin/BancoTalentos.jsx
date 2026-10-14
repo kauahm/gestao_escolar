@@ -191,7 +191,7 @@ const abrirDetalhes = (curriculo) => {
             <Upload size={18} /> Importar planilha
           </button>
           <button onClick={abrirModalNovo} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium">
-            <Plus size={20} /> Novo Currículo
+            <Plus size={20} /> Novo currículo
           </button>
         </div>
       </div>
@@ -200,7 +200,7 @@ const abrirDetalhes = (curriculo) => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
             <input type="text" placeholder="Buscar por nome ou vaga..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </div>
@@ -210,7 +210,7 @@ const abrirDetalhes = (curriculo) => {
             <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4">Candidato</th>
-                <th className="px-6 py-4">Vaga Pretendida</th>
+                <th className="px-6 py-4">Vaga pretendida</th>
                 <th className="px-6 py-4">Indicação</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Ações</th>
@@ -268,7 +268,7 @@ const abrirDetalhes = (curriculo) => {
             {curriculo.indicacao ? (
               <span className="text-sm">{curriculo.indicacao}</span>
             ) : (
-              <span className="text-xs text-gray-400 italic">Candidatura Direta</span>
+              <span className="text-xs text-gray-500 italic">Candidatura direta</span>
             )}
           </div>
         </td>
@@ -300,7 +300,7 @@ const abrirDetalhes = (curriculo) => {
               <button 
                 onClick={() => abrirModalAgenda(curriculo)} 
                 className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" 
-                title="Agendar Entrevista"
+                title="Agendar entrevista"
               >
                 <Calendar size={16} /> 
                 <span className="hidden lg:inline">Agendar</span>
@@ -337,8 +337,8 @@ const abrirDetalhes = (curriculo) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900">Agendar Entrevista</h2>
-              <button onClick={() => setIsAgendaModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h2 className="text-lg font-bold text-gray-900">Agendar entrevista</h2>
+              <button onClick={() => setIsAgendaModalOpen(false)} className="text-gray-500 hover:text-gray-600"><X size={20} /></button>
             </div>
             <form onSubmit={handleAgendarEntrevista} className="p-4 space-y-4">
               <p className="text-sm text-gray-600">Escolha o horário para entrevistar <strong>{curriculoSelecionado.nome}</strong>:</p>
@@ -364,8 +364,8 @@ const abrirDetalhes = (curriculo) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-4 border-b border-gray-100 shrink-0">
-              <h2 className="text-lg font-bold text-gray-900">{isEditMode ? 'Editar Currículo' : 'Cadastrar Currículo'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h2 className="text-lg font-bold text-gray-900">{isEditMode ? 'Editar currículo' : 'Cadastrar currículo'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-600"><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
@@ -387,7 +387,7 @@ const abrirDetalhes = (curriculo) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vaga Pretendida *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vaga pretendida *</label>
                   <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" value={formData.vaga} onChange={(e) => setFormData({...formData, vaga: e.target.value})} />
                 </div>
                 <div>
@@ -406,7 +406,7 @@ const abrirDetalhes = (curriculo) => {
 
               {/* CAMPO DE OBSERVAÇÕES ADICIONADO AQUI */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Observações Internas</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Observações internas</label>
                 <textarea 
                   name="observacoes" 
                   value={formData.observacoes} 
@@ -462,7 +462,7 @@ const abrirDetalhes = (curriculo) => {
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
         {/* Informações de Contato */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Contato e Origem</h3>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest border-b pb-2">Contato e origem</h3>
           <div className="space-y-3">
             <p className="text-sm text-gray-700 flex items-center gap-3">
               <Phone size={18} className="text-primary" /> <strong>Telefone:</strong> {curriculoView.telefone}
@@ -471,14 +471,14 @@ const abrirDetalhes = (curriculo) => {
               <Mail size={18} className="text-primary" /> <strong>E-mail:</strong> {curriculoView.email || 'Não informado'}
             </p>
             <p className="text-sm text-gray-700 flex items-center gap-3">
-              <UserCheck size={18} className="text-primary" /> <strong>Indicação:</strong> {curriculoView.indicacao || 'Candidatura Direta'}
+              <UserCheck size={18} className="text-primary" /> <strong>Indicação:</strong> {curriculoView.indicacao || 'Candidatura direta'}
             </p>
           </div>
         </div>
 
         {/* Experiência e Observações de Cadastro */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-2">Perfil</h3>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest border-b pb-2">Perfil</h3>
           <div className="space-y-3">
             <p className="text-sm text-gray-700"><strong>Possui experiência?</strong> {curriculoView.exp}</p>
             <div>
@@ -492,7 +492,7 @@ const abrirDetalhes = (curriculo) => {
 
         {/* ÁREA DE FEEDBACK (PROCESSO SELETIVO) */}
         <div className="col-span-full mt-2">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-b pb-2 mb-3">
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest border-b pb-2 mb-3">
             Resultado do Processo Seletivo
           </h3>
           <div className={`p-4 rounded-xl border ${curriculoView.feedback ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
@@ -506,7 +506,7 @@ const abrirDetalhes = (curriculo) => {
                   {curriculoView.feedback || "Candidato ainda disponível para entrevista ou aguardando avaliação inicial."}
                 </p>
                 {curriculoView.dataDecisao && (
-                  <p className="text-[10px] text-gray-400 mt-2">
+                  <p className="text-[10px] text-gray-500 mt-2">
                     Decisão registrada em: {new Date(curriculoView.dataDecisao).toLocaleDateString('pt-BR')}
                   </p>
                 )}

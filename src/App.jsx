@@ -63,7 +63,7 @@ export default function App() {
     <AuthProvider>
       {/* Selo fixo: quem está no ambiente de demonstração sempre sabe disso. */}
       {EH_DEMO && (
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[60] pointer-events-none bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap print:hidden">
+        <div className="selo-demo fixed bottom-3 left-1/2 -translate-x-1/2 z-[60] pointer-events-none bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap print:hidden">
           Ambiente de demonstração · dados fictícios
         </div>
       )}

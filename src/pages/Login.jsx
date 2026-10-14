@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, CheckCircle2 } from 'lucide-react';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Toast from '../components/ui/Toast';
 import EsqueciSenha from '../components/shared/EsqueciSenha';
@@ -10,7 +10,8 @@ import EsqueciSenha from '../components/shared/EsqueciSenha';
 import logoImg from '../assets/logo-topo.png'; 
 
 export default function Login() {
-  const [isDirectorLogin, setIsDirectorLogin] = useState(false);
+  // No celular quem entra é quase sempre a diretora: abre direto na área da escola.
+  const [isDirectorLogin, setIsDirectorLogin] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,13 +51,21 @@ export default function Login() {
       <EsqueciSenha isOpen={esqueciAberto} onClose={() => setEsqueciAberto(false)} emailInicial={email} />
       
       {/* === MODO MOBILE: Botão no topo === */}
-      <div className="md:hidden absolute top-0 left-0 w-full z-30 bg-primary p-4 text-center text-white shadow-md">
-        <button 
-          onClick={() => setIsDirectorLogin(!isDirectorLogin)} 
-          className="font-bold underline text-sm"
-        >
-          Acessar como {isDirectorLogin ? 'Administrador' : 'Diretora'}
-        </button>
+      <div className="md:hidden absolute top-0 left-0 w-full z-30 bg-primary px-4 pt-4 pb-3 shadow-md">
+        <div role="tablist" aria-label="Tipo de acesso" className="grid grid-cols-2 gap-1 bg-white/15 rounded-full p-1 max-w-sm mx-auto">
+          {[[true, 'Escola'], [false, 'Administração']].map(([diretora, rotulo]) => (
+            <button
+              key={rotulo}
+              type="button"
+              role="tab"
+              aria-selected={isDirectorLogin === diretora}
+              onClick={() => setIsDirectorLogin(diretora)}
+              className={`py-2 rounded-full text-sm font-semibold transition-colors ${isDirectorLogin === diretora ? 'bg-white text-primary' : 'text-white'}`}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* === PAINEL DESLIZANTE AZUL === */}
@@ -69,12 +78,17 @@ export default function Login() {
           <>
             {/* Se o painel está na direita (Cobrindo Diretora), ele convida para ir para Diretora */}
             <h2 className="text-3xl font-bold mb-4">Portal da Escola</h2>
-            <p className="mb-8 font-light leading-relaxed">
-              Acesso dedicado às diretoras. Acompanhe as manutenções e o calendário da sua unidade.
+            <p className="mb-6 font-light leading-relaxed">
+              Acesso das diretoras, pelo computador ou pelo celular.
             </p>
+            <ul className="mb-8 space-y-2 text-left text-sm text-blue-50">
+              {['Peça uma manutenção em segundos', 'Acompanhe cada chamado até a conclusão', 'Veja o que vence na sua escola'].map((t) => (
+                <li key={t} className="flex items-center gap-2"><CheckCircle2 size={18} className="shrink-0 text-blue-200" aria-hidden="true" /> {t}</li>
+              ))}
+            </ul>
             <button 
               onClick={() => setIsDirectorLogin(true)} 
-              className="border-2 border-white px-10 py-3 rounded-full font-bold uppercase text-xs tracking-wider hover:bg-white hover:text-primary transition-colors"
+              className="border-2 border-white px-10 py-3 rounded-full font-semibold text-sm hover:bg-white hover:text-primary transition-colors"
             >
               Sou Diretora
             </button>
@@ -88,7 +102,7 @@ export default function Login() {
             </p>
             <button 
               onClick={() => setIsDirectorLogin(false)} 
-              className="border-2 border-white px-10 py-3 rounded-full font-bold uppercase text-xs tracking-wider hover:bg-white hover:text-primary transition-colors"
+              className="border-2 border-white px-10 py-3 rounded-full font-semibold text-sm hover:bg-white hover:text-primary transition-colors"
             >
               Sou Administrador
             </button>
@@ -102,16 +116,18 @@ export default function Login() {
           isDirectorLogin ? 'hidden md:flex opacity-0 -translate-x-20 pointer-events-none' : 'flex opacity-100 translate-x-0 pointer-events-auto z-10'
         }`}
       >
-        <img src={logoImg} alt="Logo Associação" className="h-24 w-auto object-contain mb-6" />
+        <img src={logoImg} alt="Associação Educacional Maria do Carmo" className="h-24 w-auto object-contain mb-6" />
         <h2 className="text-3xl font-bold text-primary mb-2 text-center">Administração</h2>
-        <p className="text-gray-400 text-sm mb-8 text-center">Insira suas credenciais de gestão</p>
+        <p className="text-gray-500 text-sm mb-8 text-center">Insira suas credenciais de gestão</p>
         
         <form className="w-full max-w-sm space-y-5" onSubmit={handleLogin}>
           <div className="relative flex items-center bg-gray-100 rounded-lg p-3">
-            <Mail className="text-gray-400 mr-3" size={20} />
+            <Mail className="text-gray-500 mr-3" size={20} />
             <input
               type="email"
               required
+              autoComplete="username"
+              aria-label="E-mail"
               className="w-full bg-transparent outline-none text-sm text-gray-700"
               placeholder="E-mail"
               value={email}
@@ -119,10 +135,12 @@ export default function Login() {
             />
           </div>
           <div className="relative flex items-center bg-gray-100 rounded-lg p-3">
-            <Lock className="text-gray-400 mr-3" size={20} />
+            <Lock className="text-gray-500 mr-3" size={20} />
             <input
               type="password"
               required
+              autoComplete="current-password"
+              aria-label="Senha"
               className="w-full bg-transparent outline-none text-sm text-gray-700"
               placeholder="Senha"
               value={senha}
@@ -132,9 +150,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white font-bold py-3 rounded-full hover:bg-primary-dark transition-colors uppercase text-xs tracking-wider mt-4"
+            className="w-full bg-primary text-white font-semibold py-3 rounded-full hover:bg-primary-dark transition-colors text-sm mt-4"
           >
-            {loading ? <LoadingSpinner size="sm" color="text-white" /> : 'Entrar no Sistema'}
+            {loading ? <LoadingSpinner size="sm" color="text-white" /> : 'Entrar'}
           </button>
           <button
             type="button"
@@ -152,27 +170,31 @@ export default function Login() {
           isDirectorLogin ? 'flex opacity-100 translate-x-0 pointer-events-auto z-10' : 'hidden md:flex opacity-0 translate-x-20 pointer-events-none'
         }`}
       >
-        <img src={logoImg} alt="Logo Associação" className="h-24 w-auto object-contain mb-6" />
+        <img src={logoImg} alt="Associação Educacional Maria do Carmo" className="h-24 w-auto object-contain mb-6" />
         <h2 className="text-3xl font-bold text-primary mb-2 text-center">Área da Escola</h2>
-        <p className="text-gray-400 text-sm mb-8 text-center">Insira as credenciais da sua unidade</p>
+        <p className="text-gray-500 text-sm mb-8 text-center">Insira as credenciais da sua unidade</p>
         
         <form className="w-full max-w-sm space-y-5" onSubmit={handleLogin}>
           <div className="relative flex items-center bg-gray-100 rounded-lg p-3">
-            <Mail className="text-gray-400 mr-3" size={20} />
+            <Mail className="text-gray-500 mr-3" size={20} />
             <input
               type="email"
               required
+              autoComplete="username"
+              aria-label="E-mail"
               className="w-full bg-transparent outline-none text-sm text-gray-700"
-              placeholder="E-mail da Diretora"
+              placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="relative flex items-center bg-gray-100 rounded-lg p-3">
-            <Lock className="text-gray-400 mr-3" size={20} />
+            <Lock className="text-gray-500 mr-3" size={20} />
             <input
               type="password"
               required
+              autoComplete="current-password"
+              aria-label="Senha"
               className="w-full bg-transparent outline-none text-sm text-gray-700"
               placeholder="Senha"
               value={senha}
@@ -182,9 +204,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white font-bold py-3 rounded-full hover:bg-primary-dark transition-colors uppercase text-xs tracking-wider mt-4"
+            className="w-full bg-primary text-white font-semibold py-3 rounded-full hover:bg-primary-dark transition-colors text-sm mt-4"
           >
-            {loading ? <LoadingSpinner size="sm" color="text-white" /> : 'Acessar Portal'}
+            {loading ? <LoadingSpinner size="sm" color="text-white" /> : 'Entrar'}
           </button>
           <button
             type="button"

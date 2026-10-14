@@ -13,6 +13,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeCartoes } from '../../components/ui/Esqueleto';
 import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
 import { Upload } from 'lucide-react';
 
@@ -251,7 +252,7 @@ export default function Escolas() {
             className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
           >
             <Plus size={20} />
-            Nova Escola
+            Nova escola
           </button>
         </div>
       </div>
@@ -259,7 +260,7 @@ export default function Escolas() {
       {/* Busca e Filtro */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
           <input
             type="text"
             placeholder="Buscar por nome, bairro ou diretora..."
@@ -269,23 +270,21 @@ export default function Escolas() {
           />
         </div>
         <div className="w-full sm:w-48">
-          <select
+          <select aria-label="Filtrar por situação"
             value={filterSituacao}
             onChange={(e) => setFilterSituacao(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none bg-white"
           >
             <option value="Todas">Todas as situações</option>
-            <option value="Ativas">Apenas Ativas</option>
-            <option value="Inativas">Apenas Inativas</option>
+            <option value="Ativas">Apenas ativas</option>
+            <option value="Inativas">Apenas inativas</option>
           </select>
         </div>
       </div>
 
       {/* Conteúdo Principal */}
       {loading ? (
-        <div className="h-64 flex items-center justify-center">
-          <LoadingSpinner size="lg" />
-        </div>
+        <EsqueletoDeCartoes quantidade={6} />
       ) : filteredEscolas.length === 0 ? (
         escolas.length === 0 ? (
           <EmptyState
@@ -331,15 +330,15 @@ export default function Escolas() {
 
               <div className="space-y-2 mt-2 flex-1">
                 <div className="flex items-center text-sm text-gray-600">
-                  <MapPin size={16} className="mr-2 text-gray-400 shrink-0" />
+                  <MapPin size={16} className="mr-2 text-gray-500 shrink-0" />
                   <span className="truncate">{escola.bairro}</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <User size={16} className="mr-2 text-gray-400 shrink-0" />
+                  <User size={16} className="mr-2 text-gray-500 shrink-0" />
                   <span className="truncate">{escola.nomeDiretora}</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <Users size={16} className="mr-2 text-gray-400 shrink-0" />
+                  <Users size={16} className="mr-2 text-gray-500 shrink-0" />
                   <span>{escola.numeroAlunos ? `${escola.numeroAlunos} alunos` : 'Não informado'}</span>
                 </div>
               </div>
@@ -352,7 +351,7 @@ export default function Escolas() {
       <Modal 
         isOpen={isFormModalOpen} 
         onClose={handleCloseForm} 
-        title={selectedEscola ? `Editar escola — ${selectedEscola.nome}` : "Nova Escola"}
+        title={selectedEscola ? `Editar escola — ${selectedEscola.nome}` : "Nova escola"}
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -374,7 +373,7 @@ export default function Escolas() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Código da Unidade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Código da unidade</label>
                 <input
                   type="text"
                   name="codigo"
@@ -444,12 +443,12 @@ export default function Escolas() {
             </div>
           </div>
 
-          {/* Sessão: Contato da Unidade */}
+          {/* Sessão: Contato da unidade */}
           <div>
-            <h4 className="text-sm font-bold text-primary mb-3 border-b border-gray-100 pb-2 uppercase tracking-wider">Contato da Unidade</h4>
+            <h4 className="text-sm font-bold text-primary mb-3 border-b border-gray-100 pb-2 uppercase tracking-wider">Contato da unidade</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefone Fixo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Telefone fixo</label>
                 <input
                   type="text"
                   name="telefone"
@@ -474,9 +473,9 @@ export default function Escolas() {
             </div>
           </div>
 
-          {/* Sessão: Diretora Responsável */}
+          {/* Sessão: Diretora responsável */}
           <div>
-            <h4 className="text-sm font-bold text-primary mb-3 border-b border-gray-100 pb-2 uppercase tracking-wider">Diretora Responsável</h4>
+            <h4 className="text-sm font-bold text-primary mb-3 border-b border-gray-100 pb-2 uppercase tracking-wider">Diretora responsável</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
@@ -517,12 +516,12 @@ export default function Escolas() {
             </div>
           </div>
 
-          {/* Sessão: Informações Adicionais */}
+          {/* Sessão: Informações adicionais */}
           <div>
-            <h4 className="text-sm font-bold text-primary mb-3 border-b border-gray-100 pb-2 uppercase tracking-wider">Informações Adicionais</h4>
+            <h4 className="text-sm font-bold text-primary mb-3 border-b border-gray-100 pb-2 uppercase tracking-wider">Informações adicionais</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Número de Alunos</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Número de alunos</label>
                 <input
                   type="number"
                   name="numeroAlunos"
@@ -575,7 +574,7 @@ export default function Escolas() {
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary-dark focus:outline-none flex items-center justify-center min-w-[120px]"
             >
-              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Salvar Escola'}
+              {isSubmitting ? <LoadingSpinner size="sm" color="text-white" /> : 'Salvar escola'}
             </button>
           </div>
         </form>
@@ -586,7 +585,7 @@ export default function Escolas() {
         <Modal
           isOpen={isDetailsModalOpen}
           onClose={handleCloseDetails}
-          title="Detalhes da Escola"
+          title="Detalhes da escola"
           size="lg"
         >
           <div className="space-y-6">
@@ -605,38 +604,38 @@ export default function Escolas() {
               {/* Coluna 1 */}
               <div className="space-y-5">
                 <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Localização</h4>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Localização</h4>
                   <ul className="space-y-2 text-sm text-gray-800">
                     <li className="flex items-start gap-2">
-                      <MapPin size={16} className="text-gray-400 mt-0.5" /> 
+                      <MapPin size={16} className="text-gray-500 mt-0.5" /> 
                       <span>{selectedEscola.endereco} <br/> <span className="text-gray-500">{selectedEscola.bairro} - CEP: {selectedEscola.cep || 'N/I'}</span></span>
                     </li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contato da Unidade</h4>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contato da unidade</h4>
                   <ul className="space-y-2 text-sm text-gray-800">
                     <li className="flex items-center gap-2">
-                      <Phone size={16} className="text-gray-400" /> 
-                      {selectedEscola.telefone || <span className="text-gray-400 italic">Não informado</span>}
+                      <Phone size={16} className="text-gray-500" /> 
+                      {selectedEscola.telefone || <span className="text-gray-500 italic">Não informado</span>}
                     </li>
                     <li className="flex items-center gap-2">
-                      <Mail size={16} className="text-gray-400" /> 
-                      {selectedEscola.email || <span className="text-gray-400 italic">Não informado</span>}
+                      <Mail size={16} className="text-gray-500" /> 
+                      {selectedEscola.email || <span className="text-gray-500 italic">Não informado</span>}
                     </li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Estrutura</h4>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Estrutura</h4>
                   <ul className="space-y-2 text-sm text-gray-800">
                     <li className="flex items-center gap-2">
-                      <Users size={16} className="text-gray-400" /> 
+                      <Users size={16} className="text-gray-500" /> 
                       <strong>{selectedEscola.numeroAlunos || 0}</strong> alunos matriculados
                     </li>
                     <li className="flex items-center gap-2">
-                      <Droplets size={16} className="text-gray-400" /> 
+                      <Droplets size={16} className="text-gray-500" /> 
                       Caixa d'água: <strong>{selectedEscola.capacidadeCaixaDagua || 0}L</strong>
                     </li>
                   </ul>
@@ -647,31 +646,31 @@ export default function Escolas() {
               <div className="space-y-5">
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <User size={14} /> Diretora Responsável
+                    <User size={14} /> Diretora responsável
                   </h4>
                   <p className="font-semibold text-gray-900 mb-2">{selectedEscola.nomeDiretora}</p>
                   <ul className="space-y-2 text-sm text-gray-700">
                     <li className="flex items-center gap-2">
                       <Phone size={14} className="text-blue-400" /> 
-                      {selectedEscola.celularDiretora || <span className="text-gray-400 italic">Não informado</span>}
+                      {selectedEscola.celularDiretora || <span className="text-gray-500 italic">Não informado</span>}
                     </li>
                     <li className="flex items-center gap-2">
                       <Mail size={14} className="text-blue-400" /> 
-                      {selectedEscola.emailDiretora || <span className="text-gray-400 italic">Não informado</span>}
+                      {selectedEscola.emailDiretora || <span className="text-gray-500 italic">Não informado</span>}
                     </li>
                   </ul>
                 </div>
 
                 {selectedEscola.observacoes && (
                   <div>
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Observações</h4>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Observações</h4>
                     <div className="bg-gray-50 p-3 rounded-md border border-gray-200 text-sm text-gray-700 whitespace-pre-wrap">
                       {selectedEscola.observacoes}
                     </div>
                   </div>
                 )}
                 
-                <div className="text-xs text-gray-400 pt-4">
+                <div className="text-xs text-gray-500 pt-4">
                   Cadastrado em: {selectedEscola.criadoEm ? formatarDataHora(selectedEscola.criadoEm) : 'N/I'}
                 </div>
               </div>

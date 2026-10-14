@@ -13,6 +13,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { EsqueletoDeLista, EsqueletoDeCartoes } from '../../components/ui/Esqueleto';
 
 // Ícones
 import { Plus, Search, Edit2, Trash2, Phone, Briefcase, User, Hash } from 'lucide-react';
@@ -121,19 +122,19 @@ export default function Prestadores() {
           <p className="text-gray-500 text-sm mt-1">Gerencie a equipe de manutenção e terceirizados.</p>
         </div>
         <button onClick={() => handleOpenForm()} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-sm">
-          <Plus size={20} /> Novo Prestador
+          <Plus size={20} /> Novo prestador
         </button>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
           <input type="text" placeholder="Buscar por nome ou especialidade..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-primary outline-none" />
         </div>
       </div>
 
       {loading ? (
-        <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
+        <EsqueletoDeCartoes quantidade={6} />
       ) : filteredPrestadores.length === 0 ? (
         prestadores.length === 0 ? (
           <EmptyState
@@ -165,26 +166,26 @@ export default function Prestadores() {
               </div>
               
               <div className="space-y-2 mt-4 text-sm text-gray-600">
-                <p className="flex items-center gap-2"><Briefcase size={16} className="text-gray-400"/> {prestador.especialidade}</p>
+                <p className="flex items-center gap-2"><Briefcase size={16} className="text-gray-500"/> {prestador.especialidade}</p>
                 {prestador.telefone && (
                   <p className="flex items-center gap-2">
-                    <Phone size={16} className="text-gray-400"/> 
+                    <Phone size={16} className="text-gray-500"/> 
                     <button onClick={() => openWhatsApp(prestador.telefone)} className="text-green-600 hover:underline">{prestador.telefone}</button>
                   </p>
                 )}
-                {prestador.documento && <p className="flex items-center gap-2"><Hash size={16} className="text-gray-400"/> {prestador.documento}</p>}
+                {prestador.documento && <p className="flex items-center gap-2"><Hash size={16} className="text-gray-500"/> {prestador.documento}</p>}
               </div>
 
               <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
-                <button onClick={() => handleOpenForm(prestador)} className="p-2 text-gray-500 hover:text-primary transition-colors"><Edit2 size={18} /></button>
-                <button onClick={() => { setSelectedPrestador(prestador); setIsConfirmDeleteOpen(true); }} className="p-2 text-gray-500 hover:text-red-600 transition-colors"><Trash2 size={18} /></button>
+                <button title={`Editar ${prestador.nome}`} aria-label={`Editar ${prestador.nome}`} onClick={() => handleOpenForm(prestador)} className="p-2 text-gray-500 hover:text-primary transition-colors"><Edit2 size={18} /></button>
+                <button title={`Excluir ${prestador.nome}`} aria-label={`Excluir ${prestador.nome}`} onClick={() => { setSelectedPrestador(prestador); setIsConfirmDeleteOpen(true); }} className="p-2 text-gray-500 hover:text-red-600 transition-colors"><Trash2 size={18} /></button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedPrestador ? "Editar Prestador" : "Novo Prestador"} size="md">
+      <Modal isOpen={isFormModalOpen} onClose={handleCloseForm} title={selectedPrestador ? "Editar prestador" : "Novo prestador"} size="md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo / Empresa *</label>
@@ -204,10 +205,10 @@ export default function Prestadores() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Vínculo</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de vínculo</label>
               <select name="tipo" value={formData.tipo} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
-                <option value="Interno">Funcionário Interno</option>
-                <option value="Externo">Terceirizado Externo</option>
+                <option value="Interno">Funcionário interno</option>
+                <option value="Externo">Terceirizado (externo)</option>
               </select>
             </div>
           </div>
@@ -234,7 +235,7 @@ export default function Prestadores() {
         </form>
       </Modal>
 
-      <ConfirmDialog isOpen={isConfirmDeleteOpen} title="Excluir Prestador" message="Tem certeza que deseja excluir este prestador? Ele vai para a lixeira e pode ser restaurado; o histórico de manutenções é mantido." onConfirm={handleConfirmDelete} onCancel={() => setIsConfirmDeleteOpen(false)} />
+      <ConfirmDialog isOpen={isConfirmDeleteOpen} title="Excluir prestador" message="Tem certeza que deseja excluir este prestador? Ele vai para a lixeira e pode ser restaurado; o histórico de manutenções é mantido." onConfirm={handleConfirmDelete} onCancel={() => setIsConfirmDeleteOpen(false)} />
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
     </div>
   );

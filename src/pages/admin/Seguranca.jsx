@@ -267,7 +267,7 @@ export default function Seguranca() {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="font-bold text-gray-800 flex items-center gap-2"><History size={18} /> Histórico de alterações</h2>
-          <select
+          <select aria-label="Filtrar por módulo"
             value={filtroColecao}
             onChange={(e) => setFiltroColecao(e.target.value)}
             className="px-3 py-1.5 border border-gray-300 rounded-md text-sm outline-none focus:border-primary bg-white"
@@ -291,7 +291,7 @@ export default function Seguranca() {
                     className="w-full text-left flex items-start gap-3"
                     disabled={campos.length === 0}
                   >
-                    <span className="mt-0.5 text-gray-400 w-4 shrink-0">
+                    <span className="mt-0.5 text-gray-500 w-4 shrink-0">
                       {campos.length > 0 && (expandido ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
                     </span>
                     <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded ${acao.cor}`}>{acao.rotulo}</span>
