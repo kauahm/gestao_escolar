@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  collection, doc, setDoc, updateDoc, onSnapshot, serverTimestamp, query 
-} from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp, query } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { setDoc, updateDoc } from '../../services/db';
 import { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { auth, db } from '../../services/firebase';
@@ -195,6 +195,12 @@ export default function Usuarios() {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Ninguém desativa a própria conta: evita ficar sem nenhum admin para reativar.
+    if (selectedUsuario?.uid === auth.currentUser?.uid && formData.situacao !== 'ativa') {
+      showToast('Você não pode desativar a sua própria conta. Peça a outro administrador.', 'error');
+      return;
+    }
+
     // Verificar regra de negócio (1 diretora ativa por escola) - Apenas se for diretora
     if (formData.situacao === 'ativa' && formData.perfil === 'diretora') {
       const conflict = checkConflict(formData.unidadeId, selectedUsuario?.uid);
@@ -278,6 +284,13 @@ export default function Usuarios() {
     if (!selectedUsuario) return;
     try {
       const novoStatus = selectedUsuario.situacao === 'ativa' ? 'inativa' : 'ativa';
+
+      // Ninguém desativa a própria conta: evita ficar sem nenhum admin para reativar.
+      if (novoStatus === 'inativa' && selectedUsuario.uid === auth.currentUser?.uid) {
+        showToast('Você não pode desativar a sua própria conta. Peça a outro administrador.', 'error');
+        setIsConfirmStatusOpen(false);
+        return;
+      }
       
       if (novoStatus === 'ativa' && selectedUsuario.perfil === 'diretora') {
         const conflict = checkConflict(selectedUsuario.unidadeId, selectedUsuario.uid);

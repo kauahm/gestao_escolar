@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 
 // Componentes UI
@@ -283,7 +285,7 @@ export default function Ciclos() {
     if (!selectedCiclo) return;
     try {
       await deleteDoc(doc(db, 'ciclos', selectedCiclo.id));
-      showToast('Registro excluído com sucesso.', 'error');
+      showToast('Registro movido para a lixeira. Dá para restaurar em Segurança dos dados.');
       setIsConfirmDeleteOpen(false);
       setSelectedCiclo(null);
     } catch (error) {
@@ -526,7 +528,7 @@ export default function Ciclos() {
       <ConfirmDialog 
         isOpen={isConfirmDeleteOpen} 
         title="Excluir ciclo" 
-        message="Tem certeza que deseja excluir este registro de controle de ciclo? Esta ação não pode ser desfeita e pode impactar a Agenda da unidade." 
+        message="Tem certeza que deseja excluir este registro de controle de ciclo? Ele sai da Agenda da unidade, mas fica na lixeira e pode ser restaurado." 
         onConfirm={handleConfirmDelete} 
         onCancel={() => setIsConfirmDeleteOpen(false)} 
       />

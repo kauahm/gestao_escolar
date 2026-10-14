@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { formatarMoeda, formatarDataHora } from '../../utils/formatters';
-import { diasEmAberto, statusCiclo } from '../../utils/calcularStatus';
+import { diasEmAberto, statusCiclo, situacaoConta, somarValores, diasAte, paraData, hojeZerado } from '../../utils/calcularStatus';
 
 import { 
   Wrench, Receipt, RefreshCcw, Users, AlertTriangle, 
-  ArrowRight, Clock, Calendar as CalendarIcon, CheckCircle
+  ArrowRight, Clock, Calendar as CalendarIcon, CheckCircle, ShieldCheck
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [ciclos, setCiclos] = useState([]);
   const [candidatos, setCandidatos] = useState([]);
   const [eventos, setEventos] = useState([]);
+  const [backup, setBackup] = useState(undefined); // undefined = carregando
 
   useEffect(() => {
     // Escutar todas as coleções necessárias em tempo real
@@ -43,6 +44,11 @@ export default function AdminDashboard() {
       setLoading(false);
     }));
 
+    // Data da última cópia de segurança (lembrete no topo do painel)
+    unsubs.push(onSnapshot(doc(db, 'config', 'backup'),
+      snap => setBackup(snap.exists() ? snap.data() : null),
+      () => setBackup(null)));
+
     return () => unsubs.forEach(unsub => unsub());
   }, []);
 
@@ -61,12 +67,16 @@ export default function AdminDashboard() {
   // Métricas para os Cards
   const metricas = useMemo(() => {
     const manutencoesAbertas = manutencoes.filter(m => m.status === 'Pendente' || m.status === 'Em andamento');
-    const valorContasAEnviar = contas.filter(c => c.status === 'A enviar').reduce((acc, c) => acc + (Number(c.valor) || 0), 0);
-    const contasAEnviar = contas.filter(c => c.status === 'A enviar');
-    
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    
+
+    // Contas pendentes = tudo que ainda não foi enviado, tenha vencido ou não.
+    // Antes o painel só somava status 'A enviar'; como as vencidas eram
+    // reescritas como 'Vencida', ele mostrava zero com dezenas de contas em aberto.
+    const contasPendentes = contas.filter(c => situacaoConta(c).pendente);
+    const contasVencidas = contasPendentes.filter(c => situacaoConta(c).vencida);
+    const contasNoPrazo = contasPendentes.filter(c => !situacaoConta(c).vencida);
+
+    const hoje = hojeZerado();
+
     const ciclosCriticos = ciclos.filter(c => {
       if (!c.proximaExecucao) return false;
       const [ano, mes, dia] = c.proximaExecucao.split('-');
@@ -85,8 +95,11 @@ export default function AdminDashboard() {
 
     return {
       manutencoes: manutencoesAbertas,
-      contas: contasAEnviar,
-      valorContas: valorContasAEnviar,
+      contas: contasPendentes,
+      contasVencidas,
+      contasNoPrazo,
+      valorContas: somarValores(contasPendentes),
+      valorVencido: somarValores(contasVencidas),
       ciclos: ciclosCriticos,
       entrevistas: entrevistasMes
     };
@@ -98,9 +111,21 @@ export default function AdminDashboard() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    // Manutenções pendentes há mais de 5 dias
+    // Contas vencidas: um alerta só, resumido (em vez de uma linha por conta)
+    if (metricas.contasVencidas.length > 0) {
+      const n = metricas.contasVencidas.length;
+      itens.push({
+        id: 'contas_vencidas',
+        tipo: 'conta',
+        texto: `${n} ${n === 1 ? 'conta vencida' : 'contas vencidas'} somando ${formatarMoeda(metricas.valorVencido)} ainda sem envio`,
+        link: '/admin/contas'
+      });
+    }
+
+    // Manutenções pendentes há mais de 5 dias (descrição resumida)
     metricas.manutencoes.filter(m => m.status === 'Pendente' && diasEmAberto(m.criadoEm) > 5).forEach(m => {
-      itens.push({ id: `man_${m.id}`, tipo: 'manutencao', texto: `Manutenção pendente há ${diasEmAberto(m.criadoEm)} dias: ${m.escolaNome} - ${m.descricao}`, link: '/admin/manutencoes' });
+      const resumo = (m.descricao || '').length > 70 ? `${m.descricao.slice(0, 70)}…` : (m.descricao || '');
+      itens.push({ id: `man_${m.id}`, tipo: 'manutencao', texto: `Manutenção parada há ${diasEmAberto(m.criadoEm)} dias: ${m.escolaNome} — ${resumo}`, link: '/admin/manutencoes' });
     });
 
     // Ciclos vencidos
@@ -112,13 +137,12 @@ export default function AdminDashboard() {
       }
     });
 
-    // Contas com vencimento <= 3 dias
-    metricas.contas.forEach(c => {
-      const [ano, mes, dia] = c.vencimento.split('-');
-      const vDate = new Date(ano, mes - 1, dia);
-      const diff = Math.ceil((vDate - hoje) / (1000 * 60 * 60 * 24));
-      if (diff >= 0 && diff <= 3) {
-        itens.push({ id: `con_${c.id}`, tipo: 'conta', texto: `Conta a enviar vence em ${diff} dias: ${c.tipo} - ${c.escolaNome}`, link: '/admin/contas' });
+    // Contas no prazo com vencimento <= 3 dias
+    metricas.contasNoPrazo.forEach(c => {
+      const diff = diasAte(c.vencimento);
+      if (diff !== null && diff >= 0 && diff <= 3) {
+        const quando = diff === 0 ? 'vence hoje' : (diff === 1 ? 'vence amanhã' : `vence em ${diff} dias`);
+        itens.push({ id: `con_${c.id}`, tipo: 'conta', texto: `Conta a enviar ${quando}: ${c.tipo === 'Outro' ? c.tipoCustomizado : c.tipo} - ${c.escolaNome}`, link: '/admin/contas' });
       }
     });
 
@@ -138,21 +162,29 @@ export default function AdminDashboard() {
       .slice(0, 5);
   };
 
-  const getContasDaSemana = () => {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    return [...metricas.contas].filter(c => {
-      const [ano, mes, dia] = c.vencimento.split('-');
-      const diff = Math.ceil((new Date(ano, mes - 1, dia) - hoje) / (1000 * 60 * 60 * 24));
-      return diff >= 0 && diff <= 7;
-    }).sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento)).slice(0, 5);
+  // Vencidas primeiro (mais atrasada no topo), depois as que vencem em até 7 dias.
+  const getContasEmFoco = () => {
+    const vencidas = [...metricas.contasVencidas]
+      .sort((a, b) => (diasAte(a.vencimento) ?? 0) - (diasAte(b.vencimento) ?? 0));
+    const daSemana = [...metricas.contasNoPrazo]
+      .filter(c => { const d = diasAte(c.vencimento); return d !== null && d <= 7; })
+      .sort((a, b) => (diasAte(a.vencimento) ?? 0) - (diasAte(b.vencimento) ?? 0));
+    return [...vencidas, ...daSemana].slice(0, 5);
   };
 
+  // Só o que ainda não aconteceu. Eventos de dia inteiro valem até o fim do dia.
   const getProximosEventos = () => {
-    const hoje = new Date();
+    const hoje = hojeZerado();
+    const agora = new Date();
     return [...eventos].filter(e => {
-      const start = e.inicio?.toDate ? e.inicio.toDate() : new Date(e.inicio);
-      return start >= hoje || e.diaInteiro;
+      const start = paraData(e.inicio);
+      if (!start) return false;
+      if (e.diaInteiro) {
+        const dia = new Date(start);
+        dia.setHours(0, 0, 0, 0);
+        return dia >= hoje;
+      }
+      return start >= agora;
     }).sort((a, b) => {
       const startA = a.inicio?.toDate ? a.inicio.toDate() : new Date(a.inicio);
       const startB = b.inicio?.toDate ? b.inicio.toDate() : new Date(b.inicio);
@@ -184,6 +216,23 @@ export default function AdminDashboard() {
         <p className="text-gray-500 text-sm mt-1 capitalize">{dataAtualFormatada}</p>
       </div>
 
+      {/* Lembrete de cópia de segurança: aparece se nunca foi feita ou se tem mais de 7 dias */}
+      {backup !== undefined && (() => {
+        const dias = backup?.ultimoEm?.toDate ? Math.floor((Date.now() - backup.ultimoEm.toDate().getTime()) / 86400000) : null;
+        if (dias !== null && dias <= 7) return null;
+        return (
+          <Link to="/admin/seguranca" className="flex items-center justify-between gap-3 p-4 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors">
+            <span className="flex items-center gap-3 text-sm text-blue-900">
+              <ShieldCheck size={20} className="shrink-0 text-primary" />
+              {dias === null
+                ? 'Você ainda não baixou nenhuma cópia de segurança dos dados.'
+                : `Sua última cópia de segurança foi há ${dias} dias.`}
+            </span>
+            <span className="text-sm font-semibold text-primary whitespace-nowrap flex items-center gap-1">Baixar agora <ArrowRight size={16} /></span>
+          </Link>
+        );
+      })()}
+
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
@@ -195,14 +244,22 @@ export default function AdminDashboard() {
           </div>
         </div>
         
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
-          <div className="p-3 bg-yellow-50 rounded-lg text-yellow-600"><Receipt size={24} /></div>
+        <Link
+          to="/admin/contas"
+          className={`bg-white p-5 rounded-xl border shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow ${metricas.contasVencidas.length > 0 ? 'border-red-200' : 'border-gray-200'}`}
+        >
+          <div className={`p-3 rounded-lg ${metricas.contasVencidas.length > 0 ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600'}`}><Receipt size={24} /></div>
           <div>
             <p className="text-sm font-medium text-gray-500">Contas a Enviar</p>
             <h3 className="text-2xl font-bold text-gray-900">{metricas.contas.length}</h3>
             <p className="text-xs text-gray-400 mt-1">{formatarMoeda(metricas.valorContas)} pendentes</p>
+            {metricas.contasVencidas.length > 0 && (
+              <p className="text-xs font-semibold text-red-600 mt-1">
+                {metricas.contasVencidas.length} {metricas.contasVencidas.length === 1 ? 'vencida' : 'vencidas'} · {formatarMoeda(metricas.valorVencido)}
+              </p>
+            )}
           </div>
-        </div>
+        </Link>
 
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
           <div className="p-3 bg-orange-50 rounded-lg text-orange-600"><RefreshCcw size={24} /></div>
@@ -328,7 +385,7 @@ export default function AdminDashboard() {
         {/* Contas */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-800">Contas a Enviar (Próx. 7 dias)</h3>
+            <h3 className="font-bold text-gray-800">Contas vencidas e dos próximos 7 dias</h3>
             <Link to="/admin/contas" className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">Ver todas <ArrowRight size={16} /></Link>
           </div>
           <div className="p-0 flex-1">
@@ -340,20 +397,26 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {getContasDaSemana().length === 0 ? (
-                  <tr><td colSpan="2" className="p-4 text-center text-gray-500">Nenhuma conta para os próximos 7 dias.</td></tr>
-                ) : getContasDaSemana().map(c => (
-                  <tr key={c.id} className="border-b last:border-0 hover:bg-gray-50">
-                    <td className="p-3">
-                      <p className="font-medium text-gray-900 truncate max-w-[200px]">{c.escolaNome}</p>
-                      <p className="text-xs text-gray-500">{c.tipo === 'Outro' ? c.tipoCustomizado : c.tipo}</p>
-                    </td>
-                    <td className="p-3 text-right">
-                      <p className="font-bold text-gray-900">{formatarMoeda(c.valor)}</p>
-                      <p className="text-xs text-gray-500">{c.vencimento.split('-').reverse().join('/')}</p>
-                    </td>
-                  </tr>
-                ))}
+                {getContasEmFoco().length === 0 ? (
+                  <tr><td colSpan="2" className="p-4 text-center text-gray-500">Nenhuma conta vencida ou vencendo nos próximos 7 dias.</td></tr>
+                ) : getContasEmFoco().map(c => {
+                  const s = situacaoConta(c);
+                  return (
+                    <tr key={c.id} className={`border-b last:border-0 hover:bg-gray-50 ${s.vencida ? 'bg-red-50/60' : ''}`}>
+                      <td className="p-3">
+                        <p className="font-medium text-gray-900 truncate max-w-[200px]">{c.escolaNome}</p>
+                        <p className="text-xs text-gray-500">{c.tipo === 'Outro' ? c.tipoCustomizado : c.tipo}</p>
+                      </td>
+                      <td className="p-3 text-right">
+                        <p className="font-bold text-gray-900">{formatarMoeda(c.valor)}</p>
+                        <p className={`text-xs ${s.vencida ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                          {(c.vencimento || '').split('-').reverse().join('/')}
+                          {s.vencida && ` · há ${s.diasDeAtraso} dias`}
+                        </p>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

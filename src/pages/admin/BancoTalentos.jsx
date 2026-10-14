@@ -4,7 +4,9 @@ import {
   Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2, 
   MessageCircle, Briefcase, Phone, Mail 
 } from 'lucide-react';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import Toast from '../../components/ui/Toast';
 
 export default function BancoTalentos() {
@@ -105,10 +107,10 @@ const abrirDetalhes = (curriculo) => {
 
   // 6. Excluir Currículo
   const handleExcluir = async (id, nome) => {
-    if (window.confirm(`Tem certeza que deseja excluir permanentemente o currículo de ${nome}?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir o currículo de ${nome}? Ele vai para a lixeira e pode ser restaurado.`)) {
       try {
         await deleteDoc(doc(db, 'curriculos', id));
-        setSuccess('Currículo excluído com sucesso!');
+        setSuccess('Currículo movido para a lixeira.');
       } catch (err) {
         setError('Erro ao excluir currículo.');
       }

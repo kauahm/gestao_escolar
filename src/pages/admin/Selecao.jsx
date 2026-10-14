@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../services/firebase';
-import { collection, onSnapshot, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { updateDoc, deleteDoc } from '../../services/db';
 import { Calendar, Clock, User, Phone, CheckCircle, XCircle, ChevronRight, Edit, Trash2, X } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 
@@ -59,10 +61,10 @@ const confirmarDecisao = async (e) => {
 };
   // 3. Excluir Candidato
   const handleExcluir = async (id, nome) => {
-    if (window.confirm(`Tem certeza que deseja excluir o currículo de ${nome} e cancelar esta entrevista?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir o currículo de ${nome} e cancelar esta entrevista? Ele vai para a lixeira e pode ser restaurado.`)) {
       try {
         await deleteDoc(doc(db, 'curriculos', id));
-        setSuccess('Candidato excluído com sucesso.');
+        setSuccess('Candidato movido para a lixeira.');
       } catch (err) {
         setError('Erro ao excluir candidato.');
       }

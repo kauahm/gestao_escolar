@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, 
-  getDocs, serverTimestamp, Timestamp 
-} from 'firebase/firestore';
+import { collection, doc, onSnapshot, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -122,7 +121,8 @@ export default function Agenda() {
       const contasSnap = await getDocs(collection(db, 'contas'));
       contasSnap.forEach(doc => {
         const data = doc.data();
-        if (data.status === 'A enviar' && data.vencimento) {
+        // Pendente = tudo que ainda não foi enviado (inclui registros antigos gravados como 'Vencida')
+        if (data.status !== 'Enviada' && data.vencimento) {
           const [ano, mes, dia] = data.vencimento.split('-');
           const vDate = new Date(ano, mes - 1, dia); // CORREÇÃO: Transforma a string em Data real
           const diffDias = Math.ceil((vDate - hoje) / (1000 * 60 * 60 * 24));
@@ -425,7 +425,7 @@ export default function Agenda() {
     if (!selectedEvent || !selectedEvent.extendedProps.isManual) return;
     try {
       await deleteDoc(doc(db, 'eventos', selectedEvent.id));
-      showToast('Evento excluído com sucesso.', 'error');
+      showToast('Evento movido para a lixeira. Dá para restaurar em Segurança dos dados.');
       setIsConfirmDeleteOpen(false);
       setIsDetailsModalOpen(false);
       setSelectedEvent(null);

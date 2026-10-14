@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, 
-  serverTimestamp, writeBatch 
-} from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { formatarMoeda } from '../../utils/formatters';
+import { situacaoConta, somarValores, diasAte } from '../../utils/calcularStatus';
 
 // Componentes UI
 import Modal from '../../components/ui/Modal';
@@ -72,34 +72,17 @@ export default function Contas() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Buscar Contas e aplicar lógica de Vencimento Automático
+  // 2. Buscar Contas
+  //
+  // "Vencida" NÃO é mais gravado no banco. Antes, toda conta "A enviar" cujo
+  // vencimento passava era reescrita como "Vencida", e o painel — que só somava
+  // "A enviar" — passava a mostrar zero enquanto havia contas pendentes.
+  // Agora o status guardado é só "A enviar" ou "Enviada", e "vencida" é
+  // calculado na hora (ver utils/calcularStatus.js).
   useEffect(() => {
     const q = collection(db, 'contas');
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const contasData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      // Lógica automática: verificar vencidas
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
-      const contasParaAtualizar = contasData.filter(c => {
-        if (c.status !== 'A enviar' || !c.vencimento) return false;
-        const [ano, mes, dia] = c.vencimento.split('-');
-        const vDate = new Date(ano, mes - 1, dia);
-        return vDate < hoje;
-      });
-
-      // Batch update para as contas que venceram
-      if (contasParaAtualizar.length > 0) {
-        const batch = writeBatch(db);
-        contasParaAtualizar.forEach(c => {
-          const ref = doc(db, 'contas', c.id);
-          batch.update(ref, { status: 'Vencida', atualizadoEm: serverTimestamp() });
-        });
-        await batch.commit();
-        // A atualização chamará onSnapshot novamente, então retornamos cedo
-        return; 
-      }
 
       // Ordenar por vencimento (mais urgente primeiro)
       contasData.sort((a, b) => {
@@ -130,15 +113,20 @@ export default function Contas() {
   // Filtragem
   const filteredContas = useMemo(() => {
     return contas.filter(c => {
+      const situacao = situacaoConta(c);
       const matchSearch = (
         (c.numeroDocumento || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (c.observacoes || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
       const matchEscola = filterEscola === 'Todas' ? true : c.escolaId === filterEscola;
       const matchTipo = filterTipo === 'Todos' ? true : c.tipo === filterTipo;
-      const matchStatus = filterStatus === 'Todos' ? true : c.status === filterStatus;
+      const matchStatus =
+        filterStatus === 'Todos' ? true :
+        filterStatus === 'Enviada' ? situacao.enviada :
+        filterStatus === 'Vencida' ? situacao.vencida :
+        /* 'A enviar' */ (situacao.pendente && !situacao.vencida);
       const matchCompetencia = filterCompetencia === 'Todas' ? true : c.competencia === filterCompetencia;
-      
+
       return matchSearch && matchEscola && matchTipo && matchStatus && matchCompetencia;
     });
   }, [contas, searchTerm, filterEscola, filterTipo, filterStatus, filterCompetencia]);
@@ -152,14 +140,16 @@ export default function Contas() {
   };
 
   // Cálculos de Totais
-  const totalAEnviar = contas
-    .filter(c => c.status === 'A enviar')
-    .reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+  const contasVencidas = useMemo(() => contas.filter(c => situacaoConta(c).vencida), [contas]);
+  const contasNoPrazo = useMemo(
+    () => contas.filter(c => { const s = situacaoConta(c); return s.pendente && !s.vencida; }),
+    [contas]
+  );
 
-  const totalFiltrado = filteredContas
-    .reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
-  
-  const contasFiltradasAEnviar = filteredContas.filter(c => c.status === 'A enviar');
+  const totalVencido = somarValores(contasVencidas);
+  const totalNoPrazo = somarValores(contasNoPrazo);
+  const totalFiltrado = somarValores(filteredContas);
+  const contasFiltradasPendentes = filteredContas.filter(c => situacaoConta(c).pendente);
 
   // Helpers de Data
   const formatDataString = (dateStr) => {
@@ -169,12 +159,8 @@ export default function Contas() {
   };
 
   const getDiasParaVencer = (dateStr) => {
-    if (!dateStr) return 999;
-    const [ano, mes, dia] = dateStr.split('-');
-    const vDate = new Date(ano, mes - 1, dia);
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    return Math.ceil((vDate - hoje) / (1000 * 60 * 60 * 24));
+    const dias = diasAte(dateStr);
+    return dias === null ? 999 : dias;
   };
 
   // Handlers do Formulário
@@ -183,6 +169,8 @@ export default function Contas() {
       setFormData({
         ...initialFormState,
         ...conta,
+        // Registros antigos podem ter "Vencida" gravado; hoje isso é calculado.
+        status: conta.status === 'Enviada' ? 'Enviada' : 'A enviar',
       });
       setSelectedConta(conta);
     } else {
@@ -247,6 +235,8 @@ export default function Contas() {
       const dataToSave = {
         ...formData,
         valor: Number(formData.valor),
+        // Só existem dois status gravados: "A enviar" e "Enviada".
+        status: formData.status === 'Enviada' ? 'Enviada' : 'A enviar',
         atualizadoEm: serverTimestamp()
       };
 
@@ -287,7 +277,7 @@ export default function Contas() {
     if (!selectedConta) return;
     try {
       await deleteDoc(doc(db, 'contas', selectedConta.id));
-      showToast('Conta excluída com sucesso.', 'error');
+      showToast('Conta movida para a lixeira. Dá para restaurar em Segurança dos dados.');
       setIsConfirmDeleteOpen(false);
       setIsDetailsModalOpen(false);
     } catch (error) {
@@ -296,18 +286,11 @@ export default function Contas() {
   };
 
   // Utilitários Visuais
-  const getStatusBadge = (status) => {
-    if (status === 'A enviar') return 'yellow';
-    if (status === 'Enviada') return 'green';
-    return 'red'; // Vencida
-  };
-
   const getRowStyle = (conta) => {
-    if (conta.status === 'Enviada') return 'bg-gray-50';
-    if (conta.status === 'A enviar') {
-      const dias = getDiasParaVencer(conta.vencimento);
-      if (dias <= 3 && dias >= 0) return 'bg-red-50';
-    }
+    const s = situacaoConta(conta);
+    if (s.enviada) return 'bg-gray-50';
+    if (s.vencida) return 'bg-red-50';
+    if (s.diasParaVencer !== null && s.diasParaVencer <= 3) return 'bg-amber-50';
     return 'bg-white';
   };
 
@@ -317,9 +300,19 @@ export default function Contas() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Contas a Pagar</h1>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {contasVencidas.length > 0 && (
+              <button
+                onClick={() => setFilterStatus('Vencida')}
+                className="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-red-200 transition-colors"
+                title="Ver apenas as contas vencidas"
+              >
+                <AlertTriangle size={12} />
+                {contasVencidas.length} {contasVencidas.length === 1 ? 'vencida' : 'vencidas'}: {formatarMoeda(totalVencido)}
+              </button>
+            )}
             <span className="bg-yellow-100 text-yellow-800 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
-              <AlertTriangle size={12} /> Total a enviar: {formatarMoeda(totalAEnviar)}
+              {contasNoPrazo.length} a enviar no prazo: {formatarMoeda(totalNoPrazo)}
             </span>
           </div>
         </div>
@@ -367,9 +360,9 @@ export default function Contas() {
           </select>
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
             <option value="Todos">Todos os Status</option>
-            <option value="A enviar">A enviar</option>
-            <option value="Enviada">Enviada</option>
-            <option value="Vencida">Vencida</option>
+            <option value="Vencida">Vencidas</option>
+            <option value="A enviar">A enviar (no prazo)</option>
+            <option value="Enviada">Enviadas</option>
           </select>
           <select value={filterCompetencia} onChange={(e) => setFilterCompetencia(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary">
             <option value="Todas">Todas as Competências</option>
@@ -405,6 +398,7 @@ export default function Contas() {
               <tbody className="divide-y divide-gray-200">
                 {filteredContas.map((item) => {
                   const labelTipo = item.tipo === 'Outro' ? item.tipoCustomizado : item.tipo;
+                  const s = situacaoConta(item);
                   return (
                     <tr key={item.id} className={`hover:bg-opacity-80 transition-colors ${getRowStyle(item)}`}>
                       <td className="px-4 py-3">
@@ -421,19 +415,24 @@ export default function Contas() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
                         {formatDataString(item.vencimento)}
+                        {s.vencida && (
+                          <span className="block text-xs font-medium text-red-600">
+                            {s.diasDeAtraso === 1 ? 'há 1 dia' : `há ${s.diasDeAtraso} dias`}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">
                         {formatarMoeda(item.valor)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <Badge label={item.status} color={getStatusBadge(item.status)} />
+                        <Badge label={s.rotulo} color={s.cor} />
                       </td>
                       <td className="px-4 py-3 text-right text-sm font-medium whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
-                          {item.status === 'A enviar' && (
-                            <button 
-                              onClick={() => { setSelectedConta(item); setIsConfirmSendOpen(true); }} 
-                              className="text-green-600 hover:bg-green-100 p-1.5 rounded-full transition-colors" 
+                          {s.pendente && (
+                            <button
+                              onClick={() => { setSelectedConta(item); setIsConfirmSendOpen(true); }}
+                              className="text-green-600 hover:bg-green-100 p-1.5 rounded-full transition-colors"
                               title="Marcar como Enviada"
                             >
                               <CheckCircle size={18} />
@@ -463,7 +462,7 @@ export default function Contas() {
             </span>
             <div className="flex gap-4 mt-2 sm:mt-0">
               <span className="text-gray-600">
-                {contasFiltradasAEnviar.length} a enviar
+                {contasFiltradasPendentes.length} pendentes
               </span>
               <span className="font-bold text-gray-900">
                 Total na lista: {formatarMoeda(totalFiltrado)}
@@ -520,8 +519,8 @@ export default function Contas() {
               <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-primary bg-white">
                 <option value="A enviar">A enviar</option>
                 <option value="Enviada">Enviada</option>
-                <option value="Vencida">Vencida</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">"Vencida" é calculado pela data de vencimento.</p>
             </div>
           </div>
 
@@ -564,14 +563,17 @@ export default function Contas() {
               </div>
               <div className="text-right">
                 <span className="block text-2xl font-bold text-gray-900">{formatarMoeda(selectedConta.valor)}</span>
-                <Badge label={selectedConta.status} color={getStatusBadge(selectedConta.status)} />
+                <Badge label={situacaoConta(selectedConta).rotulo} color={situacaoConta(selectedConta).cor} />
               </div>
             </div>
 
-            {selectedConta.status === 'A enviar' && (
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div className="text-sm text-yellow-800">
-                  <strong>Atenção:</strong> Esta conta ainda não foi enviada a SP.
+            {situacaoConta(selectedConta).pendente && (
+              <div className={`border p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-3 ${situacaoConta(selectedConta).vencida ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                <div className={`text-sm ${situacaoConta(selectedConta).vencida ? 'text-red-800' : 'text-yellow-800'}`}>
+                  <strong>Atenção:</strong>{' '}
+                  {situacaoConta(selectedConta).vencida
+                    ? `Esta conta venceu há ${situacaoConta(selectedConta).diasDeAtraso} dias e ainda não foi enviada a SP.`
+                    : 'Esta conta ainda não foi enviada a SP.'}
                 </div>
                 <button
                   onClick={() => setIsConfirmSendOpen(true)}
@@ -596,9 +598,11 @@ export default function Contas() {
                 <p className="text-sm font-medium text-gray-900 mt-1">{selectedConta.numeroDocumento || 'Não informado'}</p>
               </div>
               <div>
-                <span className="block text-xs font-bold text-gray-400 uppercase">Dias para Vencer</span>
+                <span className="block text-xs font-bold text-gray-400 uppercase">Prazo</span>
                 <p className="text-sm font-medium text-gray-900 mt-1">
-                  {selectedConta.status === 'Vencida' ? 'Já venceu' : getDiasParaVencer(selectedConta.vencimento) + ' dias'}
+                  {situacaoConta(selectedConta).vencida
+                    ? `Venceu há ${situacaoConta(selectedConta).diasDeAtraso} dias`
+                    : `Vence em ${getDiasParaVencer(selectedConta.vencimento)} dias`}
                 </p>
               </div>
             </div>
@@ -640,7 +644,7 @@ export default function Contas() {
       <ConfirmDialog 
         isOpen={isConfirmDeleteOpen} 
         title="Excluir conta" 
-        message="Tem certeza que deseja excluir este registro de conta? Esta ação não pode ser desfeita." 
+        message="Tem certeza que deseja excluir este registro de conta? Ele vai para a lixeira e pode ser restaurado." 
         onConfirm={handleConfirmDelete} 
         onCancel={() => setIsConfirmDeleteOpen(false)} 
       />

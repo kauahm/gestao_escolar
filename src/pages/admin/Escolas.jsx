@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { formatarDataHora } from '../../utils/formatters';
 
@@ -213,7 +215,7 @@ export default function Escolas() {
     
     try {
       await deleteDoc(doc(db, 'escolas', selectedEscola.id));
-      showToast('Escola excluída.', 'error');
+      showToast('Escola movida para a lixeira.');
       setIsConfirmDeleteOpen(false);
       setIsDetailsModalOpen(false);
     } catch (error) {
@@ -684,7 +686,7 @@ export default function Escolas() {
       <ConfirmDialog
         isOpen={isConfirmDeleteOpen}
         title="Excluir escola"
-        message={`Tem certeza que deseja excluir a unidade ${selectedEscola?.nome}? Esta ação não pode ser desfeita.`}
+        message={`Tem certeza que deseja excluir a unidade ${selectedEscola?.nome}? Ela vai para a lixeira e pode ser restaurada.`}
         onConfirm={handleConfirmDelete}
         onCancel={() => setIsConfirmDeleteOpen(false)}
       />

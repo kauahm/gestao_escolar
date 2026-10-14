@@ -1,16 +1,7 @@
 import { db } from '../services/firebase';
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where,
-  serverTimestamp 
-} from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, query, where, serverTimestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../services/db';
 
 export function useFirestore() {
   const getCollection = async (nomeColecao, filtros = []) => {

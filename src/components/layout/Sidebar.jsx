@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import logoImg from '../../assets/logo-topo.png'; 
 import { 
   LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
-  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase 
+  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck 
 } from 'lucide-react';
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
@@ -24,6 +24,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     { to: '/admin/selecao', icon: <Users size={20} />, label: 'Processo Seletivo' },
     { to: '/admin/agenda', icon: <Calendar size={20} />, label: 'Agenda' },
     { to: '/admin/usuarios', icon: <UserCog size={20} />, label: 'Usuários' },
+    { to: '/admin/seguranca', icon: <ShieldCheck size={20} />, label: 'Segurança dos dados' },
   ];
 
   const administrativoLinks = [

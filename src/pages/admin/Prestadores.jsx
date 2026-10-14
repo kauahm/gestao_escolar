@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -98,7 +100,7 @@ export default function Prestadores() {
     if (!selectedPrestador) return;
     try {
       await deleteDoc(doc(db, 'prestadores', selectedPrestador.id));
-      showToast('Prestador excluído.', 'error');
+      showToast('Prestador movido para a lixeira.');
       setIsConfirmDeleteOpen(false);
     } catch (error) {
       showToast('Erro ao excluir prestador.', 'error');
@@ -219,7 +221,7 @@ export default function Prestadores() {
         </form>
       </Modal>
 
-      <ConfirmDialog isOpen={isConfirmDeleteOpen} title="Excluir Prestador" message="Tem certeza que deseja excluir este prestador? O histórico de manutenções dele será mantido." onConfirm={handleConfirmDelete} onCancel={() => setIsConfirmDeleteOpen(false)} />
+      <ConfirmDialog isOpen={isConfirmDeleteOpen} title="Excluir Prestador" message="Tem certeza que deseja excluir este prestador? Ele vai para a lixeira e pode ser restaurado; o histórico de manutenções é mantido." onConfirm={handleConfirmDelete} onCancel={() => setIsConfirmDeleteOpen(false)} />
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
     </div>
   );

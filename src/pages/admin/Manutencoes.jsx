@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp, query, orderBy } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { formatarDataHora, formatarData } from '../../utils/formatters';
@@ -181,7 +183,7 @@ export default function AdminManutencoes() {
     if (!selectedManutencao) return;
     try {
       await deleteDoc(doc(db, 'manutencoes', selectedManutencao.id));
-      showToast('Manutenção excluída.', 'error');
+      showToast('Manutenção movida para a lixeira.');
       setIsConfirmDeleteOpen(false); setIsDetailsModalOpen(false);
     } catch (error) {
       showToast('Erro ao excluir manutenção.', 'error');
@@ -1050,7 +1052,7 @@ export default function AdminManutencoes() {
         </Modal>
       )}
 
-      <ConfirmDialog isOpen={isConfirmDeleteOpen} title="Excluir manutenção" message="Tem certeza que deseja excluir esta solicitação de manutenção? Esta ação não pode ser desfeita." onConfirm={handleConfirmDelete} onCancel={() => setIsConfirmDeleteOpen(false)} />
+      <ConfirmDialog isOpen={isConfirmDeleteOpen} title="Excluir manutenção" message="Tem certeza que deseja excluir esta solicitação de manutenção? Ela vai para a lixeira e pode ser restaurada." onConfirm={handleConfirmDelete} onCancel={() => setIsConfirmDeleteOpen(false)} />
 
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
     </div>

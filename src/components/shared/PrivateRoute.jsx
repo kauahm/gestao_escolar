@@ -3,25 +3,48 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
-export default function PrivateRoute({ children, allowedRole }) {
+// Rota protegida.
+// Uso: <PrivateRoute allowedRoles={['admin', 'administrativo']}> ... </PrivateRoute>
+// (`allowedRole` no singular continua aceito para não quebrar chamadas antigas)
+export default function PrivateRoute({ children, allowedRoles, allowedRole }) {
   const { currentUser, userProfile, loading } = useAuth();
 
-  if (loading) {
-    return <div className="h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
-  }
+  // Normaliza: aceita array, string ou nada.
+  const perfisPermitidos = allowedRoles
+    ? (Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles])
+    : (allowedRole ? [allowedRole] : null);
+
+  const telaDeEspera = (
+    <div className="h-screen flex items-center justify-center">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+
+  if (loading) return telaDeEspera;
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
 
-  // A MÁGICA ESTÁ AQUI: Trava a renderização se o perfil ainda estiver a ser descarregado
-  if (allowedRole && !userProfile) {
-    return <div className="h-screen flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
+  // Trava a renderização enquanto o perfil ainda está sendo carregado,
+  // para não liberar a tela por engano nem redirecionar para o lugar errado.
+  if (perfisPermitidos && !userProfile) return telaDeEspera;
+
+  // Conta desativada não entra em lugar nenhum.
+  if (userProfile && userProfile.situacao && userProfile.situacao !== 'ativa') {
+    return <Navigate to="/login" replace />;
   }
 
-  if (allowedRole && userProfile?.perfil !== allowedRole) {
-    return <Navigate to={userProfile?.perfil === 'admin' ? '/admin/dashboard' : '/diretora/dashboard'} replace />;
+  if (perfisPermitidos && !perfisPermitidos.includes(userProfile?.perfil)) {
+    return <Navigate to={rotaInicialDoPerfil(userProfile?.perfil)} replace />;
   }
 
   return children;
+}
+
+function rotaInicialDoPerfil(perfil) {
+  if (perfil === 'admin') return '/admin/dashboard';
+  if (perfil === 'administrativo') return '/admin/talentos';
+  if (perfil === 'diretora') return '/diretora/dashboard';
+  return '/login';
 }

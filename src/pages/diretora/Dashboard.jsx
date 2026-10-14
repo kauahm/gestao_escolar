@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, onSnapshot, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
+// Gravações passam pela camada com histórico e lixeira (ver services/db.js)
+import { addDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { formatarMoeda, formatarDataHora } from '../../utils/formatters';
+import { situacaoConta } from '../../utils/calcularStatus';
 
 // Ícones e Componentes UI
 import { 
@@ -77,7 +80,7 @@ export default function DiretoraDashboard() {
   // Métricas
   const metricas = useMemo(() => {
     const manutencoesAbertas = manutencoes.filter(m => m.status !== 'Concluído');
-    const contasDaUnidade = contas.filter(c => c.status === 'A enviar');
+    const contasDaUnidade = contas.filter(c => situacaoConta(c).pendente);
     
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -292,7 +295,7 @@ export default function DiretoraDashboard() {
                     <tr key={c.id} className="border-b last:border-0 hover:bg-gray-50">
                       <td className="p-3">
                         <p className="font-medium text-gray-900">{c.tipo === 'Outro' ? c.tipoCustomizado : c.tipo}</p>
-                        <Badge label={c.status} color={c.status === 'A enviar' ? 'yellow' : 'green'} />
+                        <Badge label={situacaoConta(c).rotulo} color={situacaoConta(c).cor} />
                       </td>
                       <td className="p-3 text-right">
                         <p className="font-bold text-gray-900">{formatarMoeda(c.valor)}</p>
