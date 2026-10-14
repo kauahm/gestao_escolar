@@ -78,7 +78,7 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 - Escola inativa passa a ser informada como tal na importação, em vez de "não encontrada".
 - **Testes:** 35 de leitura e validação (`npm test`) e 52 de regras (`npm run test:regras`), todos passando; fluxo conferido na tela no emulador.
 
-**Falta fazer:** publicar as regras novas (projeto real e demonstração) **antes** de enviar o código: sem a regra de `importacoes`, importar dá erro de permissão (nada é gravado).
+**Publicado em 14/10:** regras novas nos dois projetos (real e demonstração, conferidas por hash) e, depois, o código no GitHub. Também entrou a tela que explica uma conta sem perfil (com o UID e o botão Sair), em vez de "A carregar o seu perfil..." para sempre (achado T5 do [12](12-revisao-e-testes-das-regras.md)).
 
 Detalhes em [14](14-importacao-de-planilhas.md).
 
