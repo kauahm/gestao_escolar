@@ -19,5 +19,6 @@ Toda a documentação do projeto fica nesta pasta.
 | [13-ambiente-de-demonstracao.md](13-ambiente-de-demonstracao.md) | Segundo projeto Firebase só com dados fictícios: o que vem nos dados, travas contra mistura com o sistema real, passo a passo para criar o projeto e como restaurar |
 | [14-importacao-de-planilhas.md](14-importacao-de-planilhas.md) | Importação de Excel/CSV em Escolas, Contas, Ciclos e Banco de Talentos: o que cada módulo aceita, conversões, desfazer, leitor próprio de planilhas, testes e como testar no emulador local |
 | [15-textos-e-estados-de-tela.md](15-textos-e-estados-de-tela.md) | Português do Brasil, um nome por tela, data e saudação, estados vazios que ensinam o próximo passo e o que a tela mostra quando os dados não chegam (sem internet, sem servidor, sem permissão) |
+| [16-dados-e-fluxo-dos-chamados.md](16-dados-e-fluxo-dos-chamados.md) | Competência em seletor, tipo de conta, responsável ligado ao prestador, página de detalhe do chamado com linha do tempo, "Meus chamados" da diretora e "Esqueci minha senha" |
 
 **Convenção:** arquivos numerados em ordem de criação (`NN-assunto.md`), escritos em português, com "(a confirmar)" onde houver inferência.

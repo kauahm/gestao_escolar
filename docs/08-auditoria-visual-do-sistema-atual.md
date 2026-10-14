@@ -52,12 +52,12 @@
 | # | Achado | Proposta |
 |---|---|---|
 | M1 | **Uma manutenção tem ~15 problemas misturados numa só descrição** (puxador, lâmpadas, mesas, vazamento, ventiladores, pintura…), com local "circuito de banho, corredor, salas, refeitório, parque…" | Permitir **itens/checklist dentro do chamado** e **dividir em várias O.S.**; fotos por item |
-| M2 | **Competência digitada à mão e inconsistente** ("ABRIL/2026", "abril/2025", "MAIO/26", "JUNHO/26"); há conta que vence em maio/2026 com competência "abril/2025" (provável erro) | Campo de **mês/ano em seletor**; validação |
-| M3 | **Tipos de conta fora do padrão**: aparece "TAXA DE LICENÇA" (provável tipo "Outro" digitado), enquanto a lista oficial tem "Taxa de Limpeza" | Lista fechada de categorias, alinhada às da AEMC ([04](04-pesquisa-de-mercado.md), prestação de contas) |
-| M4 | **Responsável "Vitor" numa manutenção, mas a lista de Prestadores está vazia** | Responsável sempre ligado a um prestador cadastrado (ou a um usuário) |
-| M5 | **Detalhes da manutenção mostram só a descrição** (sem status, prioridade, prazo, histórico); o botão **Excluir** fica na janela de visualização | Tela de detalhe com **linha do tempo**; exclusão escondida e com confirmação forte, preferir "arquivar" |
+| M2 | ✅ Feito em 14/10 ([16](16-dados-e-fluxo-dos-chamados.md)). **Competência digitada à mão e inconsistente** ("ABRIL/2026", "abril/2025", "MAIO/26", "JUNHO/26"); há conta que vence em maio/2026 com competência "abril/2025" (provável erro) | Campo de **mês/ano em seletor**; validação |
+| M3 | ✅ Feito em 14/10 ([16](16-dados-e-fluxo-dos-chamados.md)). **Tipos de conta fora do padrão**: aparece "TAXA DE LICENÇA" (provável tipo "Outro" digitado), enquanto a lista oficial tem "Taxa de Limpeza" | Lista fechada de categorias, alinhada às da AEMC ([04](04-pesquisa-de-mercado.md), prestação de contas) |
+| M4 | ✅ Feito em 14/10 ([16](16-dados-e-fluxo-dos-chamados.md)). **Responsável "Vitor" numa manutenção, mas a lista de Prestadores está vazia** | Responsável sempre ligado a um prestador cadastrado (ou a um usuário) |
+| M5 | ✅ Feito em 14/10 ([16](16-dados-e-fluxo-dos-chamados.md)). **Detalhes da manutenção mostram só a descrição** (sem status, prioridade, prazo, histórico); o botão **Excluir** fica na janela de visualização | Tela de detalhe com **linha do tempo**; exclusão escondida e com confirmação forte, preferir "arquivar" |
 | M6 | **Dados cadastrais incompletos**: "Não informado" para número de alunos nas escolas visíveis; unidade administrativa misturada com escolas | Importar planilha; separar tipos de unidade (escola, escritório) |
-| M7 | **Sem recuperação de senha** (não encontrei no código da tela de login) | Fluxo "Esqueci minha senha" |
+| M7 | ✅ Feito em 14/10 ([16](16-dados-e-fluxo-dos-chamados.md)). **Sem recuperação de senha** (não encontrei no código da tela de login) | Fluxo "Esqueci minha senha" |
 
 ### 3.3 Média: visual e consistência (desktop)
 

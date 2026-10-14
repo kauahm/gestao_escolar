@@ -69,6 +69,21 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Dados e fluxo dos chamados (bloco D)
+
+- **Competência** escolhida em mês e ano, sempre gravada como "Outubro/2026", com aviso quando está longe do vencimento; filtro em ordem de data.
+- **Tipo "Outro"** sugere os tipos já usados e evita grafias diferentes do mesmo tipo.
+- **Responsável ligado ao prestador** (identificador + nome); nomes fora do cadastro aparecem como "não cadastrado".
+- **Página de detalhe do chamado** com linha do tempo, mudança de status com um clique, WhatsApp, impressão e exclusão protegida.
+- **"Meus chamados"** para a diretora, no lugar do item de menu que não levava a lugar nenhum.
+- **"Esqueci minha senha"** no login, e mensagens de erro do login mais claras.
+- **Defeito corrigido:** editar um registro gravava um campo `id` dentro do documento.
+- **Testes:** 53 em `npm test`, 52 de regras; conferência na tela no emulador.
+
+Detalhes em [16](16-dados-e-fluxo-dos-chamados.md).
+
+---
+
 ## 14/10/2026 — Textos em PT-BR e estados de tela (item 0.6)
 
 - **Português do Brasil** em todos os textos encontrados, com um teste que barra palavras de Portugal no código.
