@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 !.env.demo.example
+# Configuração do emulador local: sem nenhum segredo, pode ir para o Git.
+!.env.emulador
 
 # Dependências
 node_modules/

@@ -8,10 +8,13 @@ import { collection, onSnapshot, query, orderBy, serverTimestamp, doc } from 'fi
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import Toast from '../../components/ui/Toast';
+import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
+import { Upload } from 'lucide-react';
 
 export default function BancoTalentos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [curriculos, setCurriculos] = useState([]);
+  const [importarAberto, setImportarAberto] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Controle de Edição
@@ -164,15 +167,31 @@ const abrirDetalhes = (curriculo) => {
       {error && <Toast message={error} type="error" onClose={() => setError('')} />}
       {success && <Toast message={success} type="success" onClose={() => setSuccess('')} />}
 
+      <ImportarPlanilha
+        isOpen={importarAberto}
+        onClose={() => setImportarAberto(false)}
+        tipo="curriculos"
+        existentes={curriculos}
+      />
+
+
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Banco de Talentos</h1>
           <p className="text-sm text-gray-500">Gerencie currículos e inicie processos seletivos.</p>
         </div>
-        <button onClick={abrirModalNovo} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium">
-          <Plus size={20} /> Novo Currículo
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setImportarAberto(true)}
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
+          >
+            <Upload size={18} /> Importar planilha
+          </button>
+          <button onClick={abrirModalNovo} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium">
+            <Plus size={20} /> Novo Currículo
+          </button>
+        </div>
       </div>
 
       {/* Filtro e Tabela */}

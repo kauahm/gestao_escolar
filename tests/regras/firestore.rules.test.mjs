@@ -29,6 +29,8 @@ import {
 
 import { gerarDadosDemo } from '../../src/demo/dadosDemo.js';
 import { resetarDemo } from '../../src/demo/resetarDemo.js';
+import { desfazerImportacao, importarRegistros } from '../../src/importacao/gravar.js';
+import { ESQUEMAS } from '../../src/importacao/esquemas.js';
 
 const PROJETO = 'demo-gestao-escolar';
 
@@ -507,6 +509,86 @@ describe('ambiente de demonstração', () => {
     assert.equal(new Set(todosOsIds).size, todosOsIds.length, 'identificadores repetidos');
     const prestadores = new Set(dados.prestadores.map((p) => p.nome));
     for (const m of dados.manutencoes) assert.ok(m.responsavel === 'A definir' || prestadores.has(m.responsavel), m.responsavel);
+  });
+});
+
+describe('importação de planilhas', () => {
+  const usuario = (uid) => ({ uid, email: emailDe(uid) });
+  const escolaNova = (nome) => ({ dados: { nome, codigo: '', situacao: 'Ativa', bairro: 'Centro', numeroAlunos: 0, capacidadeCaixaDagua: 0 } });
+  const curriculoNovo = (nome) => ({ dados: { nome, telefone: '(19) 99999-0000', vaga: 'Cozinheira', exp: 'Não', status: 'Disponível' } });
+
+  test('admin importa escolas: registros, histórico e registro da importação', async () => {
+    const bd = como('admin');
+    const { importacaoId, importados } = await importarRegistros({
+      db: bd, esquema: ESQUEMAS.escolas, registros: [escolaNova('CEI Um'), escolaNova('CEI Dois')], arquivo: 'escolas.xlsx', usuario: usuario('admin'),
+    });
+    assert.equal(importados, 2);
+    const criadas = await getDocs(query(collection(bd, 'escolas'), where('importacaoId', '==', importacaoId)));
+    assert.equal(criadas.size, 2);
+    assert.ok(criadas.docs.every((d) => d.data().criadoEm && d.data().atualizadoEm));
+    const importacao = (await getDoc(doc(bd, 'importacoes', importacaoId))).data();
+    assert.equal(importacao.status, 'concluida');
+    assert.equal(importacao.importados, 2);
+    assert.equal(importacao.ids.length, 2);
+    const historico = await getDocs(query(collection(bd, 'historico'), where('acao', '==', 'criar')));
+    const ids = new Set(criadas.docs.map((d) => d.id));
+    assert.equal(historico.docs.filter((h) => ids.has(h.data().docId)).length, 2);
+  });
+
+  test('importação grande é gravada em vários lotes', async () => {
+    const registros = Array.from({ length: 450 }, (_, i) => escolaNova(`CEI ${i}`));
+    const { importados } = await importarRegistros({ db: como('admin'), esquema: ESQUEMAS.escolas, registros, arquivo: 'grande.csv', usuario: usuario('admin') });
+    assert.equal(importados, 450);
+    assert.equal((await getDocs(collection(como('admin'), 'escolas'))).size, 452); // + as 2 de partida
+  });
+
+  test('admin desfaz: tudo vai para a lixeira, com histórico, e a importação fica marcada', async () => {
+    const bd = como('admin');
+    const { importacaoId } = await importarRegistros({ db: bd, esquema: ESQUEMAS.escolas, registros: [escolaNova('CEI Um'), escolaNova('CEI Dois')], arquivo: 'x.xlsx', usuario: usuario('admin') });
+    const { removidos } = await desfazerImportacao({ db: bd, importacao: { id: importacaoId, colecao: 'escolas' }, usuario: usuario('admin') });
+    assert.equal(removidos, 2);
+    assert.equal((await getDocs(query(collection(bd, 'escolas'), where('importacaoId', '==', importacaoId)))).size, 0);
+    const lixeira = await getDocs(query(collection(bd, 'lixeira'), where('colecao', '==', 'escolas')));
+    assert.equal(lixeira.docs.filter((d) => d.data().dados.importacaoId === importacaoId).length, 2);
+    assert.equal((await getDoc(doc(bd, 'importacoes', importacaoId))).data().status, 'desfeita');
+    const excluidos = await getDocs(query(collection(bd, 'historico'), where('acao', '==', 'excluir')));
+    assert.equal(excluidos.size, 2);
+  });
+
+  test('RH importa e desfaz currículos, mas não importa escolas nem contas', async () => {
+    const bd = como('rh');
+    const { importacaoId } = await importarRegistros({ db: bd, esquema: ESQUEMAS.curriculos, registros: [curriculoNovo('Ana')], arquivo: 'cv.csv', usuario: usuario('rh') });
+    await assert.doesNotReject(desfazerImportacao({ db: bd, importacao: { id: importacaoId, colecao: 'curriculos' }, usuario: usuario('rh') }));
+    await assert.rejects(importarRegistros({ db: bd, esquema: ESQUEMAS.escolas, registros: [escolaNova('CEI X')], arquivo: 'x', usuario: usuario('rh') }));
+    assert.equal((await getDocs(collection(como('admin'), 'escolas'))).size, 2);
+  });
+
+  test('diretora não importa nada', async () => {
+    await assert.rejects(importarRegistros({ db: como('diretoraA'), esquema: ESQUEMAS.curriculos, registros: [curriculoNovo('Ana')], arquivo: 'x', usuario: usuario('diretoraA') }));
+    await assert.rejects(importarRegistros({ db: como('diretoraA'), esquema: ESQUEMAS.escolas, registros: [escolaNova('CEI X')], arquivo: 'x', usuario: usuario('diretoraA') }));
+  });
+
+  test('o registro da importação não pode ser forjado, alterado à vontade nem apagado', async () => {
+    const bd = como('admin');
+    const base = { colecao: 'escolas', arquivo: 'x', total: 1, importados: 0, ids: [], porEmail: emailDe('admin'), em: serverTimestamp() };
+    await assertFails(addDoc(collection(bd, 'importacoes'), { ...base, porUid: 'rh', status: 'em andamento' }));
+    await assertFails(addDoc(collection(bd, 'importacoes'), { ...base, porUid: 'admin', status: 'concluida' }));
+    await assertFails(addDoc(collection(bd, 'importacoes'), { ...base, porUid: 'admin', status: 'em andamento', colecao: 'usuarios' }));
+    await assertFails(addDoc(collection(bd, 'importacoes'), { ...base, porUid: 'admin', status: 'em andamento', em: new Date('2020-01-01') }));
+    const ref = await assertSucceeds(addDoc(collection(bd, 'importacoes'), { ...base, porUid: 'admin', status: 'em andamento' }));
+    await assertFails(updateDoc(ref, { ids: ['outro'] }));
+    await assertFails(updateDoc(ref, { status: 'qualquer' }));
+    await assertSucceeds(updateDoc(ref, { status: 'concluida', importados: 1 }));
+    await assertFails(deleteDoc(ref));
+    await assertFails(getDoc(doc(como('rh'), 'importacoes', ref.id)));
+  });
+
+  test('restaurar a demonstração também limpa as importações', async () => {
+    await ambiente.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'config', 'ambiente'), { demo: true }));
+    const bd = como('admin');
+    await importarRegistros({ db: bd, esquema: ESQUEMAS.escolas, registros: [escolaNova('CEI Um')], arquivo: 'x', usuario: usuario('admin') });
+    await resetarDemo(bd);
+    assert.equal((await getDocs(collection(bd, 'importacoes'))).size, 0);
   });
 });
 

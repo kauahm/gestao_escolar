@@ -11,6 +11,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
+import { Upload } from 'lucide-react';
 
 // Ícones
 import { 
@@ -38,6 +40,8 @@ const initialFormState = {
 export default function Ciclos() {
   // Estados de dados
   const [ciclos, setCiclos] = useState([]);
+  const [importarAberto, setImportarAberto] = useState(false);
+  const [todasEscolas, setTodasEscolas] = useState([]);
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,11 +67,12 @@ export default function Ciclos() {
   useEffect(() => {
     const q = collection(db, 'escolas');
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const escolasData = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
+      const todas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const escolasData = todas
         .filter(e => e.situacao === 'Ativa')
         .sort((a, b) => a.nome.localeCompare(b.nome));
       setEscolas(escolasData);
+      setTodasEscolas(todas); // a importação precisa saber também das inativas
     });
     return () => unsubscribe();
   }, []);
@@ -324,12 +329,20 @@ export default function Ciclos() {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => handleOpenForm()}
-          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
-        >
-          <Plus size={20} /> Registrar Ciclo
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setImportarAberto(true)}
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
+          >
+            <Upload size={18} /> Importar planilha
+          </button>
+          <button
+            onClick={() => handleOpenForm()}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
+          >
+            <Plus size={20} /> Registrar Ciclo
+          </button>
+        </div>
       </div>
 
       {/* Filtros e Toggle View */}
@@ -531,6 +544,14 @@ export default function Ciclos() {
         message="Tem certeza que deseja excluir este registro de controle de ciclo? Ele sai da Agenda da unidade, mas fica na lixeira e pode ser restaurado." 
         onConfirm={handleConfirmDelete} 
         onCancel={() => setIsConfirmDeleteOpen(false)} 
+      />
+
+      <ImportarPlanilha
+        isOpen={importarAberto}
+        onClose={() => setImportarAberto(false)}
+        tipo="ciclos"
+        escolas={todasEscolas}
+        existentes={ciclos}
       />
 
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}

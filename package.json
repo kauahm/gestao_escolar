@@ -6,10 +6,14 @@
   "scripts": {
     "dev": "vite",
     "dev:demo": "vite --mode demo",
+    "dev:emulador": "vite --mode emulador",
+    "emulador": "npx -y firebase-tools@13 emulators:start --only auth,firestore --project demo-gestao-escolar",
+    "emulador:dados": "node scripts/semear-emulador.mjs",
     "build": "vite build",
     "build:demo": "vite build --mode demo",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test": "node --test tests/importacao/*.test.mjs",
     "test:regras": "npx -y firebase-tools@13 emulators:exec --only firestore --project demo-gestao-escolar \"node --test tests/regras/*.test.mjs\""
   },
   "dependencies": {

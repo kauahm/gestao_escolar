@@ -26,6 +26,7 @@ import {
   setDoc as fbSetDoc,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { tituloDoRegistro } from '../utils/tituloDoRegistro.js';
 
 export const COLECAO_LIXEIRA = 'lixeira';
 export const COLECAO_HISTORICO = 'historico';
@@ -36,16 +37,7 @@ const CAMPOS_IGNORADOS = new Set(['atualizadoEm', 'criadoEm']);
 /** Nome da coleção de uma referência (documento ou coleção). */
 const nomeDaColecao = (ref) => (ref.type === 'collection' ? ref.id : ref.parent.id);
 
-/** Um rótulo curto para identificar o registro no histórico e na lixeira. */
-export const tituloDoRegistro = (dados = {}) => {
-  const candidato =
-    dados.nome || dados.titulo || dados.descricao || dados.tipoCustomizado ||
-    dados.tipo || dados.email || dados.escolaNome || '';
-  const texto = String(candidato).replace(/\s+/g, ' ').trim();
-  const complemento = dados.escolaNome && candidato !== dados.escolaNome ? ` · ${dados.escolaNome}` : '';
-  const completo = `${texto}${complemento}`;
-  return completo.length > 90 ? `${completo.slice(0, 90)}…` : completo;
-};
+export { tituloDoRegistro };
 
 /** Remove sentinelas do Firebase (ex.: serverTimestamp) para guardar no histórico. */
 const limparParaHistorico = (dados = {}) => {

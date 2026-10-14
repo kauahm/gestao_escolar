@@ -12,6 +12,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
+import { Upload } from 'lucide-react';
 
 // Ícones
 import { 
@@ -39,6 +41,7 @@ const initialFormState = {
 export default function Escolas() {
   // Estados de Dados
   const [escolas, setEscolas] = useState([]);
+  const [importarAberto, setImportarAberto] = useState(false);
   const [loading, setLoading] = useState(true);
   
   // Estados de Filtro e Busca
@@ -235,13 +238,21 @@ export default function Escolas() {
             {escolas.length} {escolas.length === 1 ? 'escola cadastrada' : 'escolas cadastradas'}
           </p>
         </div>
-        <button
-          onClick={() => handleOpenForm()}
-          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
-        >
-          <Plus size={20} />
-          Nova Escola
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setImportarAberto(true)}
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium"
+          >
+            <Upload size={18} /> Importar planilha
+          </button>
+          <button
+            onClick={() => handleOpenForm()}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm"
+          >
+            <Plus size={20} />
+            Nova Escola
+          </button>
+        </div>
       </div>
 
       {/* Busca e Filtro */}
@@ -692,6 +703,14 @@ export default function Escolas() {
       />
 
       {/* Notificações Toast */}
+      <ImportarPlanilha
+        isOpen={importarAberto}
+        onClose={() => setImportarAberto(false)}
+        tipo="escolas"
+        escolas={escolas}
+        existentes={escolas}
+      />
+
       {toast.show && (
         <Toast
           message={toast.message}

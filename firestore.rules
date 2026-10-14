@@ -171,6 +171,27 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Importações de planilha: quem importou, de qual arquivo e o que foi criado,
+    // para poder desfazer. Admin importa tudo; RH só currículos. Nunca se apaga
+    // (fora do ambiente de demonstração); só o status muda.
+    match /importacoes/{id} {
+      function podeImportar(colecao) {
+        return isAdmin() || (isAdministrativo() && colecao == 'curriculos');
+      }
+      allow read: if isAdmin() ||
+                     (isAdministrativo() && resource.data.colecao == 'curriculos');
+      allow create: if podeImportar(request.resource.data.colecao)
+                    && request.resource.data.colecao in ['escolas', 'contas', 'ciclos', 'curriculos']
+                    && request.resource.data.porUid == request.auth.uid
+                    && request.resource.data.status == 'em andamento'
+                    && request.resource.data.em == request.time;
+      allow update: if podeImportar(resource.data.colecao)
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'importados', 'desfeitaEm', 'desfeitaPor'])
+                    && request.resource.data.status in ['concluida', 'incompleta', 'desfeita'];
+      allow delete: if isAdmin() && ambienteDeDemonstracao();
+    }
+
     // Configurações do sistema (ex.: data da última cópia de segurança).
     // config/ambiente marca o projeto de demonstração e não pode ser gravado
     // pelo app, nem pelo admin: só pelo console do Firebase.

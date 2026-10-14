@@ -22,6 +22,7 @@ export const COLECOES = [
 const COLECOES_INTERNAS = [
   { id: 'lixeira', rotulo: 'Lixeira' },
   { id: 'historico', rotulo: 'Histórico' },
+  { id: 'importacoes', rotulo: 'Importações' },
 ];
 
 export const rotuloDaColecao = (id) =>
@@ -69,7 +70,7 @@ const ROTULOS = {
 };
 
 // Colunas que não ajudam a ler a planilha (identificadores internos).
-const OCULTAS_NO_EXCEL = new Set(['escolaId', 'unidadeId', 'solicitadaPor', 'criadoPor', 'uid']);
+const OCULTAS_NO_EXCEL = new Set(['escolaId', 'unidadeId', 'solicitadaPor', 'criadoPor', 'uid', 'importacaoId']);
 
 const rotuloDaColuna = (chave) =>
   ROTULOS[chave] ||
