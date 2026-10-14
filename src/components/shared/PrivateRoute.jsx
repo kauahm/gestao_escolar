@@ -2,12 +2,13 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import FalhaNoPerfil from './FalhaNoPerfil';
 
 // Rota protegida.
 // Uso: <PrivateRoute allowedRoles={['admin', 'administrativo']}> ... </PrivateRoute>
 // (`allowedRole` no singular continua aceito para não quebrar chamadas antigas)
 export default function PrivateRoute({ children, allowedRoles, allowedRole }) {
-  const { currentUser, userProfile, loading } = useAuth();
+  const { currentUser, userProfile, loading, erroDoPerfil } = useAuth();
 
   // Normaliza: aceita array, string ou nada.
   const perfisPermitidos = allowedRoles
@@ -28,7 +29,7 @@ export default function PrivateRoute({ children, allowedRoles, allowedRole }) {
 
   // Trava a renderização enquanto o perfil ainda está sendo carregado,
   // para não liberar a tela por engano nem redirecionar para o lugar errado.
-  if (perfisPermitidos && !userProfile) return telaDeEspera;
+  if (perfisPermitidos && !userProfile) return erroDoPerfil ? <FalhaNoPerfil codigo={erroDoPerfil} /> : telaDeEspera;
 
   // Conta desativada não entra em lugar nenhum.
   if (userProfile && userProfile.situacao && userProfile.situacao !== 'ativa') {

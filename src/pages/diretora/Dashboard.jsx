@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, onSnapshot, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc } from '../../services/db';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
-import { formatarMoeda, formatarDataHora } from '../../utils/formatters';
+import { formatarMoeda, formatarDataHora, dataPorExtenso, primeiroNome } from '../../utils/formatters';
 import { situacaoConta } from '../../utils/calcularStatus';
 
 // Ícones e Componentes UI
@@ -49,13 +50,13 @@ export default function DiretoraDashboard() {
     const qCiclos = query(collection(db, 'ciclos'), where('escolaId', '==', userProfile.unidadeId));
     const qContas = query(collection(db, 'contas'), where('escolaId', '==', userProfile.unidadeId));
 
-    unsubs.push(onSnapshot(qManutencoes, snap => {
+    unsubs.push(ouvir(qManutencoes, snap => {
       setManutencoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(onSnapshot(qCiclos, snap => {
+    unsubs.push(ouvir(qCiclos, snap => {
       setCiclos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(onSnapshot(qContas, snap => {
+    unsubs.push(ouvir(qContas, snap => {
       setContas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
     }));
@@ -73,9 +74,7 @@ export default function DiretoraDashboard() {
     return 'Boa noite';
   };
 
-  const dataAtualFormatada = new Intl.DateTimeFormat('pt-BR', { 
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-  }).format(new Date());
+  const dataAtualFormatada = dataPorExtenso(new Date());
 
   // Métricas
   const metricas = useMemo(() => {
@@ -178,8 +177,8 @@ export default function DiretoraDashboard() {
       {/* Cabeçalho */}
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{getSaudacao()}, {userProfile?.nome}!</h1>
-          <p className="text-gray-500 text-sm mt-1 capitalize">{dataAtualFormatada}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{getSaudacao()}, {primeiroNome(userProfile?.nome)}!</h1>
+          <p className="text-gray-500 text-sm mt-1">{dataAtualFormatada}</p>
           <div className="mt-3 inline-flex items-center gap-2 bg-blue-50 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-semibold border border-blue-100">
             <MapPin size={16} /> Escola: {userProfile?.unidadeNome || 'Não atribuída'}
           </div>
@@ -326,7 +325,7 @@ export default function DiretoraDashboard() {
               name="localDentroEscola" 
               value={formData.localDentroEscola} 
               onChange={handleInputChange} 
-              placeholder="Ex: Casa de banho das crianças, Cozinha, Sala 4..." 
+              placeholder="Ex.: banheiro das crianças, cozinha, sala 4..." 
               className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.localDentroEscola ? 'border-red-500' : 'border-gray-300'}`} 
             />
             {formErrors.localDentroEscola && <p className="text-red-500 text-xs mt-1">{formErrors.localDentroEscola}</p>}

@@ -20,12 +20,14 @@ import Seguranca from './pages/admin/Seguranca';
 
 import DiretoraDashboard from './pages/diretora/Dashboard';
 import { EH_DEMO, DEMO_MAL_CONFIGURADA } from './services/ambiente';
+import FalhaNoPerfil from './components/shared/FalhaNoPerfil';
 
 function RootRedirect() {
-  const { currentUser, userProfile, loading, logout } = useAuth();
+  const { currentUser, userProfile, loading, logout, erroDoPerfil } = useAuth();
 
   if (loading) return <div className="h-screen flex items-center justify-center">Verificando...</div>;
   if (!currentUser) return <Navigate to="/login" replace />;
+  if (!userProfile && erroDoPerfil) return <FalhaNoPerfil codigo={erroDoPerfil} />;
 
   if (!userProfile) {
     return (

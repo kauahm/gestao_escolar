@@ -30,3 +30,17 @@ export const formatarTelefone = (tel) => {
   }
   return tel;
 };
+
+/**
+ * Data por extenso, como se escreve em português do Brasil:
+ * "Terça-feira, 13 de outubro de 2026" (só a primeira letra maiúscula).
+ */
+export const dataPorExtenso = (data = new Date()) => {
+  const texto = new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(data);
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+};
+
+/** Primeiro nome, para saudações ("Alessandra Martins" -> "Alessandra"). */
+export const primeiroNome = (nome) => String(nome || '').trim().split(/\s+/)[0] || '';

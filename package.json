@@ -13,7 +13,7 @@
     "build:demo": "vite build --mode demo",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "node --test tests/importacao/*.test.mjs",
+    "test": "node --test tests/importacao/*.test.mjs tests/interface/*.test.mjs",
     "test:regras": "npx -y firebase-tools@13 emulators:exec --only firestore --project demo-gestao-escolar \"node --test tests/regras/*.test.mjs\""
   },
   "dependencies": {

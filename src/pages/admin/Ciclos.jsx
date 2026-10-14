@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -66,7 +67,7 @@ export default function Ciclos() {
   // Buscar escolas
   useEffect(() => {
     const q = collection(db, 'escolas');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const todas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const escolasData = todas
         .filter(e => e.situacao === 'Ativa')
@@ -80,7 +81,7 @@ export default function Ciclos() {
   // Buscar ciclos
   useEffect(() => {
     const q = collection(db, 'ciclos');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const ciclosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCiclos(ciclosData);
       setLoading(false);
@@ -316,7 +317,7 @@ export default function Ciclos() {
       {/* Header & Resumo */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Controle de Ciclos</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Ciclos</h1>
           <div className="flex flex-wrap items-center gap-3 mt-2">
             <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-800">
               <AlertTriangle size={14} /> {contadores.vencidos} vencidos
@@ -390,11 +391,22 @@ export default function Ciclos() {
       {loading ? (
         <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
       ) : Object.keys(groupedCiclos).length === 0 ? (
-        <EmptyState 
-          message="Nenhum ciclo encontrado com os filtros atuais." 
-          actionLabel="Registrar Ciclo" 
-          onAction={() => handleOpenForm()} 
-        />
+        ciclos.length === 0 ? (
+          <EmptyState
+            titulo="Nenhum ciclo registrado"
+            mensagem="Registre a última limpeza da caixa d'água, a recarga dos extintores e as outras revisões: o sistema calcula a próxima e avisa quando estiver perto de vencer."
+            acoes={[
+              { rotulo: 'Registrar ciclo', onClick: () => handleOpenForm() },
+              { rotulo: 'Importar planilha', onClick: () => setImportarAberto(true), icone: Upload },
+            ]}
+          />
+        ) : (
+          <EmptyState
+            titulo="Nenhum ciclo com estes filtros"
+            mensagem="Mude ou limpe os filtros para ver os outros ciclos."
+            acoes={[{ rotulo: 'Limpar filtros', onClick: clearFilters }]}
+          />
+        )
       ) : (
         <div className="space-y-6">
           {Object.entries(groupedCiclos).map(([groupName, items]) => (

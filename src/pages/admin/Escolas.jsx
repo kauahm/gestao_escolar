@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -65,7 +66,7 @@ export default function Escolas() {
   // Buscar escolas em tempo real
   useEffect(() => {
     const q = collection(db, 'escolas');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const escolasData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       // Ordenar por nome em ordem alfabética
       escolasData.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -286,11 +287,22 @@ export default function Escolas() {
           <LoadingSpinner size="lg" />
         </div>
       ) : filteredEscolas.length === 0 ? (
-        <EmptyState 
-          message={searchTerm ? "Nenhuma escola encontrada para a busca." : "Nenhuma escola cadastrada. Clique em 'Nova Escola' para começar."}
-          actionLabel={!searchTerm ? "Nova Escola" : null}
-          onAction={!searchTerm ? () => handleOpenForm() : null}
-        />
+        escolas.length === 0 ? (
+          <EmptyState
+            titulo="Nenhuma escola cadastrada"
+            mensagem="Cadastre a primeira escola ou traga a lista que você já tem em Excel."
+            acoes={[
+              { rotulo: 'Nova escola', onClick: () => handleOpenForm() },
+              { rotulo: 'Importar planilha', onClick: () => setImportarAberto(true), icone: Upload },
+            ]}
+          />
+        ) : (
+          <EmptyState
+            titulo="Nenhuma escola com estes filtros"
+            mensagem="Confira o texto da busca ou a situação escolhida."
+            acoes={[{ rotulo: 'Limpar filtros', onClick: () => { setSearchTerm(''); setFilterSituacao('Todas'); } }]}
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEscolas.map((escola) => (

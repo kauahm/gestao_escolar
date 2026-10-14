@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
+import { useEstadoDasLeituras } from '../../hooks/useEstadoDasLeituras';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -40,6 +42,7 @@ export default function Contas() {
   const [contas, setContas] = useState([]);
   const [importarAberto, setImportarAberto] = useState(false);
   const [todasEscolas, setTodasEscolas] = useState([]);
+  const leituras = useEstadoDasLeituras();
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +69,7 @@ export default function Contas() {
   // 1. Buscar Escolas
   useEffect(() => {
     const q = collection(db, 'escolas');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const todas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const escolasData = todas
         .filter(e => e.situacao === 'Ativa')
@@ -86,7 +89,7 @@ export default function Contas() {
   // calculado na hora (ver utils/calcularStatus.js).
   useEffect(() => {
     const q = collection(db, 'contas');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const contasData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Ordenar por vencimento (mais urgente primeiro)
@@ -304,7 +307,9 @@ export default function Contas() {
       {/* Header & Totalizador Global */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contas a Pagar</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Contas a pagar</h1>
+          {/* Totais só com os dados confirmados pelo servidor (nunca "R$ 0,00" por falha de leitura). */}
+          {!loading && !leituras.falha && !leituras.semServidor && (
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {contasVencidas.length > 0 && (
               <button
@@ -320,6 +325,7 @@ export default function Contas() {
               {contasNoPrazo.length} a enviar no prazo: {formatarMoeda(totalNoPrazo)}
             </span>
           </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -388,11 +394,22 @@ export default function Contas() {
       {loading ? (
         <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
       ) : filteredContas.length === 0 ? (
-        <EmptyState 
-          message="Nenhuma conta encontrada." 
-          actionLabel="Registrar Conta" 
-          onAction={() => handleOpenForm()} 
-        />
+        contas.length === 0 ? (
+          <EmptyState
+            titulo="Nenhuma conta registrada"
+            mensagem="Registre as contas de energia, água, taxas e notas fiscais das escolas, ou importe a planilha que você já usa."
+            acoes={[
+              { rotulo: 'Registrar conta', onClick: () => handleOpenForm() },
+              { rotulo: 'Importar planilha', onClick: () => setImportarAberto(true), icone: Upload },
+            ]}
+          />
+        ) : (
+          <EmptyState
+            titulo="Nenhuma conta com estes filtros"
+            mensagem="Mude ou limpe os filtros para ver as outras contas."
+            acoes={[{ rotulo: 'Limpar filtros', onClick: clearFilters }]}
+          />
+        )
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm flex flex-col">
           <div className="overflow-x-auto">

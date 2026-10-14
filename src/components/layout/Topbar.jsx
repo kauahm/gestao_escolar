@@ -1,25 +1,16 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { UserCircle, Menu } from 'lucide-react';
+import { UserCircle, Menu, ChevronRight } from 'lucide-react';
+import { NOME_DO_SISTEMA, nomeDaTela, ROTULO_DO_PERFIL } from '../../config/telas';
 
 export default function Topbar({ onMenuClick }) {
   const location = useLocation();
   const { userProfile } = useAuth();
 
-  const getPageTitle = () => {
-    const path = location.pathname;
-    if (path.includes('dashboard')) return 'Dashboard';
-    if (path.includes('escolas')) return 'Gestão de Escolas';
-    if (path.includes('manutencoes')) return 'Manutenções';
-    if (path.includes('contas')) return 'Contas a Pagar';
-    if (path.includes('ciclos')) return 'Ciclos Periódicos';
-    if (path.includes('selecao')) return 'Processo Seletivo';
-    if (path.includes('agenda')) return 'Agenda Escolar';
-    if (path.includes('usuarios')) return 'Gestão de Usuários';
-    if (path.includes('talentos')) return 'Banco de Talentos';
-    return 'Sistema de Gestão';
-  };
+  // A barra mostra onde a pessoa está ("Gestão Escolar › Escolas"); o título
+  // grande fica só dentro da página, para não repetir com outro nome.
+  const tela = nomeDaTela(location.pathname);
 
   return (
     <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6 md:ml-64 w-full md:w-[calc(100%-16rem)] fixed top-0 z-10 border-b border-gray-100">
@@ -32,13 +23,17 @@ export default function Topbar({ onMenuClick }) {
           <Menu size={24} />
         </button>
 
-        <h2 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
+        <nav aria-label="Você está em" className="flex items-center gap-1.5 text-sm text-gray-500 min-w-0">
+          <span className="hidden sm:inline">{NOME_DO_SISTEMA}</span>
+          {tela && <ChevronRight size={16} className="hidden sm:inline shrink-0" />}
+          {tela && <span className="font-medium text-gray-800 truncate" aria-current="page">{tela}</span>}
+        </nav>
       </div>
       
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
           <p className="text-sm font-medium text-gray-900">{userProfile?.nome}</p>
-          <p className="text-xs text-gray-500 capitalize">{userProfile?.perfil}</p>
+          <p className="text-xs text-gray-500">{ROTULO_DO_PERFIL[userProfile?.perfil] || ''}</p>
         </div>
         <UserCircle className="w-8 h-8 text-gray-400" />
       </div>

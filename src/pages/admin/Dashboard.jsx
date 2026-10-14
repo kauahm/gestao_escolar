@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, doc, onSnapshot, query } from 'firebase/firestore';
+import { collection, doc, query } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
-import { formatarMoeda, formatarDataHora } from '../../utils/formatters';
+import { formatarMoeda, formatarDataHora, dataPorExtenso, primeiroNome } from '../../utils/formatters';
 import { diasEmAberto, statusCiclo, situacaoConta, somarValores, diasAte, paraData, hojeZerado } from '../../utils/calcularStatus';
 
 import { 
@@ -26,26 +27,26 @@ export default function AdminDashboard() {
     // Escutar todas as coleções necessárias em tempo real
     const unsubs = [];
 
-    unsubs.push(onSnapshot(collection(db, 'manutencoes'), snap => {
+    unsubs.push(ouvir(collection(db, 'manutencoes'), snap => {
       setManutencoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(onSnapshot(collection(db, 'contas'), snap => {
+    unsubs.push(ouvir(collection(db, 'contas'), snap => {
       setContas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(onSnapshot(collection(db, 'ciclos'), snap => {
+    unsubs.push(ouvir(collection(db, 'ciclos'), snap => {
       setCiclos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(onSnapshot(collection(db, 'candidatos'), snap => {
+    unsubs.push(ouvir(collection(db, 'candidatos'), snap => {
       setCandidatos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(onSnapshot(collection(db, 'eventos'), snap => {
+    unsubs.push(ouvir(collection(db, 'eventos'), snap => {
       setEventos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       // Para fins de loading, consideramos que o último snapshot marca o fim do carregamento inicial
       setLoading(false);
     }));
 
     // Data da última cópia de segurança (lembrete no topo do painel)
-    unsubs.push(onSnapshot(doc(db, 'config', 'backup'),
+    unsubs.push(ouvir(doc(db, 'config', 'backup'),
       snap => setBackup(snap.exists() ? snap.data() : null),
       () => setBackup(null)));
 
@@ -60,9 +61,7 @@ export default function AdminDashboard() {
     return 'Boa noite';
   };
 
-  const dataAtualFormatada = new Intl.DateTimeFormat('pt-BR', { 
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-  }).format(new Date());
+  const dataAtualFormatada = dataPorExtenso(new Date());
 
   // Métricas para os Cards
   const metricas = useMemo(() => {
@@ -212,8 +211,8 @@ export default function AdminDashboard() {
     <div className="w-full space-y-6">
       {/* Cabeçalho */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{getSaudacao()}, {userProfile?.nome}!</h1>
-        <p className="text-gray-500 text-sm mt-1 capitalize">{dataAtualFormatada}</p>
+        <h1 className="text-2xl font-bold text-gray-900">{getSaudacao()}, {primeiroNome(userProfile?.nome)}!</h1>
+        <p className="text-gray-500 text-sm mt-1">{dataAtualFormatada}</p>
       </div>
 
       {/* Lembrete de cópia de segurança: aparece se nunca foi feita ou se tem mais de 7 dias */}
@@ -275,7 +274,7 @@ export default function AdminDashboard() {
           <div>
             <p className="text-sm font-medium text-gray-500">Entrevistas este Mês</p>
             <h3 className="text-2xl font-bold text-gray-900">{metricas.entrevistas.length}</h3>
-            <p className="text-xs text-gray-400 mt-1">Candidatos registados</p>
+            <p className="text-xs text-gray-400 mt-1">Candidatos cadastrados</p>
           </div>
         </div>
       </div>

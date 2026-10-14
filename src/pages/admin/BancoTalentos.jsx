@@ -4,10 +4,12 @@ import {
   Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2, 
   MessageCircle, Briefcase, Phone, Mail 
 } from 'lucide-react';
-import { collection, onSnapshot, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import Toast from '../../components/ui/Toast';
+import EmptyState from '../../components/ui/EmptyState';
 import ImportarPlanilha from '../../components/shared/ImportarPlanilha';
 import { Upload } from 'lucide-react';
 
@@ -49,7 +51,7 @@ const abrirDetalhes = (curriculo) => {
   // 2. Buscar os dados no Firebase
   useEffect(() => {
     const q = query(collection(db, 'curriculos'), orderBy('dataCadastro', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const curriculosData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -217,8 +219,25 @@ const abrirDetalhes = (curriculo) => {
             <tbody className="divide-y divide-gray-100">
   {curriculosFiltrados.length === 0 ? (
     <tr>
-      <td colSpan="5" className="text-center py-8 text-gray-500">
-        Nenhum currículo encontrado.
+      <td colSpan="5" className="p-4">
+        {curriculos.length === 0 ? (
+          <EmptyState
+            compacto
+            titulo="Nenhum currículo no banco"
+            mensagem="Cadastre os currículos que chegam ou importe a planilha (ou as respostas do Formulário Google) que você já tem."
+            acoes={[
+              { rotulo: 'Novo currículo', onClick: abrirModalNovo },
+              { rotulo: 'Importar planilha', onClick: () => setImportarAberto(true), icone: Upload },
+            ]}
+          />
+        ) : (
+          <EmptyState
+            compacto
+            titulo="Nenhum currículo encontrado"
+            mensagem={`Nada encontrado para "${searchTerm}".`}
+            acoes={[{ rotulo: 'Limpar busca', onClick: () => setSearchTerm('') }]}
+          />
+        )}
       </td>
     </tr>
   ) : (

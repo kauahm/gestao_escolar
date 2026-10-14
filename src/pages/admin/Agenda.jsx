@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, doc, onSnapshot, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -98,7 +99,7 @@ export default function Agenda() {
   // 1. Buscar Eventos Manuais (Real-time)
   useEffect(() => {
     const q = collection(db, 'eventos');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const eventosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEventosManuais(eventosData);
       setLoading(false);

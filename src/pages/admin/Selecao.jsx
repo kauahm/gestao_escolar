@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import EmptyState from '../../components/ui/EmptyState';
 import { db } from '../../services/firebase';
-import { collection, onSnapshot, query, where, doc } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { updateDoc, deleteDoc } from '../../services/db';
 import { Calendar, Clock, User, Phone, CheckCircle, XCircle, ChevronRight, Edit, Trash2, X } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 
 export default function Selecao() {
+  const navigate = useNavigate();
   const [entrevistas, setEntrevistas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
@@ -26,7 +30,7 @@ const [candidatoAlvo, setCandidatoAlvo] = useState(null);
   // 1. Busca apenas quem tem entrevista marcada
   useEffect(() => {
     const q = query(collection(db, 'curriculos'), where('status', '==', 'Entrevista Agendada'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEntrevistas(data.sort((a, b) => new Date(a.dataEntrevista) - new Date(b.dataEntrevista)));
       setLoading(false);
@@ -109,14 +113,18 @@ const confirmarDecisao = async (e) => {
       {error && <Toast message={error} type="error" onClose={() => setError('')} />}
       
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Processo Seletivo</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Processo seletivo</h1>
         <p className="text-sm text-gray-500">Acompanhe as entrevistas agendadas e tome decisões.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {entrevistas.length === 0 && !loading ? (
-          <div className="col-span-full bg-white p-12 text-center rounded-xl border border-dashed border-gray-300">
-            <p className="text-gray-500">Nenhuma entrevista agendada para os próximos dias.</p>
+          <div className="col-span-full">
+            <EmptyState
+              titulo="Nenhuma entrevista agendada"
+              mensagem="Para marcar uma entrevista, abra o Banco de Talentos e use o botão de agendar no currículo da pessoa."
+              acoes={[{ rotulo: 'Abrir o Banco de Talentos', onClick: () => navigate('/admin/talentos') }]}
+            />
           </div>
         ) : (
           entrevistas.map((item) => (

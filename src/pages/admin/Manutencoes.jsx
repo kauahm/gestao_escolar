@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -57,7 +58,7 @@ export default function AdminManutencoes() {
   // Busca Escolas
   useEffect(() => {
     const q = collection(db, 'escolas');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const escolasData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(e => e.situacao === 'Ativa')
@@ -70,7 +71,7 @@ export default function AdminManutencoes() {
   // NOVO: Busca Prestadores de Serviço
   useEffect(() => {
     const q = collection(db, 'prestadores');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const prestadoresData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       prestadoresData.sort((a, b) => a.nome.localeCompare(b.nome));
       setPrestadores(prestadoresData);
@@ -81,7 +82,7 @@ export default function AdminManutencoes() {
   // Busca Manutenções
   useEffect(() => {
     const q = collection(db, 'manutencoes');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const manutencoesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       manutencoesData.sort((a, b) => {
         const timeA = a.criadoEm?.toMillis ? a.criadoEm.toMillis() : 0;
@@ -251,7 +252,7 @@ export default function AdminManutencoes() {
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      showToast('Por favor, permita os pop-ups do navegador para gerar o ficheiro.', 'error');
+      showToast('Permita as janelas pop-up do navegador para gerar a O.S. para impressão.', 'error');
       return;
     }
 
@@ -736,7 +737,7 @@ export default function AdminManutencoes() {
               </div>
 
               <div class="exec-section">
-                <div class="info-section-title">Registo de Execução</div>
+                <div class="info-section-title">Registro de Execução</div>
                 <table class="exec-table">
                   <thead>
                     <tr>
@@ -832,7 +833,7 @@ export default function AdminManutencoes() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Manutenções</h1>
-          <p className="text-gray-500 text-sm mt-1">{manutencoes.length} {manutencoes.length === 1 ? 'registo' : 'registos no total'}</p>
+          <p className="text-gray-500 text-sm mt-1">{manutencoes.length} {manutencoes.length === 1 ? 'registro' : 'registros no total'}</p>
         </div>
         <button onClick={() => handleOpenForm()} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium shadow-sm">
           <Plus size={20} /> Nova Manutenção
@@ -881,7 +882,19 @@ export default function AdminManutencoes() {
       {loading ? (
         <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
       ) : filteredManutencoes.length === 0 ? (
-        <EmptyState message="Nenhuma manutenção encontrada." actionLabel="Nova Manutenção" onAction={() => handleOpenForm()} />
+        manutencoes.length === 0 ? (
+          <EmptyState
+            titulo="Nenhum chamado de manutenção"
+            mensagem="Os pedidos das diretoras aparecem aqui assim que são abertos. Você também pode registrar um chamado."
+            acoes={[{ rotulo: 'Nova manutenção', onClick: () => handleOpenForm() }]}
+          />
+        ) : (
+          <EmptyState
+            titulo="Nenhum chamado com estes filtros"
+            mensagem="Mude ou limpe os filtros para ver os outros chamados."
+            acoes={[{ rotulo: 'Limpar filtros', onClick: clearFilters }]}
+          />
+        )
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto shadow-sm">
           <table className="min-w-full divide-y divide-gray-200">
@@ -967,7 +980,7 @@ export default function AdminManutencoes() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Local dentro da escola *</label>
-            <input type="text" name="localDentroEscola" value={formData.localDentroEscola} onChange={handleInputChange} placeholder="Ex: Casa de banho, Recreio..." className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.localDentroEscola ? 'border-red-500' : 'border-gray-300'}`} />
+            <input type="text" name="localDentroEscola" value={formData.localDentroEscola} onChange={handleInputChange} placeholder="Ex.: banheiro, pátio..." className={`w-full px-3 py-2 border rounded-md outline-none focus:border-primary ${formErrors.localDentroEscola ? 'border-red-500' : 'border-gray-300'}`} />
             {formErrors.localDentroEscola && <p className="text-red-500 text-xs mt-1">{formErrors.localDentroEscola}</p>}
           </div>
 

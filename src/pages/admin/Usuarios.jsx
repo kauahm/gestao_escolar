@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp, query } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { setDoc, updateDoc } from '../../services/db';
 import { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -58,7 +59,7 @@ export default function Usuarios() {
   // 1. Buscar Escolas Ativas
   useEffect(() => {
     const q = collection(db, 'escolas');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const escolasData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(e => e.situacao === 'Ativa')
@@ -71,7 +72,7 @@ export default function Usuarios() {
   // 2. Buscar TODOS os Usuários
   useEffect(() => {
     const q = collection(db, 'usuarios');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
       
       // Ordenação: Ativos primeiro, depois alfabético
@@ -344,7 +345,7 @@ export default function Usuarios() {
     <div className="w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Usuários</h1>
           <p className="text-gray-500 text-sm mt-1">Cadastre e gerencie os acessos do sistema</p>
           <div className="mt-2 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 inline-flex">
             {totalAtivos} usuários ativos
@@ -380,10 +381,10 @@ export default function Usuarios() {
       {loading ? (
         <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
       ) : filteredUsuarios.length === 0 ? (
-        <EmptyState 
-          message={searchTerm ? "Nenhum usuário encontrado." : "Nenhum usuário cadastrado."} 
-          actionLabel={!searchTerm ? "Novo Usuário" : null} 
-          onAction={!searchTerm ? () => handleOpenForm() : null} 
+        <EmptyState
+          titulo="Nenhum usuário com estes filtros"
+          mensagem="Confira o texto da busca, o perfil e a situação escolhidos."
+          acoes={[{ rotulo: 'Limpar filtros', onClick: () => { setSearchTerm(''); setFilterSituacao('Todas'); setFilterPerfil('Todos'); } }]}
         />
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto shadow-sm">

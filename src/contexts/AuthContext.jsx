@@ -13,10 +13,13 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Código do erro ao ler o perfil (ex.: 'unavailable' sem internet). null = sem erro.
+  const [erroDoPerfil, setErroDoPerfil] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      setErroDoPerfil(null);
       if (user) {
         try {
           const docRef = doc(db, 'usuarios', user.uid);
@@ -37,6 +40,8 @@ export function AuthProvider({ children }) {
           }
         } catch (error) {
           console.error("Erro ao buscar perfil:", error);
+          // Erros do Firebase têm código; o "usuário inativo" acima não tem.
+          if (error?.code) setErroDoPerfil(error.code);
         }
       } else {
         setUserProfile(null);
@@ -60,6 +65,7 @@ export function AuthProvider({ children }) {
     userProfile,
     login,
     logout,
+    erroDoPerfil,
     loading
   };
 

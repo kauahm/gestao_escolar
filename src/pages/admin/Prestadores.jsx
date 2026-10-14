@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -34,7 +35,7 @@ export default function Prestadores() {
 
   useEffect(() => {
     const q = collection(db, 'prestadores');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = ouvir(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       data.sort((a, b) => a.nome.localeCompare(b.nome));
       setPrestadores(data);
@@ -116,7 +117,7 @@ export default function Prestadores() {
     <div className="w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Prestadores de Serviço</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Prestadores</h1>
           <p className="text-gray-500 text-sm mt-1">Gerencie a equipe de manutenção e terceirizados.</p>
         </div>
         <button onClick={() => handleOpenForm()} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-sm">
@@ -134,7 +135,19 @@ export default function Prestadores() {
       {loading ? (
         <div className="h-64 flex items-center justify-center"><LoadingSpinner size="lg" /></div>
       ) : filteredPrestadores.length === 0 ? (
-        <EmptyState message="Nenhum prestador encontrado." actionLabel="Adicionar Prestador" onAction={() => handleOpenForm()} />
+        prestadores.length === 0 ? (
+          <EmptyState
+            titulo="Nenhum prestador cadastrado"
+            mensagem="Cadastre quem faz os serviços (equipe interna ou terceirizados) para atribuir os chamados e enviar a O.S. por WhatsApp."
+            acoes={[{ rotulo: 'Adicionar prestador', onClick: () => handleOpenForm() }]}
+          />
+        ) : (
+          <EmptyState
+            titulo="Nenhum prestador encontrado"
+            mensagem={`Nada encontrado para "${searchTerm}".`}
+            acoes={[{ rotulo: 'Limpar busca', onClick: () => setSearchTerm('') }]}
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPrestadores.map((prestador) => (

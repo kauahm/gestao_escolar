@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import logoImg from '../../assets/logo-topo.png'; 
+import { TELAS, ROTULO_DO_PERFIL } from '../../config/telas';
 import { 
   LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
   Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck 
@@ -14,26 +15,26 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
   const isAdministrativo = userProfile?.perfil === 'administrativo';
 
   const adminLinks = [
-    { to: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { to: '/admin/escolas', icon: <School size={20} />, label: 'Escolas' },
-    { to: '/admin/manutencoes', icon: <Wrench size={20} />, label: 'Manutenções' },
-    { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: 'Prestadores' },
-    { to: '/admin/contas', icon: <Receipt size={20} />, label: 'Contas a Pagar' },
-    { to: '/admin/ciclos', icon: <RefreshCcw size={20} />, label: 'Ciclos' },
-    { to: '/admin/talentos', icon: <FileText size={20} />, label: 'Banco de Talentos' },
-    { to: '/admin/selecao', icon: <Users size={20} />, label: 'Processo Seletivo' },
-    { to: '/admin/agenda', icon: <Calendar size={20} />, label: 'Agenda' },
-    { to: '/admin/usuarios', icon: <UserCog size={20} />, label: 'Usuários' },
-    { to: '/admin/seguranca', icon: <ShieldCheck size={20} />, label: 'Segurança dos dados' },
+    { to: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: TELAS['/admin/dashboard'] },
+    { to: '/admin/escolas', icon: <School size={20} />, label: TELAS['/admin/escolas'] },
+    { to: '/admin/manutencoes', icon: <Wrench size={20} />, label: TELAS['/admin/manutencoes'] },
+    { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: TELAS['/admin/prestadores'] },
+    { to: '/admin/contas', icon: <Receipt size={20} />, label: TELAS['/admin/contas'] },
+    { to: '/admin/ciclos', icon: <RefreshCcw size={20} />, label: TELAS['/admin/ciclos'] },
+    { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },
+    { to: '/admin/selecao', icon: <Users size={20} />, label: TELAS['/admin/selecao'] },
+    { to: '/admin/agenda', icon: <Calendar size={20} />, label: TELAS['/admin/agenda'] },
+    { to: '/admin/usuarios', icon: <UserCog size={20} />, label: TELAS['/admin/usuarios'] },
+    { to: '/admin/seguranca', icon: <ShieldCheck size={20} />, label: TELAS['/admin/seguranca'] },
   ];
 
   const administrativoLinks = [
-    { to: '/admin/talentos', icon: <FileText size={20} />, label: 'Banco de Talentos' },
-    { to: '/admin/selecao', icon: <Users size={20} />, label: 'Processo Seletivo' },
+    { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },
+    { to: '/admin/selecao', icon: <Users size={20} />, label: TELAS['/admin/selecao'] },
   ];
 
   const diretoraLinks = [
-    { to: '/diretora/dashboard', icon: <LayoutDashboard size={20} />, label: 'Início' },
+    { to: '/diretora/dashboard', icon: <LayoutDashboard size={20} />, label: TELAS['/diretora/dashboard'] },
     { to: '/diretora/manutencoes', icon: <Wrench size={20} />, label: 'Solicitar Manutenção' },
   ];
 
@@ -96,7 +97,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
         <div className="p-4 border-t border-primary-light shrink-0 bg-primary-dark/30">
           <div className="mb-4 px-4">
             <p className="text-sm font-medium">{userProfile?.nome}</p>
-            <p className="text-[10px] text-blue-200 uppercase tracking-widest">{userProfile?.perfil}</p>
+            <p className="text-[10px] text-blue-200 uppercase tracking-widest">{ROTULO_DO_PERFIL[userProfile?.perfil] || ''}</p>
           </div>
           <button onClick={logout} className="flex items-center gap-3 px-4 py-2 w-full text-left text-blue-100 hover:bg-primary-light rounded-lg transition-colors">
             <LogOut size={20} /> Sair
