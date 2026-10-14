@@ -42,9 +42,15 @@ Para a restauração apagar alguma coisa, **todas** precisam passar:
 
 As travas 4 e 5 e a restauração completa estão cobertas por testes automatizados ([12](12-revisao-e-testes-das-regras.md)).
 
-## 4. Passo a passo para criar o projeto (você, uma vez)
+## 4. Passo a passo para criar o projeto
 
-Leva uns 15 minutos. Nada aqui pede cartão de crédito.
+**Situação em 14/10/2026:** o projeto `gestao-escolar-demo` já foi criado (plano Spark, sem Gemini e sem Analytics). Estão **feitos** os passos 1, 2, 3, 4, 6 e 8. **Faltam** três coisas, que dependem de você:
+
+- **Passo 5:** o arquivo `.env.demo` já existe na pasta do projeto com tudo preenchido, **menos a chave de API**. Copie o valor de `apiKey` em *Configurações do projeto → Seus aplicativos → Gestao Escolar Demo* e cole na linha `VITE_FIREBASE_API_KEY=`.
+- **Passo 7:** criar o primeiro administrador (envolve escolher uma senha).
+- **Passos 9 e 10:** entrar, restaurar os dados e criar a diretora e o RH de demonstração.
+
+O roteiro completo fica abaixo como referência. Nada aqui pede cartão de crédito.
 
 1. **Criar o projeto.** Em console.firebase.google.com → *Adicionar projeto*. Nome sugerido: `gestao-escolar-demo`. Pode desligar o Google Analytics. Confira que o plano é **Spark (gratuito)**.
 2. **Ligar o login.** *Authentication* → *Vamos começar* → *E-mail/senha* → ativar.

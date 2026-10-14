@@ -78,7 +78,14 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 - **`firebase.json`** ganhou a seção de hospedagem, para publicar a demonstração gratuitamente no Firebase Hosting.
 - **Testes:** 45 passando no emulador, incluindo a restauração completa.
 
-**Falta fazer (você, uma vez):** criar o projeto de demonstração, seguindo o passo a passo de [13](13-ambiente-de-demonstracao.md).
+**Feito no console (14/10):** projeto `gestao-escolar-demo` criado no plano Spark, login por e-mail/senha ativado, banco em São Paulo, regras publicadas, app web registrado e `config/ambiente` marcado como demonstração.
+
+**Falta fazer (você, uma vez):** colar a chave de API no `.env.demo`, criar o primeiro administrador e restaurar os dados ([13](13-ambiente-de-demonstracao.md), seção 4).
+
+### Pendências antigas resolvidas em 14/10
+- **Regras publicadas no projeto real** (`gestaoescolar-b84c2`), com o mesmo conteúdo de `firestore.rules` (conferido por hash). A versão anterior continua no histórico do console, caso seja preciso voltar.
+- **Código enviado ao GitHub** (`git push`), depois das regras.
+- **Chave de API restrita por site** no Google Cloud. Sites permitidos: `https://gestao-escolar-phi.vercel.app/*`, `https://gestaoescolar-b84c2.firebaseapp.com/*`, `https://gestaoescolar-b84c2.web.app/*` e `http://localhost:5173/*`. **Atenção:** se o sistema passar a ser aberto por outro endereço (domínio próprio, endereço de prévia da Vercel, outra porta local), o login falha até esse endereço ser incluído em *Google Cloud → APIs e serviços → Credenciais → Browser key*. O `.env` saiu do controle de versão no mesmo envio.
 
 ---
 
