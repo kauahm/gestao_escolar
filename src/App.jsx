@@ -15,6 +15,7 @@ import Selecao from './pages/admin/Selecao';
 import Agenda from './pages/admin/Agenda';
 import Usuarios from './pages/admin/Usuarios';
 import BancoTalentos from './pages/admin/BancoTalentos';
+import Funcionarios from './pages/admin/Funcionarios';
 import Prestadores from './pages/admin/Prestadores';
 import Seguranca from './pages/admin/Seguranca';
 import ManutencaoDetalhe from './pages/admin/ManutencaoDetalhe';
@@ -53,7 +54,7 @@ function RootRedirect() {
   }
   
   if (userProfile.perfil === 'admin') return <Navigate to="/admin/dashboard" replace />;
-  if (userProfile.perfil === 'administrativo') return <Navigate to="/admin/talentos" replace />;
+  if (userProfile.perfil === 'administrativo') return <Navigate to="/admin/funcionarios" replace />;
   
   return <Navigate to="/diretora/dashboard" replace />;
 }
@@ -78,8 +79,8 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
 
           <Route path="/admin" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><DashboardLayout /></PrivateRoute>}>
-            {/* O perfil 'administrativo' (RH) entra em /admin, mas só no Banco de
-                Talentos e no Processo Seletivo. As demais telas são do admin. */}
+            {/* O perfil 'administrativo' (RH) entra em /admin, mas só em Funcionários,
+                Banco de Talentos e Processo Seletivo. As demais telas são do admin. */}
             <Route path="dashboard" element={<PrivateRoute allowedRoles={['admin']}><AdminDashboard /></PrivateRoute>} />
             <Route path="escolas" element={<PrivateRoute allowedRoles={['admin']}><Escolas /></PrivateRoute>} />
             <Route path="manutencoes" element={<PrivateRoute allowedRoles={['admin']}><AdminManutencoes /></PrivateRoute>} />
@@ -92,6 +93,7 @@ export default function App() {
             <Route path="seguranca" element={<PrivateRoute allowedRoles={['admin']}><Seguranca /></PrivateRoute>} />
             <Route path="selecao" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><Selecao /></PrivateRoute>} />
             <Route path="talentos" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><BancoTalentos /></PrivateRoute>} />
+            <Route path="funcionarios" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><Funcionarios /></PrivateRoute>} />
           </Route>
 
           <Route path="/diretora" element={<PrivateRoute allowedRoles={['diretora']}><DashboardLayout /></PrivateRoute>}>

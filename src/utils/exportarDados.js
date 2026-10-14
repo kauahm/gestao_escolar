@@ -15,6 +15,7 @@ export const COLECOES = [
   { id: 'ciclos', rotulo: 'Ciclos' },
   { id: 'eventos', rotulo: 'Agenda' },
   { id: 'curriculos', rotulo: 'Currículos' },
+  { id: 'funcionarios', rotulo: 'Funcionários' },
   { id: 'usuarios', rotulo: 'Usuários' },
 ];
 
@@ -65,6 +66,20 @@ const ROTULOS = {
   dataEntrevista: 'Data da entrevista',
   horaEntrevista: 'Hora da entrevista',
   feedback: 'Feedback',
+  dataNascimento: 'Data de nasc.',
+  pcd: 'PCD',
+  dataAdmissao: 'Admissão',
+  salario: 'Salário (R$)',
+  cpf: 'CPF',
+  rg: 'RG',
+  pis: 'PIS',
+  cidade: 'Cidade',
+  dataUltimoAso: 'Data último ASO',
+  dataVencimentoAso: 'Data venc. ASO',
+  afastamentoInicio: 'Data início afast.',
+  afastamentoRetorno: 'Data retorno afast.',
+  afastamentoTipo: 'Tipo de afastamento',
+  dataRescisao: 'Data de rescisão',
   criadoEm: 'Criado em',
   atualizadoEm: 'Atualizado em',
 };

@@ -201,3 +201,49 @@ export const mesesEntreCompetenciaEVencimento = (comp, vencimentoYmd) => {
 
 /** Distância (em meses) a partir da qual a competência provavelmente foi digitada errada. */
 export const DISTANCIA_SUSPEITA_DE_COMPETENCIA = 3;
+
+// -------------------------------------------------------- documentos ----
+
+const soDigitos = (v) => String(v ?? '').replace(/\D/g, '');
+
+/** CPF válido pelos dígitos verificadores. */
+export const cpfValido = (valor) => {
+  const d = soDigitos(valor);
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const digito = (base) => {
+    const soma = base.split('').reduce((s, n, i) => s + Number(n) * (base.length + 1 - i), 0);
+    const resto = (soma * 10) % 11;
+    return resto === 10 ? 0 : resto;
+  };
+  return digito(d.slice(0, 9)) === Number(d[9]) && digito(d.slice(0, 10)) === Number(d[10]);
+};
+
+/** CPF -> "000.000.000-00". CPF inválido entra com aviso (pode ser erro de digitação na planilha). */
+export const cpf = (valor) => {
+  if (vazio(valor)) return { valor: '' };
+  let d = soDigitos(typeof valor === 'number' ? String(Math.round(valor)) : valor);
+  if (d.length > 0 && d.length < 11) d = d.padStart(11, '0'); // Excel costuma comer os zeros da frente
+  if (d.length !== 11) return { valor: texto(valor), aviso: `CPF "${valor}" não tem 11 dígitos` };
+  const formatado = `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  return cpfValido(d) ? { valor: formatado } : { valor: formatado, aviso: `CPF ${formatado} não confere (dígito verificador)` };
+};
+
+/** PIS/PASEP/NIT válido pelo dígito verificador. */
+export const pisValido = (valor) => {
+  const d = soDigitos(valor);
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const pesos = [3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const resto = pesos.reduce((s, p, i) => s + p * Number(d[i]), 0) % 11;
+  const dv = resto < 2 ? 0 : 11 - resto;
+  return dv === Number(d[10]);
+};
+
+/** PIS -> "000.00000.00-0", com aviso se não conferir. */
+export const pis = (valor) => {
+  if (vazio(valor)) return { valor: '' };
+  let d = soDigitos(typeof valor === 'number' ? String(Math.round(valor)) : valor);
+  if (d.length > 0 && d.length < 11) d = d.padStart(11, '0');
+  if (d.length !== 11) return { valor: texto(valor), aviso: `PIS "${valor}" não tem 11 dígitos` };
+  const formatado = `${d.slice(0, 3)}.${d.slice(3, 8)}.${d.slice(8, 10)}-${d.slice(10)}`;
+  return pisValido(d) ? { valor: formatado } : { valor: formatado, aviso: `PIS ${formatado} não confere (dígito verificador)` };
+};

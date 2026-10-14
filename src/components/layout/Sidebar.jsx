@@ -6,7 +6,7 @@ import { TELAS, ROTULO_DO_PERFIL } from '../../config/telas';
 import { useAlertas } from '../../contexts/AlertasContext';
 import { 
   LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
-  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck 
+  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck, Contact 
 } from 'lucide-react';
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
@@ -23,6 +23,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: TELAS['/admin/prestadores'] },
     { to: '/admin/contas', icon: <Receipt size={20} />, label: TELAS['/admin/contas'] },
     { to: '/admin/ciclos', icon: <RefreshCcw size={20} />, label: TELAS['/admin/ciclos'] },
+    { to: '/admin/funcionarios', icon: <Contact size={20} />, label: TELAS['/admin/funcionarios'] },
     { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },
     { to: '/admin/selecao', icon: <Users size={20} />, label: TELAS['/admin/selecao'] },
     { to: '/admin/agenda', icon: <Calendar size={20} />, label: TELAS['/admin/agenda'] },
@@ -31,6 +32,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
   ];
 
   const administrativoLinks = [
+    { to: '/admin/funcionarios', icon: <Contact size={20} />, label: TELAS['/admin/funcionarios'] },
     { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },
     { to: '/admin/selecao', icon: <Users size={20} />, label: TELAS['/admin/selecao'] },
   ];

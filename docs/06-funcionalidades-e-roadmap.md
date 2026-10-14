@@ -77,6 +77,7 @@ Sem isso, nada mais importa: um erro de segurança numa demo com dados reais cus
 | 2.9 | **Notificações**: sino no sistema + push (PWA) | Engajamento | M |
 | 2.10 | **Log de auditoria** (quem mudou o quê e quando) | Confiança e conformidade | M |
 | 2.11 | Perfis ampliados: coordenação regional, diretor educacional, supervisor | Estruturas reais da AEMC | M |
+| 2.12 | ✅ **Feito (14/10)** ([19](19-funcionarios.md)) — **Cadastro de funcionários** com a estrutura da planilha da AEMC, filtros, PCD, afastamentos, ASO com alerta, importação e exportação em Excel | A planilha de colaboradores é o controle de pessoal de hoje | M |
 
 ### Fase 3 — Diferenciais (o que o mercado quase não faz)
 | # | Item | Por quê | Esforço |

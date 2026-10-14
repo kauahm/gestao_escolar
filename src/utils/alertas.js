@@ -6,6 +6,7 @@
 
 import { diasAte, diasEmAberto, situacaoConta } from './calcularStatus.js';
 import { formatarMoeda } from './formatters.js';
+import { situacaoDoFuncionario, DIAS_AVISO_ASO } from './funcionarios.js';
 
 /** Dias que um chamado pode ficar "Pendente" antes de cobrar, por prioridade. */
 export const PRAZO_POR_PRIORIDADE = { Urgente: 1, Alta: 2, 'Média': 5, Baixa: 10 };
@@ -30,12 +31,12 @@ const msDe = (t) => (t?.toMillis ? t.toMillis() : t instanceof Date ? t.getTime(
 const prazoDoPendente = (prioridade) => PRAZO_POR_PRIORIDADE[prioridade] ?? PRAZO_POR_PRIORIDADE['Média'];
 
 /**
- * @param {{ manutencoes?: object[], contas?: object[], ciclos?: object[], adiados?: Object<string,{ate:string}>, hoje?: Date }} dados
+ * @param {{ manutencoes?: object[], contas?: object[], ciclos?: object[], funcionarios?: object[], adiados?: Object<string,{ate:string}>, hoje?: Date }} dados
  * @returns {{ chave, tipo, gravidade, titulo, detalhe, escolaNome, link, alvo, adiadoAte? }[]}
  *   `chave` identifica o alerta para "ciente, lembrar depois"; alertas adiados
  *   (até uma data futura) vêm marcados com `adiadoAte`.
  */
-export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], adiados = {}, hoje = new Date() } = {}) {
+export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], funcionarios = [], adiados = {}, hoje = new Date() } = {}) {
   const alertas = [];
   const agora = hoje.getTime();
   const chamadosAbertosPorCiclo = new Map();
@@ -136,6 +137,46 @@ export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], ad
       alvo: c,
     });
   });
+
+  // ------------------------------------------------------- ASO (exame) ----
+  // Um alerta por grupo (vencidos / vencendo), não um por pessoa: com centenas
+  // de funcionários, um por pessoa afogaria o painel.
+  const comAso = funcionarios
+    .map((f) => ({ f, s: situacaoDoFuncionario(f, hoje) }))
+    .filter(({ s }) => s.diasParaAso !== null)
+    .sort((a, b) => a.s.diasParaAso - b.s.diasParaAso); // mais urgente primeiro
+  const asoVencidos = comAso.filter(({ s }) => s.asoVencido);
+  const asoVencendo = comAso.filter(({ s }) => s.asoVencendo);
+  const nomes = (lista) => {
+    const primeiros = lista.slice(0, 3).map(({ f }) => String(f.nome || '').split(' ')[0]).join(', ');
+    return lista.length > 3 ? `${primeiros} e mais ${lista.length - 3}` : primeiros;
+  };
+  if (asoVencidos.length) {
+    const maisAntigo = Math.max(...asoVencidos.map(({ s }) => -s.diasParaAso));
+    alertas.push({
+      chave: 'aso-vencidos',
+      tipo: 'aso',
+      gravidade: GRAVIDADE.ATENCAO,
+      titulo: plural(asoVencidos.length, 'ASO vencido', 'ASOs vencidos'),
+      detalhe: `${nomes(asoVencidos)}; o mais antigo venceu há ${plural(maisAntigo, 'dia', 'dias')}`,
+      escolaNome: '',
+      link: '/admin/funcionarios?mostrar=aso',
+      alvo: asoVencidos.map(({ f }) => f),
+    });
+  }
+  if (asoVencendo.length) {
+    const proximo = Math.min(...asoVencendo.map(({ s }) => s.diasParaAso));
+    alertas.push({
+      chave: 'aso-vencendo',
+      tipo: 'aso',
+      gravidade: GRAVIDADE.AVISO,
+      titulo: `${plural(asoVencendo.length, 'ASO vence', 'ASOs vencem')} nos próximos ${DIAS_AVISO_ASO} dias`,
+      detalhe: `${nomes(asoVencendo)}; o primeiro ${proximo === 0 ? 'vence hoje' : `vence em ${plural(proximo, 'dia', 'dias')}`}`,
+      escolaNome: '',
+      link: '/admin/funcionarios?mostrar=aso',
+      alvo: asoVencendo.map(({ f }) => f),
+    });
+  }
 
   // ------------------------------------------------- adiados e ordenação ----
   const hojeYmd = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;

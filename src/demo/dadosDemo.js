@@ -257,6 +257,105 @@ const curriculos = () => CURRICULOS.map(([nome, vaga, exp, indicacao, status, en
   ...(feedback ? { feedback } : {}),
 }));
 
+// Funcionários: [nome, escola, cargo, admissão (dias atrás), extra]
+// CPF e PIS são gerados só para passar na conferência dos dígitos; não
+// pertencem a ninguém de propósito (sequências montadas a partir do número da linha).
+const FUNCIONARIOS = [
+  ['Adriana Lopes Cardoso', 0, 'Agente de Desenvolvimento Infantil', 900, {}],
+  ['Beatriz Fontes Ramos', 0, 'Professor(a) de Educação Infantil', 1500, { asoEm: -12 }],
+  ['Carla Mendes Viana', 0, 'Auxiliar de Serviços Gerais', 400, { pcd: true }],
+  ['Denise Araújo Paiva', 0, 'Coordenador(a) Pedagógico(a)', 2100, {}],
+  ['Elaine Duarte Moura', 0, 'Agente de Desenvolvimento Infantil', 120, { afastadoHa: 15, retornoEm: 20, tipo: 'Doença não relacionada ao trabalho' }],
+  ['Fernanda Rezende Costa', 1, 'Agente de Desenvolvimento Infantil', 700, { asoEm: 9 }],
+  ['Gisele Martins Prado', 1, 'Professor(a) de Educação Infantil', 1100, {}],
+  ['Hugo Barbosa Teixeira', 1, 'Zelador(a)', 1800, {}],
+  ['Ingrid Sales Fonseca', 1, 'Auxiliar Administrativo', 300, {}],
+  ['Juliana Correia Melo', 1, 'Agente de Desenvolvimento Infantil', 600, { inativaHa: 40 }],
+  ['Kátia Nogueira Batista', 2, 'Agente de Desenvolvimento Infantil', 1300, {}],
+  ['Larissa Pires Antunes', 2, 'Professor(a) de Educação Especial', 800, { pcd: true }],
+  ['Márcia Rocha Vidal', 2, 'Auxiliar de Serviços Gerais', 2500, { asoEm: -40 }],
+  ['Natália Gomes Ribeiro', 2, 'Agente de Desenvolvimento Infantil', 200, { afastadoHa: 60, tipo: 'Licença-maternidade', retornoEm: 60 }],
+  ['Otávio Cunha Leal', 2, 'Menor Aprendiz', 90, {}],
+  ['Paula Freire Monteiro', 3, 'Agente de Desenvolvimento Infantil', 1000, { asoEm: 25 }],
+  ['Quitéria Alves Siqueira', 3, 'Auxiliar de Serviços Gerais', 1600, {}],
+  ['Regina Castro Dias', 3, 'Professor(a) de Educação Infantil', 500, {}],
+  ['Simone Borges Lacerda', 4, 'Agente de Desenvolvimento Infantil', 750, {}],
+  ['Tânia Moreira Bastos', 4, 'Assistente Administrativo', 1400, { pcd: true }],
+  ['Úrsula Pacheco Brito', 4, 'Professor(a) de Educação Infantil', 950, { asoEm: 4 }],
+  ['Valéria Neves Torres', 4, 'Agente de Desenvolvimento Infantil', 350, {}],
+  ['Wesley Rangel Farias', 5, 'Auxiliar de Serviços Gerais', 650, { inativaHa: 100 }],
+  ['Yara Coutinho Lima', 5, 'Agente de Desenvolvimento Infantil', 1200, {}],
+  ['Zilda Matos Ferraz', 5, 'Psicólogo(a)', 1700, {}],
+  ['Aparecida Souto Reis', 6, 'Agente de Desenvolvimento Infantil', 850, {}],
+  ['Bianca Vilela Campos', 6, 'Professor(a) de Educação Infantil', 450, { asoEm: -3 }],
+  ['Cristina Peixoto Lins', 6, 'Auxiliar de Serviços Gerais', 1900, {}],
+];
+
+const SALARIOS = {
+  'Agente de Desenvolvimento Infantil': 2090,
+  'Professor(a) de Educação Infantil': 3150,
+  'Professor(a) de Educação Especial': 3300,
+  'Auxiliar de Serviços Gerais': 1780,
+  'Auxiliar Administrativo': 2010,
+  'Assistente Administrativo': 2450,
+  'Coordenador(a) Pedagógico(a)': 4200,
+  'Zelador(a)': 1850,
+  'Psicólogo(a)': 3800,
+  'Menor Aprendiz': 793,
+};
+
+/** Completa 9 dígitos com os 2 verificadores do CPF. */
+const cpfDemo = (i) => {
+  const base = `9${pad(i + 1)}${pad(i + 11)}${pad(i + 31)}${pad(i + 51)}`.slice(0, 9);
+  const dv = (s) => {
+    const r = (s.split('').reduce((t, n, k) => t + Number(n) * (s.length + 1 - k), 0) * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  const d1 = dv(base);
+  const d = `${base}${d1}${dv(`${base}${d1}`)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+};
+
+/** Completa 10 dígitos com o verificador do PIS. */
+const pisDemo = (i) => {
+  const base = `19${pad(i + 1)}${pad(i + 21)}${pad(i + 41)}${pad(i + 61)}`.slice(0, 10);
+  const r = [3, 2, 9, 8, 7, 6, 5, 4, 3, 2].reduce((t, p, k) => t + p * Number(base[k]), 0) % 11;
+  const d = `${base}${r < 2 ? 0 : 11 - r}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 8)}.${d.slice(8, 10)}-${d.slice(10)}`;
+};
+
+const funcionarios = () => FUNCIONARIOS.map(([nome, e, cargo, admitidoHa, x], i) => {
+  // Último ASO há ~10 meses; quem tem `asoEm` vence nesse número de dias (negativo = vencido).
+  const vencAso = x.asoEm ?? 60 + ((i * 23) % 240);
+  return {
+    id: `demo-funcionario-${pad(i + 1)}`,
+    nome,
+    escolaId: idEscola(e),
+    escolaNome: ESCOLAS[e].nome,
+    cargo,
+    situacao: x.inativaHa ? 'Inativa' : 'Ativa',
+    pcd: !!x.pcd,
+    dataNascimento: ymd(-(365 * (22 + ((i * 7) % 30)) + i * 11)),
+    dataAdmissao: ymd(-admitidoHa),
+    salario: SALARIOS[cargo] || 2000,
+    cpf: cpfDemo(i),
+    rg: `${pad(10 + i)}.${100 + i * 7}.${200 + i * 3}-${i % 10}`,
+    pis: pisDemo(i),
+    telefone: `(19) 99333-00${pad(i + 1)}`,
+    endereco: `Rua Fictícia ${i + 1}, ${20 + i * 13}`,
+    cidade: i % 4 === 3 ? 'Sumaré' : 'Hortolândia',
+    dataUltimoAso: ymd(vencAso - 365),
+    dataVencimentoAso: ymd(vencAso),
+    afastamentoInicio: x.afastadoHa ? ymd(-x.afastadoHa) : '',
+    afastamentoRetorno: x.afastadoHa && x.retornoEm ? ymd(x.retornoEm) : '',
+    afastamentoTipo: x.tipo || '',
+    dataRescisao: x.inativaHa ? ymd(-x.inativaHa) : '',
+    observacoes: '',
+    criadoEm: carimbo(-200),
+    atualizadoEm: carimbo(-10),
+  };
+});
+
 /**
  * Tudo o que entra no ambiente de demonstração, por coleção.
  * Cada registro traz o `id` do documento; o resto são os campos.
@@ -270,5 +369,6 @@ export function gerarDadosDemo() {
     ciclos: ciclos(),
     eventos: eventos(),
     curriculos: curriculos(),
+    funcionarios: funcionarios(),
   };
 }

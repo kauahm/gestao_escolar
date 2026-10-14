@@ -130,6 +130,13 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin() || isAdministrativo();
     }
 
+    // Funcionários (colaboradores das escolas): administração e RH. Tem CPF,
+    // salário e afastamentos por doença (dado sensível pela LGPD): a diretora
+    // não lê. Ver docs/19-funcionarios.md.
+    match /funcionarios/{id} {
+      allow read, create, update, delete: if isAdmin() || isAdministrativo();
+    }
+
     // Agenda: somente administração.
     match /eventos/{id} {
       allow read, create, update, delete: if isAdmin();
@@ -163,25 +170,25 @@ service cloud.firestore {
     // Restaurar (apagar daqui e recriar no original) é só do admin.
     match /lixeira/{id} {
       allow read: if isAdmin() ||
-                     (isAdministrativo() && resource.data.colecao in ['curriculos', 'candidatos']);
+                     (isAdministrativo() && resource.data.colecao in ['curriculos', 'candidatos', 'funcionarios']);
       allow create: if request.resource.data.excluidoPor == request.auth.uid
                     && (isAdmin() ||
-                        (isAdministrativo() && request.resource.data.colecao in ['curriculos', 'candidatos']));
+                        (isAdministrativo() && request.resource.data.colecao in ['curriculos', 'candidatos', 'funcionarios']));
       allow update: if false;
       allow delete: if isAdmin();
     }
 
     // Importações de planilha: quem importou, de qual arquivo e o que foi criado,
-    // para poder desfazer. Admin importa tudo; RH só currículos. Nunca se apaga
+    // para poder desfazer. Admin importa tudo; RH, currículos e funcionários. Nunca se apaga
     // (fora do ambiente de demonstração); só o status muda.
     match /importacoes/{id} {
       function podeImportar(colecao) {
-        return isAdmin() || (isAdministrativo() && colecao == 'curriculos');
+        return isAdmin() || (isAdministrativo() && colecao in ['curriculos', 'funcionarios']);
       }
       allow read: if isAdmin() ||
-                     (isAdministrativo() && resource.data.colecao == 'curriculos');
+                     (isAdministrativo() && resource.data.colecao in ['curriculos', 'funcionarios']);
       allow create: if podeImportar(request.resource.data.colecao)
-                    && request.resource.data.colecao in ['escolas', 'contas', 'ciclos', 'curriculos']
+                    && request.resource.data.colecao in ['escolas', 'contas', 'ciclos', 'curriculos', 'funcionarios']
                     && request.resource.data.porUid == request.auth.uid
                     && request.resource.data.status == 'em andamento'
                     && request.resource.data.em == request.time;

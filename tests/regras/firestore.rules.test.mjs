@@ -593,6 +593,42 @@ describe('importação de planilhas', () => {
   });
 });
 
+describe('funcionários', () => {
+  const funcionario = { nome: 'Fulana de Tal', escolaId: 'escolaA', cargo: 'Menor Aprendiz', situacao: 'Ativa', cpf: '000.000.000-00', salario: 793 };
+
+  test('administração e RH leem e gravam', async () => {
+    for (const uid of ['admin', 'rh']) {
+      const bd = como(uid);
+      const ref = await assertSucceeds(addDoc(collection(bd, 'funcionarios'), funcionario));
+      await assertSucceeds(updateDoc(ref, { situacao: 'Inativa' }));
+      await assertSucceeds(getDocs(collection(bd, 'funcionarios')));
+    }
+  });
+
+  test('diretora e visitante não leem nem gravam (CPF, salário, saúde)', async () => {
+    await ambiente.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'funcionarios', 'f1'), funcionario));
+    for (const bd of [como('diretoraA'), como('diretoraInativa'), anonimo()]) {
+      await assertFails(getDoc(doc(bd, 'funcionarios', 'f1')));
+      await assertFails(getDocs(query(collection(bd, 'funcionarios'), where('escolaId', '==', 'escolaA'))));
+      await assertFails(addDoc(collection(bd, 'funcionarios'), funcionario));
+    }
+  });
+
+  test('RH exclui pela lixeira e importa planilha de funcionários', async () => {
+    await ambiente.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'funcionarios', 'f1'), funcionario));
+    const bd = como('rh');
+    const lote = writeBatch(bd);
+    lote.set(doc(collection(bd, 'lixeira')), itemDeLixeira('rh', 'funcionarios', 'f1'));
+    lote.delete(doc(bd, 'funcionarios', 'f1'));
+    await assertSucceeds(lote.commit());
+    const { importacaoId } = await importarRegistros({
+      db: bd, esquema: ESQUEMAS.funcionarios, registros: [{ dados: { ...funcionario, nome: 'Outra Pessoa' } }], arquivo: 'colaboradores.xlsx', usuario: { uid: 'rh', email: emailDe('rh') },
+    });
+    await assertSucceeds(getDoc(doc(bd, 'importacoes', importacaoId)));
+    await assert.doesNotReject(desfazerImportacao({ db: bd, importacao: { id: importacaoId, colecao: 'funcionarios' }, usuario: { uid: 'rh', email: emailDe('rh') } }));
+  });
+});
+
 describe('alertas adiados ("ciente, lembrar depois")', () => {
   const adiar = (uid, extra = {}) => ({ ate: '2026-10-20', porUid: uid, porEmail: emailDe(uid), em: serverTimestamp(), ...extra });
 

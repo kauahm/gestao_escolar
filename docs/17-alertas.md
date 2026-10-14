@@ -16,6 +16,8 @@ No painel da administração, o quadro **"Precisa de atenção hoje"** substitui
 | Ciclo perto de vencer | Até 7 dias | Aviso | Já foi feito · Abrir chamado |
 | Contas vencidas | Qualquer conta vencida sem envio (um alerta só, com total e a mais antiga) | Crítico | Ver contas (já filtrada em "Vencidas") |
 | Conta perto de vencer | Até 3 dias (hoje e amanhã = atenção) | Atenção / aviso | Marcar como enviada |
+| ASO vencido ([19](19-funcionarios.md)) | Exame periódico de funcionário ativo vencido (um alerta só, com os primeiros nomes) | Atenção | Ver funcionários (já filtrada) |
+| ASO perto de vencer | Até 30 dias (um alerta só) | Aviso | Ver funcionários (já filtrada) |
 
 Vários motivos no mesmo chamado (prazo estourado e pendente há muito tempo) viram um alerta só, com os dois motivos.
 

@@ -5,7 +5,7 @@
 
 ## 1. Para que serve
 
-A AEMC trabalha em Excel. Esta função leva o que já está em planilhas para dentro do sistema, sem redigitar: **Escolas, Contas a pagar, Ciclos e Banco de Talentos** têm o botão **"Importar planilha"**.
+A AEMC trabalha em Excel. Esta função leva o que já está em planilhas para dentro do sistema, sem redigitar: **Escolas, Contas a pagar, Ciclos, Banco de Talentos e Funcionários** têm o botão **"Importar planilha"**.
 
 ## 2. Como funciona (para quem usa)
 
@@ -26,6 +26,7 @@ Limite: **2.000 linhas por arquivo**, para não esgotar a cota gratuita diária 
 | Contas a pagar | Escola, Tipo, Competência, Valor, Vencimento | Nº do documento, Status, Observações | Mesma escola, tipo e competência, com o mesmo documento (ou o mesmo valor, se não houver documento) |
 | Ciclos | Escola, Tipo de ciclo, Última execução | Periodicidade (dias), Observações | Mesmo tipo na mesma escola |
 | Banco de Talentos | Nome, Telefone, Vaga pretendida | E-mail, Tem experiência?, Indicação, Observações | Mesmo telefone ou mesmo e-mail |
+| Funcionários ([19](19-funcionarios.md)) | Unidade, Colaborador, Descrição do cargo | Situação (em branco = Ativa, ou Inativa se houver rescisão), Data de nasc., PCD, Admissão, Salário, CPF, RG, PIS, Fone, Endereço, Cidade, ASO, afastamento, Data de rescisão, Observações | Mesmo CPF (sem CPF: mesmo nome na mesma escola) |
 
 Conversões automáticas:
 - **Datas:** célula de data do Excel, `31/12/2026`, `31/12/26`, `2026-12-31`.
@@ -43,7 +44,7 @@ Escolas importadas **sem endereço, bairro ou diretora** entram com aviso: a tel
 - Cada importação fica registrada na coleção `importacoes`: quem importou, quando, de qual arquivo, quantos registros e quais.
 - Cada registro importado leva o campo `importacaoId` (escondido na cópia em Excel) e ganha uma linha no **histórico**, gravada **junto** com o registro: se o histórico falhar, o registro também não é gravado.
 - **Desfazer** move para a lixeira (com o motivo "importação desfeita") e registra a exclusão no histórico. Também leva registros que tenham sido editados depois da importação.
-- **Regras:** o admin importa nos quatro módulos; o RH (perfil administrativo) só currículos; a diretora não importa. O registro da importação não pode ser forjado (autor, data e situação inicial são conferidos), só tem o status alterado e nunca é apagado (exceto pela restauração da demonstração).
+- **Regras:** o admin importa em todos os módulos; o RH (perfil administrativo) só currículos e funcionários; a diretora não importa. O registro da importação não pode ser forjado (autor, data e situação inicial são conferidos), só tem o status alterado e nunca é apagado (exceto pela restauração da demonstração).
 - Se a gravação parar no meio (queda de internet), a importação fica marcada como "incompleta" e pode ser desfeita.
 
 ## 5. Como foi construído (para quem mantém)

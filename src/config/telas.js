@@ -10,6 +10,7 @@ export const TELAS = {
   '/admin/prestadores': 'Prestadores',
   '/admin/contas': 'Contas a pagar',
   '/admin/ciclos': 'Ciclos',
+  '/admin/funcionarios': 'Funcionários',
   '/admin/talentos': 'Banco de Talentos',
   '/admin/selecao': 'Processo seletivo',
   '/admin/agenda': 'Agenda',

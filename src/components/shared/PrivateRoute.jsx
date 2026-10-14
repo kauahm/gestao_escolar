@@ -45,7 +45,7 @@ export default function PrivateRoute({ children, allowedRoles, allowedRole }) {
 
 function rotaInicialDoPerfil(perfil) {
   if (perfil === 'admin') return '/admin/dashboard';
-  if (perfil === 'administrativo') return '/admin/talentos';
+  if (perfil === 'administrativo') return '/admin/funcionarios';
   if (perfil === 'diretora') return '/diretora/dashboard';
   return '/login';
 }

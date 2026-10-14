@@ -139,3 +139,26 @@ describe('adiar ("ciente, lembrar depois") e contagem', () => {
     assert.deepEqual(alertas.map((a) => a.gravidade), [...alertas.map((a) => a.gravidade)].sort());
   });
 });
+
+describe('ASO dos funcionários', () => {
+  const funcionarios = [
+    { id: 'v1', nome: 'Ana Souza', situacao: 'Ativa', dataVencimentoAso: ymd(-10) },
+    { id: 'v2', nome: 'Bia Lima', situacao: 'Ativa', dataVencimentoAso: ymd(-2) },
+    { id: 'p1', nome: 'Caio Reis', situacao: 'Ativa', dataVencimentoAso: ymd(5) },
+    { id: 'ok', nome: 'Davi Rocha', situacao: 'Ativa', dataVencimentoAso: ymd(31) },
+    { id: 'in', nome: 'Eva Dias', situacao: 'Inativa', dataVencimentoAso: ymd(-50) },
+    { id: 'sem', nome: 'Fabi Melo', situacao: 'Ativa' },
+  ];
+
+  test('um alerta para os vencidos e um aviso para os que vencem em 30 dias; inativos não contam', () => {
+    const alertas = calcularAlertas({ funcionarios, hoje: HOJE });
+    assert.deepEqual(chaves(alertas), ['aso-vencidos', 'aso-vencendo']);
+    assert.equal(alertas[0].gravidade, GRAVIDADE.ATENCAO);
+    assert.equal(alertas[0].titulo, '2 ASOs vencidos');
+    assert.equal(alertas[0].detalhe, 'Ana, Bia; o mais antigo venceu há 10 dias');
+    assert.equal(alertas[1].gravidade, GRAVIDADE.AVISO);
+    assert.equal(alertas[1].titulo, '1 ASO vence nos próximos 30 dias');
+    assert.equal(alertas[1].detalhe, 'Caio; o primeiro vence em 5 dias');
+    assert.equal(contarPendencias(alertas), 1);
+  });
+});

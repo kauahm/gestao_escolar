@@ -11,7 +11,7 @@ import { calcularAlertas, contarPendencias } from '../utils/alertas';
 
 const AlertasContext = createContext({ alertas: [], pendencias: 0, manutencoes: [], contas: [], ciclos: [], carregando: true });
 
-const VAZIO = { manutencoes: null, contas: null, ciclos: null, adiados: {} };
+const VAZIO = { manutencoes: null, contas: null, ciclos: null, funcionarios: null, adiados: {} };
 
 export function AlertasProvider({ children }) {
   const { userProfile } = useAuth();
@@ -26,6 +26,8 @@ export function AlertasProvider({ children }) {
       ouvir(collection(db, 'manutencoes'), lista('manutencoes')),
       ouvir(collection(db, 'contas'), lista('contas')),
       ouvir(collection(db, 'ciclos'), lista('ciclos')),
+      // Funcionários não seguram o carregamento: só somam os alertas de ASO.
+      ouvir(collection(db, 'funcionarios'), lista('funcionarios')),
       ouvir(collection(db, 'alertasAdiados'), (s) => {
         const mapa = {};
         s.docs.forEach((x) => { mapa[x.id] = x.data(); });
@@ -44,7 +46,7 @@ export function AlertasProvider({ children }) {
   const valor = useMemo(() => {
     const carregando = !dados.manutencoes || !dados.contas || !dados.ciclos;
     const alertas = carregando ? [] : calcularAlertas({
-      manutencoes: dados.manutencoes, contas: dados.contas, ciclos: dados.ciclos, adiados: dados.adiados, hoje: agora,
+      manutencoes: dados.manutencoes, contas: dados.contas, ciclos: dados.ciclos, funcionarios: dados.funcionarios || [], adiados: dados.adiados, hoje: agora,
     });
     return {
       carregando,

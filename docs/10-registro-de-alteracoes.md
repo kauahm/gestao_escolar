@@ -69,6 +69,22 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Funcionários
+
+- **Nova aba Funcionários** (administração e RH), com a mesma estrutura da planilha "Colaboradores": situação, unidade, nome, nascimento, cargo, PCD, admissão, salário, CPF, RG, PIS, fone, endereço, cidade, ASO, afastamento e rescisão.
+- **Só 4 campos obrigatórios** (nome, unidade, cargo, situação). **Cargos sugeridos** (os 12 da planilha, com o nome completo), com liberdade para digitar outro.
+- **Filtros:** busca por nome ou CPF, unidade, cargo, situação e atalhos PCD, Afastados e ASO vencido ou vencendo. Números no topo (ativos, inativos, PCD, afastados).
+- **CPF e PIS conferidos** pelos dígitos verificadores; CPF repetido barrado; vencimento do ASO sugerido; inativação pede a data de rescisão.
+- **Exportar Excel** com as colunas na ordem da planilha original e **importar planilha**: a planilha real foi conferida sem gravar nada (293 de 296 linhas entram).
+- **Alertas de ASO** no Painel (vencidos e vencendo em 30 dias), agrupados.
+- **Regras:** coleção `funcionarios` só para administração e RH; a diretora não lê (CPF, salário, saúde). RH também usa a lixeira e a importação de funcionários. O RH passa a entrar direto em Funcionários.
+- **Demonstração:** 28 funcionários fictícios. A planilha real não entrou no projeto.
+- **Testes:** 75 (`npm test`) e 58 de regras (`npm run test:regras`), todos passando; tela conferida no emulador, inclusive no celular, e auditoria de acessibilidade sem violações.
+
+Detalhes em [19](19-funcionarios.md).
+
+---
+
 ## 14/10/2026 — Design e polimento (bloco F)
 
 - **Base visual** para todas as telas: fonte Inter, cinzas azulados, escala do azul da marca, sombras suaves, foco visível no teclado, 83 rótulos com maiúsculas corrigidas, esqueletos de carregamento.

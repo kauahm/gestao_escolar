@@ -82,7 +82,12 @@ describe('achar a escola', () => {
   });
 
   test('nome parcial único é aceito com aviso; ambíguo ou inexistente é erro', () => {
-    const parcial = acharEscola('Pequenos Passos', ESCOLAS);
+    // Palavras inteiras do nome ("ACARAY" em "CEI Acaray"): associa sem aviso.
+    const porPalavras = acharEscola('PEQUENOS PASSOS', ESCOLAS);
+    assert.equal(porPalavras.escola.id, 'e1');
+    assert.equal(porPalavras.aviso, undefined);
+    // Pedaço de palavra: associa, mas avisa para conferir.
+    const parcial = acharEscola('Pequenos Pass', ESCOLAS);
     assert.equal(parcial.escola.id, 'e1');
     assert.ok(parcial.aviso);
     assert.ok(acharEscola('Girassol', ESCOLAS).erro.includes('ambígua'));
@@ -226,5 +231,61 @@ describe('validação de escolas, ciclos e currículos', () => {
     assert.equal(rs[0].dados.status, 'Disponível');
     assert.ok(rs[1].erros[0].includes('repete a linha 2'));
     assert.ok(rs[2].erros.includes('Telefone é obrigatório'));
+  });
+});
+
+describe('validação de funcionários (planilha "Colaboradores")', () => {
+  // Mesmos títulos e mesma ordem da planilha da AEMC; pessoas e números inventados.
+  const titulos = ['Situação', 'Unidade', 'Colaborador', 'Data de nasc.', 'Descrição do cargo', 'PCD', 'Admissão', 'Salário', 'CPF', 'RG', 'PIS', 'Fone', 'Endereço', 'Cidade', 'Data último ASO', 'Data venc. ASO', 'Data início afast.', 'Data retorno afast.', 'Tipo de afastamento', 'Data de rescisão'];
+  const rodar = (linhas, existentes = []) => {
+    const todas = [['ASSOCIAÇÃO EDUCACIONAL'], ['Relação de colaboradores'], [], titulos, ...linhas];
+    const { indice, mapeamento } = encontrarCabecalho(todas, ESQUEMAS.funcionarios);
+    assert.equal(indice, 3);
+    assert.equal(Object.keys(mapeamento).length, titulos.length);
+    return validarLinhas(todas, indice, mapeamento, ESQUEMAS.funcionarios, { escolas: ESCOLAS, existentes }).registros;
+  };
+
+  test('linha completa: cargo cortado, CPF sem zero da frente, datas do Excel, cidade com [SP]', () => {
+    const [r] = rodar([['ATIVA', 'PEQUENOS PASSOS', 'ana  souza', 32874, 'AGENTE DE DESENVOLVIMENTO INFA', 'Não', '01/02/2024', 2090.5, 52998224725, 123456789, '', '19999990000', 'Rua A, 1', 'Hortolândia - SP', '10/03/2026', '', '', '', '', '']]);
+    assert.equal(r.situacao, 'ok', JSON.stringify(r.avisos));
+    assert.equal(r.dados.situacao, 'Ativa');
+    assert.equal(r.dados.escolaId, 'e1');
+    assert.equal(r.dados.cargo, 'Agente de Desenvolvimento Infantil');
+    assert.equal(r.dados.cpf, '529.982.247-25');
+    assert.equal(r.dados.rg, '123456789');
+    assert.equal(r.dados.salario, 2090.5);
+    assert.equal(r.dados.dataAdmissao, '2024-02-01');
+    assert.equal(r.dados.dataNascimento, '1990-01-01');
+    assert.equal(r.dados.telefone, '(19) 99999-0000');
+    assert.equal(r.dados.cidade, 'Hortolândia');
+    assert.equal(r.dados.pcd, false);
+  });
+
+  test('só unidade, nome, cargo e situação são obrigatórios; o resto ruim vira aviso', () => {
+    const [ok, aviso, erro] = rodar([
+      ['Ativa', 'UE-02', 'Bruno Lima', '', 'Cozinheira', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['Ativa', 'UE-02', 'Carla Dias', '', 'Zeladora', 'sim', 'ontem', '', '529.982.247-26', '', '123', '', '', '', '', '', '', '', '', ''],
+      ['', 'UE-99', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ]);
+    assert.equal(ok.situacao, 'ok');
+    assert.equal(ok.dados.cargo, 'Cozinheira');
+    assert.equal(aviso.situacao, 'aviso');
+    assert.equal(aviso.dados.cargo, 'Zelador(a)');
+    assert.equal(aviso.dados.pcd, true);
+    assert.equal(aviso.dados.dataAdmissao, '');
+    assert.equal(aviso.avisos.length, 3); // admissão, CPF, PIS
+    assert.equal(erro.situacao, 'erro');
+  });
+
+  test('situação em branco: com rescisão vira Inativa; mesmo CPF repetido é barrado', () => {
+    const rs = rodar([
+      ['', 'UE-01', 'Dora Reis', '', 'Psicóloga', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '05/09/2026'],
+      ['Ativa', 'UE-01', 'Eva Melo', '', 'Menor aprendiz', '', '', '', '52998224725', '', '', '', '', '', '', '', '', '', '', ''],
+      ['Ativa', 'UE-02', 'Eva M.', '', 'Menor aprendiz', '', '', '', '529.982.247-25', '', '', '', '', '', '', '', '', '', '', ''],
+    ]);
+    assert.equal(rs[0].dados.situacao, 'Inativa');
+    assert.equal(rs[0].dados.dataRescisao, '2026-09-05');
+    assert.equal(rs[0].dados.cargo, 'Psicólogo(a)');
+    assert.ok(rs[2].erros[0].includes('repete a linha'));
   });
 });

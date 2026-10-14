@@ -7,6 +7,7 @@
 // aviso é importada e o aviso aparece no relatório.
 
 import * as n from './normalizar.js';
+import { normalizarCargo, capitalizar } from '../utils/funcionarios.js';
 
 // ------------------------------------------------------------------ escola ----
 
@@ -26,6 +27,8 @@ export const acharEscola = (valor, escolas) => {
   });
   if (parecidas.length === 1) {
     if (parecidas[0].situacao === 'Inativa') return inativa(parecidas[0]);
+    // "ACARAY" dentro de "CEI Acaray" (palavra inteira) é seguro: não precisa avisar.
+    if (` ${n.chave(parecidas[0].nome)} `.includes(` ${k} `)) return { escola: parecidas[0] };
     return { escola: parecidas[0], aviso: `escola "${valor}" associada a "${parecidas[0].nome}"` };
   }
   if (parecidas.length > 1) return { erro: `escola "${valor}" é ambígua (${parecidas.map((e) => e.nome).join(', ')})` };
@@ -281,4 +284,89 @@ const curriculos = {
   carimbos: (agora) => ({ dataCadastro: agora }),
 };
 
-export const ESQUEMAS = { escolas, contas, ciclos, curriculos };
+// ------------------------------------------------------------ funcionários ----
+
+/** Campo opcional: se não der para converter, entra em branco com aviso (planilhas reais vêm bagunçadas). */
+const opcional = (r, campo, rotulo, conversao, valor) => {
+  const saida = conversao(valor);
+  if (saida.erro) { r.avisos.push(`${rotulo}: ${saida.erro}; ficou em branco`); r.dados[campo] = ''; return saida; }
+  if (saida.aviso) r.avisos.push(`${rotulo}: ${saida.aviso}`);
+  r.dados[campo] = saida.valor ?? '';
+  return saida;
+};
+
+const funcionarios = {
+  id: 'funcionarios',
+  colecao: 'funcionarios',
+  titulo: 'Funcionários',
+  nomeDoRegistro: 'funcionário',
+  precisaDeEscolas: true,
+  // Os títulos da planilha "Colaboradores" da AEMC são reconhecidos como estão.
+  campos: [
+    { chave: 'situacao', rotulo: 'Situação', exemplo: 'Ativa', ajuda: 'Ativa ou Inativa. Em branco: Ativa (ou Inativa, se tiver data de rescisão).', sinonimos: ['status', 'situacao do colaborador'] },
+    { chave: 'escola', rotulo: 'Unidade', obrigatorio: true, exemplo: 'CEI Pequenos Passos', ajuda: 'Nome ou código da escola, igual ao cadastro (pode ser só uma parte do nome).', sinonimos: ['escola', 'unidade escolar', 'cei', 'local de trabalho', 'lotacao'] },
+    { chave: 'nome', rotulo: 'Colaborador', obrigatorio: true, exemplo: 'Ana Souza', sinonimos: ['nome', 'nome completo', 'funcionario', 'funcionaria', 'colaboradora'] },
+    { chave: 'dataNascimento', rotulo: 'Data de nasc.', exemplo: '15/03/1990', sinonimos: ['data de nascimento', 'nascimento', 'dt nasc', 'data nasc'] },
+    { chave: 'cargo', rotulo: 'Descrição do cargo', obrigatorio: true, exemplo: 'Agente de Desenvolvimento Infantil', sinonimos: ['cargo', 'funcao', 'descricao do cargo'] },
+    { chave: 'pcd', rotulo: 'PCD', exemplo: 'Não', ajuda: 'Sim ou Não. Em branco = Não.', sinonimos: ['pessoa com deficiencia', 'deficiencia'] },
+    { chave: 'dataAdmissao', rotulo: 'Admissão', exemplo: '01/02/2024', sinonimos: ['data de admissao', 'admitido em', 'dt admissao'] },
+    { chave: 'salario', rotulo: 'Salário', exemplo: '2.090,00', sinonimos: ['salario base', 'remuneracao'] },
+    { chave: 'cpf', rotulo: 'CPF', exemplo: '000.000.000-00', sinonimos: [] },
+    { chave: 'rg', rotulo: 'RG', exemplo: '', sinonimos: ['identidade'] },
+    { chave: 'pis', rotulo: 'PIS', exemplo: '', sinonimos: ['pis pasep', 'nit', 'pasep'] },
+    { chave: 'telefone', rotulo: 'Fone', exemplo: '(19) 99999-0000', sinonimos: ['telefone', 'celular', 'whatsapp', 'contato'] },
+    { chave: 'endereco', rotulo: 'Endereço', exemplo: 'Rua das Flores, 100', sinonimos: ['endereco completo', 'logradouro'] },
+    { chave: 'cidade', rotulo: 'Cidade', exemplo: 'Hortolândia', sinonimos: ['municipio'] },
+    { chave: 'dataUltimoAso', rotulo: 'Data último ASO', exemplo: '', sinonimos: ['ultimo aso', 'data do ultimo aso', 'aso'] },
+    { chave: 'dataVencimentoAso', rotulo: 'Data venc. ASO', exemplo: '', sinonimos: ['vencimento do aso', 'venc aso', 'data venc aso', 'data vencimento aso'] },
+    { chave: 'afastamentoInicio', rotulo: 'Data início afast.', exemplo: '', sinonimos: ['data inicio afast', 'inicio do afastamento', 'data inicio afastamento'] },
+    { chave: 'afastamentoRetorno', rotulo: 'Data retorno afast.', exemplo: '', sinonimos: ['data retorno afast', 'retorno do afastamento', 'data retorno afastamento'] },
+    { chave: 'afastamentoTipo', rotulo: 'Tipo de afastamento', exemplo: '', sinonimos: ['motivo do afastamento'] },
+    { chave: 'dataRescisao', rotulo: 'Data de rescisão', exemplo: '', sinonimos: ['rescisao', 'data de desligamento', 'desligamento'] },
+    { chave: 'observacoes', rotulo: 'Observações', exemplo: '', sinonimos: ['obs', 'observacao'] },
+  ],
+  converter(linha, contexto) {
+    const r = novoResultado();
+    r.dados.nome = n.texto(linha.nome);
+    exigir(r, 'nome', 'Colaborador');
+    comEscola(r, linha.escola, contexto);
+    r.dados.cargo = normalizarCargo(linha.cargo);
+    exigir(r, 'cargo', 'Cargo');
+    const sit = n.chave(linha.situacao);
+    if (!sit) r.dados.situacao = n.vazio(linha.dataRescisao) ? 'Ativa' : 'Inativa';
+    else if (['ativa', 'ativo', 'a', 'sim'].includes(sit)) r.dados.situacao = 'Ativa';
+    else if (['inativa', 'inativo', 'i', 'desligada', 'desligado', 'nao'].includes(sit)) r.dados.situacao = 'Inativa';
+    else r.erros.push(`Situação "${linha.situacao}": use Ativa ou Inativa`);
+    const pcd = n.simNao(linha.pcd);
+    r.dados.pcd = pcd.erro ? false : !!pcd.valor;
+    if (pcd.erro) r.avisos.push(`PCD "${linha.pcd}" não reconhecido; ficou como Não`);
+    opcional(r, 'dataNascimento', 'Data de nasc.', n.data, linha.dataNascimento);
+    opcional(r, 'dataAdmissao', 'Admissão', n.data, linha.dataAdmissao);
+    const sal = n.dinheiro(linha.salario);
+    if (sal.erro) { r.avisos.push(`Salário: ${sal.erro}; ficou em branco`); r.dados.salario = null; } else r.dados.salario = sal.valor;
+    opcional(r, 'cpf', 'CPF', n.cpf, linha.cpf);
+    r.dados.rg = n.texto(typeof linha.rg === 'number' ? String(Math.round(linha.rg)) : linha.rg);
+    opcional(r, 'pis', 'PIS', n.pis, linha.pis);
+    opcional(r, 'telefone', 'Fone', n.telefone, linha.telefone);
+    r.dados.endereco = n.texto(linha.endereco);
+    r.dados.cidade = n.vazio(linha.cidade) ? '' : capitalizar(String(linha.cidade).replace(/[\[\]]/g, '').replace(/\s*-\s*sp$/i, ''));
+    opcional(r, 'dataUltimoAso', 'Último ASO', n.data, linha.dataUltimoAso);
+    opcional(r, 'dataVencimentoAso', 'Vencimento do ASO', n.data, linha.dataVencimentoAso);
+    opcional(r, 'afastamentoInicio', 'Início do afastamento', n.data, linha.afastamentoInicio);
+    opcional(r, 'afastamentoRetorno', 'Retorno do afastamento', n.data, linha.afastamentoRetorno);
+    r.dados.afastamentoTipo = n.texto(linha.afastamentoTipo);
+    opcional(r, 'dataRescisao', 'Rescisão', n.data, linha.dataRescisao);
+    r.dados.observacoes = n.texto(linha.observacoes);
+    if (r.dados.situacao === 'Inativa' && !r.dados.dataRescisao) r.avisos.push('inativo(a) sem data de rescisão');
+    return r;
+  },
+  // Mesma pessoa = mesmo CPF; sem CPF, mesmo nome na mesma escola.
+  chavesDeDuplicidade: (d) => {
+    const digitos = String(d.cpf || '').replace(/\D/g, '');
+    return digitos.length === 11 ? [`cpf:${digitos}`] : [`nome:${n.chave(d.nome)}|${d.escolaId}`];
+  },
+  resumo: (d) => [d.nome, d.cargo, d.escolaNome].filter(Boolean).join(' · '),
+  carimbos: (agora) => ({ criadoEm: agora, atualizadoEm: agora }),
+};
+
+export const ESQUEMAS = { escolas, contas, ciclos, curriculos, funcionarios };
