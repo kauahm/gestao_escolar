@@ -22,18 +22,28 @@ import DiretoraDashboard from './pages/diretora/Dashboard';
 import { EH_DEMO, DEMO_MAL_CONFIGURADA } from './services/ambiente';
 
 function RootRedirect() {
-  const { currentUser, userProfile, loading } = useAuth();
-  
+  const { currentUser, userProfile, loading, logout } = useAuth();
+
   if (loading) return <div className="h-screen flex items-center justify-center">Verificando...</div>;
   if (!currentUser) return <Navigate to="/login" replace />;
-  
+
   if (!userProfile) {
     return (
-      <div className="h-screen flex items-center justify-center flex-col">
-        <p>A carregar o seu perfil...</p>
-        <button onClick={() => window.location.reload()} className="mt-4 text-blue-500 underline">
-          Recarregar página
-        </button>
+      <div className="h-screen flex items-center justify-center flex-col px-6 text-center">
+        <p className="font-medium">Não encontramos o perfil desta conta.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          A conta existe, mas não tem o cadastro correspondente em <code>usuarios</code>.
+          Peça ao administrador para conferir se o ID do documento é igual ao UID abaixo.
+        </p>
+        <code className="mt-3 text-xs break-all bg-slate-100 rounded px-2 py-1">{currentUser.uid}</code>
+        <div className="mt-4 flex gap-4">
+          <button onClick={() => window.location.reload()} className="text-blue-500 underline">
+            Recarregar página
+          </button>
+          <button onClick={() => logout()} className="text-blue-500 underline">
+            Sair
+          </button>
+        </div>
       </div>
     );
   }
