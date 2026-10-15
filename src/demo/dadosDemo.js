@@ -51,9 +51,42 @@ const ESCOLAS = [
 
 const idEscola = (i) => `demo-escola-${pad(i + 1)}`;
 
+// Visão da sede: municípios e contratos fictícios (números inventados).
+// As escolas 1 a 4 ficam no contrato de Hortolândia, 5 e 6 em Jaguariúna
+// (contrato vencendo em 60 dias) e 7 e 8 em Indaiatuba. Sorocaba tem um
+// contrato já encerrado, sem escolas.
+const MUNICIPIOS = [['Hortolândia', 'SP'], ['Jaguariúna', 'SP'], ['Indaiatuba', 'SP'], ['Sorocaba', 'SP']];
+const idMunicipio = (i) => `demo-municipio-${pad(i + 1)}`;
+const municipios = () => MUNICIPIOS.map(([nome, uf], i) => ({
+  id: idMunicipio(i), nome, uf, observacao: '', criadoEm: carimbo(-300), atualizadoEm: carimbo(-300),
+}));
+
+// [município, número, objeto, início (dias), fim (dias), valor global]
+const CONTRATOS = [
+  [0, 'Termo de Colaboração nº 901/2024 (fictício)', 'Educação infantil (creches)', -700, 760, 18500000],
+  [1, 'Termo de Colaboração nº 902/2023 (fictício)', 'Educação infantil (creches)', -1035, 60, 9200000],
+  [2, 'Termo de Colaboração nº 903/2025 (fictício)', 'Apoio escolar', -300, 430, 4100000],
+  [3, 'Termo de Colaboração nº 904/2022 (fictício)', 'Escola integral', -1500, -100, 2600000],
+];
+const idContrato = (i) => `demo-contrato-${pad(i + 1)}`;
+const contratos = () => CONTRATOS.map(([m, numero, objeto, inicio, fim, valorGlobal], i) => ({
+  id: idContrato(i),
+  municipioId: idMunicipio(m),
+  numero,
+  objeto,
+  inicio: ymd(inicio),
+  fim: ymd(fim),
+  valorGlobal,
+  observacao: '',
+  criadoEm: carimbo(-300),
+  atualizadoEm: carimbo(-300),
+}));
+const CONTRATO_DA_ESCOLA = [0, 0, 0, 0, 1, 1, 2, 2];
+
 const escolas = () => ESCOLAS.map((e, i) => ({
   id: idEscola(i),
   nome: e.nome,
+  contratoId: idContrato(CONTRATO_DA_ESCOLA[i]),
   codigo: `UE-${pad(i + 1)}`,
   situacao: e.inativa ? 'Inativa' : 'Ativa',
   endereco: `Rua Exemplo ${i + 1}, ${100 + i * 37}`,
@@ -437,6 +470,8 @@ const gastos = () => GASTOS.map(([r, meses, diaDoMes, fornecedor, notaFiscal, de
  */
 export function gerarDadosDemo() {
   return {
+    municipios: municipios(),
+    contratos: contratos(),
     escolas: escolas(),
     prestadores: prestadores(),
     manutencoes: manutencoes(),

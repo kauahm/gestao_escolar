@@ -17,6 +17,7 @@ import Usuarios from './pages/admin/Usuarios';
 import BancoTalentos from './pages/admin/BancoTalentos';
 import Funcionarios from './pages/admin/Funcionarios';
 import ControleDeSaldo from './pages/admin/ControleDeSaldo';
+import VisaoDaSede from './pages/admin/VisaoDaSede';
 import Prestadores from './pages/admin/Prestadores';
 import Seguranca from './pages/admin/Seguranca';
 import ManutencaoDetalhe from './pages/admin/ManutencaoDetalhe';
@@ -83,6 +84,7 @@ export default function App() {
             {/* O perfil 'administrativo' (RH) entra em /admin, mas só em Funcionários,
                 Banco de Talentos e Processo Seletivo. As demais telas são do admin. */}
             <Route path="dashboard" element={<PrivateRoute allowedRoles={['admin']}><AdminDashboard /></PrivateRoute>} />
+            <Route path="sede" element={<PrivateRoute allowedRoles={['admin']}><VisaoDaSede /></PrivateRoute>} />
             <Route path="escolas" element={<PrivateRoute allowedRoles={['admin']}><Escolas /></PrivateRoute>} />
             <Route path="manutencoes" element={<PrivateRoute allowedRoles={['admin']}><AdminManutencoes /></PrivateRoute>} />
             <Route path="manutencoes/:id" element={<PrivateRoute allowedRoles={['admin']}><ManutencaoDetalhe /></PrivateRoute>} />

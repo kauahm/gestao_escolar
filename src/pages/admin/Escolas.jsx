@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAlertas } from '../../contexts/AlertasContext';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
@@ -49,6 +50,14 @@ export default function Escolas() {
   // Estados de Filtro e Busca
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSituacao, setFilterSituacao] = useState('Todas');
+  const [filterMunicipio, setFilterMunicipio] = useState('Todos');
+  // Município de cada escola, pelo contrato (ver Visão da sede).
+  const { municipios, contratos } = useAlertas();
+  const municipioDaEscola = useMemo(() => {
+    const nome = new Map(municipios.map((m) => [m.id, m]));
+    const porContrato = new Map(contratos.map((c) => [c.id, { contrato: c, municipio: nome.get(c.municipioId) }]));
+    return (escola) => porContrato.get(escola.contratoId) || null;
+  }, [municipios, contratos]);
 
   // Estados de Modais
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -97,9 +106,15 @@ export default function Escolas() {
         filterSituacao === 'Ativas' ? escola.situacao === 'Ativa' :
         escola.situacao === 'Inativa';
 
-      return matchSearch && matchStatus;
+      const vinculo = municipioDaEscola(escola);
+      const matchMunicipio =
+        filterMunicipio === 'Todos' ? true :
+        filterMunicipio === 'sem' ? !vinculo?.municipio :
+        vinculo?.municipio?.id === filterMunicipio;
+
+      return matchSearch && matchStatus && matchMunicipio;
     });
-  }, [escolas, searchTerm, filterSituacao]);
+  }, [escolas, searchTerm, filterSituacao, filterMunicipio, municipioDaEscola]);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -280,6 +295,19 @@ export default function Escolas() {
             <option value="Inativas">Apenas inativas</option>
           </select>
         </div>
+        {municipios.length > 0 && (
+          <div className="w-full sm:w-56">
+            <select aria-label="Filtrar por município"
+              value={filterMunicipio}
+              onChange={(e) => setFilterMunicipio(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none bg-white"
+            >
+              <option value="Todos">Todos os municípios</option>
+              {[...municipios].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')).map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+              <option value="sem">Sem contrato</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Conteúdo Principal */}
@@ -299,7 +327,7 @@ export default function Escolas() {
           <EmptyState
             titulo="Nenhuma escola com estes filtros"
             mensagem="Confira o texto da busca ou a situação escolhida."
-            acoes={[{ rotulo: 'Limpar filtros', onClick: () => { setSearchTerm(''); setFilterSituacao('Todas'); } }]}
+            acoes={[{ rotulo: 'Limpar filtros', onClick: () => { setSearchTerm(''); setFilterSituacao('Todas'); setFilterMunicipio('Todos'); } }]}
           />
         )
       ) : (
@@ -318,6 +346,7 @@ export default function Escolas() {
                   <div className="flex items-center text-xs text-gray-500 mt-1 font-medium">
                     <Hash size={12} className="mr-1" />
                     {escola.codigo || 'Sem código'}
+                    {municipioDaEscola(escola)?.municipio && <span className="ml-2 truncate">· {municipioDaEscola(escola).municipio.nome}</span>}
                   </div>
                 </div>
                 <div className="absolute top-5 right-5">

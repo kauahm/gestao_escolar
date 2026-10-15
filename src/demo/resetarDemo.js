@@ -19,7 +19,7 @@ const PROJETO_REAL = 'gestaoescolar-b84c2';
 /** Coleções esvaziadas na restauração. */
 export const COLECOES_APAGADAS = [
   'escolas', 'manutencoes', 'prestadores', 'contas', 'ciclos',
-  'eventos', 'curriculos', 'candidatos', 'funcionarios', 'rubricas', 'gastos', 'lixeira', 'historico', 'importacoes', 'alertasAdiados',
+  'eventos', 'curriculos', 'candidatos', 'funcionarios', 'rubricas', 'gastos', 'municipios', 'contratos', 'lixeira', 'historico', 'importacoes', 'alertasAdiados',
 ];
 
 const TAMANHO_DO_LOTE = 400; // o limite do Firestore é 500 operações por lote

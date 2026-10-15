@@ -5,6 +5,7 @@ export const NOME_DO_SISTEMA = 'Gestão Escolar';
 
 export const TELAS = {
   '/admin/dashboard': 'Painel',
+  '/admin/sede': 'Visão da sede',
   '/admin/escolas': 'Escolas',
   '/admin/manutencoes': 'Manutenções',
   '/admin/prestadores': 'Prestadores',

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  AlertTriangle, CheckCircle, BellOff, Bell, ChevronDown, ChevronUp, Wrench, RefreshCcw, Receipt, ArrowRight, Stethoscope, Wallet,
+  AlertTriangle, CheckCircle, BellOff, Bell, ChevronDown, ChevronUp, Wrench, RefreshCcw, Receipt, ArrowRight, Stethoscope, Wallet, Landmark,
 } from 'lucide-react';
 
 import { useAlertas } from '../../contexts/AlertasContext';
@@ -22,7 +22,7 @@ const COR = {
   [GRAVIDADE.ATENCAO]: { ponto: 'bg-amber-500', rotulo: 'Atenção' },
   [GRAVIDADE.AVISO]: { ponto: 'bg-blue-500', rotulo: 'Aviso' },
 };
-const ICONE = { chamado: Wrench, ciclo: RefreshCcw, conta: Receipt, 'contas-vencidas': Receipt, aso: Stethoscope, saldo: Wallet };
+const ICONE = { chamado: Wrench, ciclo: RefreshCcw, conta: Receipt, 'contas-vencidas': Receipt, aso: Stethoscope, saldo: Wallet, contrato: Landmark };
 const VISIVEIS = 8;
 const dataBr = (ymd) => ymd.split('-').reverse().join('/');
 
@@ -117,6 +117,9 @@ export default function PainelDeAlertas() {
           Marcar como enviada
         </button>,
       ];
+    }
+    if (a.tipo === 'contrato') {
+      return [<Link key="ver" to={a.link} className={botaoPrincipal}>Ver contratos</Link>];
     }
     if (a.tipo === 'saldo') {
       return [<Link key="ver" to={a.link} className={botaoPrincipal}>Ver controle de saldo</Link>];

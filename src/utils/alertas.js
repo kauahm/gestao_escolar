@@ -8,6 +8,7 @@ import { diasAte, diasEmAberto, situacaoConta } from './calcularStatus.js';
 import { formatarMoeda } from './formatters.js';
 import { situacaoDoFuncionario, DIAS_AVISO_ASO } from './funcionarios.js';
 import { calcularSaldo, mesDe, mesesDoPeriodo, rotuloDoMes } from './saldo.js';
+import { situacaoDoContrato } from './contratos.js';
 
 /** Dias que um chamado pode ficar "Pendente" antes de cobrar, por prioridade. */
 export const PRAZO_POR_PRIORIDADE = { Urgente: 1, Alta: 2, 'Média': 5, Baixa: 10 };
@@ -32,12 +33,12 @@ const msDe = (t) => (t?.toMillis ? t.toMillis() : t instanceof Date ? t.getTime(
 const prazoDoPendente = (prioridade) => PRAZO_POR_PRIORIDADE[prioridade] ?? PRAZO_POR_PRIORIDADE['Média'];
 
 /**
- * @param {{ manutencoes?: object[], contas?: object[], ciclos?: object[], funcionarios?: object[], saldo?: {rubricas, gastos, periodo}, adiados?: Object<string,{ate:string}>, hoje?: Date }} dados
+ * @param {{ manutencoes?: object[], contas?: object[], ciclos?: object[], funcionarios?: object[], saldo?: {rubricas, gastos, periodo}, sede?: {municipios, contratos, escolas}, adiados?: Object<string,{ate:string}>, hoje?: Date }} dados
  * @returns {{ chave, tipo, gravidade, titulo, detalhe, escolaNome, link, alvo, adiadoAte? }[]}
  *   `chave` identifica o alerta para "ciente, lembrar depois"; alertas adiados
  *   (até uma data futura) vêm marcados com `adiadoAte`.
  */
-export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], funcionarios = [], saldo = null, adiados = {}, hoje = new Date() } = {}) {
+export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], funcionarios = [], saldo = null, sede = null, adiados = {}, hoje = new Date() } = {}) {
   const alertas = [];
   const agora = hoje.getTime();
   const chamadosAbertosPorCiclo = new Map();
@@ -206,6 +207,44 @@ export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], fu
           escolaNome: '',
           link: '/admin/saldo',
           alvo: l,
+        });
+      }
+    });
+  }
+
+  // ------------------------------------------------------- contratos ----
+  // Fim da vigência chegando, ou contrato vencido com escolas ativas ainda ligadas.
+  if (sede?.contratos?.length) {
+    const nomeDoMunicipio = new Map((sede.municipios || []).map((m) => [m.id, m.nome]));
+    const ativasPorContrato = new Map();
+    (sede.escolas || []).forEach((e) => {
+      if (e.contratoId && e.situacao !== 'Inativa') ativasPorContrato.set(e.contratoId, (ativasPorContrato.get(e.contratoId) || 0) + 1);
+    });
+    sede.contratos.forEach((c) => {
+      const s = situacaoDoContrato(c, hoje);
+      const ativas = ativasPorContrato.get(c.id) || 0;
+      const onde = nomeDoMunicipio.get(c.municipioId) || '';
+      if (s.encerrado && ativas) {
+        alertas.push({
+          chave: `contrato-vencido:${c.id}`,
+          tipo: 'contrato',
+          gravidade: GRAVIDADE.ATENCAO,
+          titulo: `Contrato ${c.numero || ''} venceu em ${dataBr(c.fim)}`.replace('  ', ' '),
+          detalhe: `${plural(ativas, 'escola ativa ainda ligada', 'escolas ativas ainda ligadas')}; registre a renovação ou o encerramento`,
+          escolaNome: onde,
+          link: '/admin/sede?aba=contratos',
+          alvo: c,
+        });
+      } else if (s.aviso) {
+        alertas.push({
+          chave: `contrato-fim:${c.id}:${c.fim}`,
+          tipo: 'contrato',
+          gravidade: s.aviso === 'urgente' ? GRAVIDADE.ATENCAO : GRAVIDADE.AVISO,
+          titulo: `Contrato ${c.numero || ''} ${s.diasParaFim === 0 ? 'vence hoje' : `vence em ${plural(s.diasParaFim, 'dia', 'dias')}`}`.replace('  ', ' '),
+          detalhe: `fim da vigência em ${dataBr(c.fim)}${ativas ? `; ${plural(ativas, 'escola ativa', 'escolas ativas')}` : ''}`,
+          escolaNome: onde,
+          link: '/admin/sede?aba=contratos',
+          alvo: c,
         });
       }
     });

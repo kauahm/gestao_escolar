@@ -19,6 +19,8 @@ No painel da administração, o quadro **"Precisa de atenção hoje"** substitui
 | ASO vencido ([19](19-funcionarios.md)) | Exame periódico de funcionário ativo vencido (um alerta só, com os primeiros nomes) | Atenção | Ver funcionários (já filtrada) |
 | ASO perto de vencer | Até 30 dias (um alerta só) | Aviso | Ver funcionários (já filtrada) |
 | Verba estourada ([20](20-controle-de-saldo.md)) | O lançado numa área passou da verba do período | Atenção | Ver controle de saldo |
+| Contrato vencendo ([21](21-visao-da-sede.md)) | Fim da vigência em até 90 dias (atenção a partir de 30) | Aviso / atenção | Ver contratos |
+| Contrato vencido com escolas | Vigência acabou e ainda há escolas ativas ligadas | Atenção | Ver contratos |
 | Área acima do teto do mês | O gasto do mês atual passou do teto (os meses seguintes se ajustam sozinhos) | Aviso | Ver controle de saldo |
 
 Vários motivos no mesmo chamado (prazo estourado e pendente há muito tempo) viram um alerta só, com os dois motivos.

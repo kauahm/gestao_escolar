@@ -598,6 +598,34 @@ describe('importação de planilhas', () => {
   });
 });
 
+describe('municípios e contratos (visão da sede)', () => {
+  const municipio = { nome: 'Alfa', uf: 'SP', observacao: '' };
+  const contrato = { municipioId: 'm1', numero: 'TC 1/2026', objeto: 'Apoio escolar', inicio: '2026-01-01', fim: '2027-12-31', valorGlobal: 1000 };
+
+  test('administração cadastra município, contrato e liga a escola', async () => {
+    const bd = como('admin');
+    const m = await assertSucceeds(addDoc(collection(bd, 'municipios'), municipio));
+    const c = await assertSucceeds(addDoc(collection(bd, 'contratos'), { ...contrato, municipioId: m.id }));
+    await assertSucceeds(updateDoc(doc(bd, 'escolas', 'escolaA'), { contratoId: c.id }));
+    await assertSucceeds(getDocs(collection(bd, 'contratos')));
+  });
+
+  test('RH, diretora, conta desativada e visitante não leem nem gravam', async () => {
+    await ambiente.withSecurityRulesDisabled(async (ctx) => {
+      const f = ctx.firestore();
+      await setDoc(doc(f, 'municipios', 'm1'), municipio);
+      await setDoc(doc(f, 'contratos', 'c1'), contrato);
+    });
+    for (const bd of [como('rh'), como('diretoraA'), como('diretoraInativa'), anonimo()]) {
+      await assertFails(getDoc(doc(bd, 'municipios', 'm1')));
+      await assertFails(getDocs(collection(bd, 'contratos')));
+      await assertFails(addDoc(collection(bd, 'contratos'), contrato));
+    }
+    // A diretora também não consegue mudar o contrato da própria escola.
+    await assertFails(updateDoc(doc(como('diretoraA'), 'escolas', 'escolaA'), { contratoId: 'c1' }));
+  });
+});
+
 describe('controle de saldo', () => {
   const rubrica = { nome: 'Material Pedagógico', verbaMensal: 5000, observacao: '' };
   const gasto = { rubricaId: 'r1', rubricaNome: 'Material Pedagógico', valorTotal: 900, parcelas: 3, primeiraParcela: '2026-10', data: '2026-10-05' };

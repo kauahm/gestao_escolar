@@ -147,6 +147,16 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    // Visão da sede: municípios e contratos (termos de colaboração). As escolas
+    // apontam para o contrato pelo campo contratoId. Somente administração.
+    // Ver docs/21-visao-da-sede.md.
+    match /municipios/{id} {
+      allow read, create, update, delete: if isAdmin();
+    }
+    match /contratos/{id} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
     // Agenda: somente administração.
     match /eventos/{id} {
       allow read, create, update, delete: if isAdmin();

@@ -11,7 +11,7 @@ import { calcularAlertas, contarPendencias } from '../utils/alertas';
 
 const AlertasContext = createContext({ alertas: [], pendencias: 0, manutencoes: [], contas: [], ciclos: [], carregando: true });
 
-const VAZIO = { manutencoes: null, contas: null, ciclos: null, funcionarios: null, rubricas: null, gastos: null, periodoDoSaldo: null, adiados: {} };
+const VAZIO = { manutencoes: null, contas: null, ciclos: null, funcionarios: null, rubricas: null, gastos: null, periodoDoSaldo: null, escolas: null, municipios: null, contratos: null, adiados: {} };
 
 export function AlertasProvider({ children }) {
   const { userProfile } = useAuth();
@@ -30,6 +30,10 @@ export function AlertasProvider({ children }) {
       ouvir(collection(db, 'funcionarios'), lista('funcionarios')),
       // Controle de saldo: também não segura o carregamento.
       ouvir(collection(db, 'rubricas'), lista('rubricas')),
+      // Visão da sede: escolas, municípios e contratos (alertas de vigência).
+      ouvir(collection(db, 'escolas'), lista('escolas')),
+      ouvir(collection(db, 'municipios'), lista('municipios')),
+      ouvir(collection(db, 'contratos'), lista('contratos')),
       ouvir(collection(db, 'gastos'), lista('gastos')),
       ouvir(doc(db, 'config', 'saldo'), (s) => setDados((d) => ({ ...d, periodoDoSaldo: s.exists() ? s.data() : null }))),
       ouvir(collection(db, 'alertasAdiados'), (s) => {
@@ -52,6 +56,7 @@ export function AlertasProvider({ children }) {
     const alertas = carregando ? [] : calcularAlertas({
       manutencoes: dados.manutencoes, contas: dados.contas, ciclos: dados.ciclos, funcionarios: dados.funcionarios || [],
       saldo: dados.periodoDoSaldo ? { rubricas: dados.rubricas || [], gastos: dados.gastos || [], periodo: dados.periodoDoSaldo } : null,
+      sede: { municipios: dados.municipios || [], contratos: dados.contratos || [], escolas: dados.escolas || [] },
       adiados: dados.adiados, hoje: agora,
     });
     return {
@@ -61,6 +66,12 @@ export function AlertasProvider({ children }) {
       manutencoes: dados.manutencoes || [],
       contas: dados.contas || [],
       ciclos: dados.ciclos || [],
+      funcionarios: dados.funcionarios || [],
+      escolas: dados.escolas || [],
+      municipios: dados.municipios || [],
+      contratos: dados.contratos || [],
+      // A visão da sede espera estes chegarem antes de pintar o semáforo.
+      carregandoSede: !dados.escolas || !dados.municipios || !dados.contratos || !dados.funcionarios,
     };
   }, [dados, agora]);
 

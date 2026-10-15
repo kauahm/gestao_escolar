@@ -69,6 +69,23 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Visão da sede
+
+- **Novo nível acima da escola:** Município → Contrato (termo de colaboração) → Escola. A escola é ligada no próprio contrato, marcando as escolas que ele atende.
+- **Painel por município** (menu "Visão da sede"):
+  - números gerais no topo;
+  - um cartão por município com semáforo (crítico, atenção ou em dia), contratos com vigência, escolas, alunos, funcionários, chamados, contas vencidas e ciclos vencidos;
+  - "Ver escolas" abre a situação de cada escola.
+- **O semáforo usa as mesmas regras dos alertas do Painel**, escola por escola; no município vale o pior caso.
+- **Alertas de contrato:** vence em até 90 dias (atenção a partir de 30) ou venceu com escolas ainda ligadas.
+- **Escolas:** município em cada cartão e filtro por município.
+- **Regras:** coleções `municipios` e `contratos` só da administração. **Demonstração:** 4 municípios e contratos fictícios.
+- **Testes:** 90 e 63 de regras, todos passando. A tela foi conferida no emulador (inclusive no celular), e a auditoria de acessibilidade não achou violações.
+
+Detalhes em [21](21-visao-da-sede.md).
+
+---
+
 ## 14/10/2026 — Controle de saldo
 
 - **Nova aba Controle de saldo** (só administração), baseada na planilha "Controle de Saldo", em versão mais simples. Tem quatro partes: Painel, Lançamentos, Mês a mês e Áreas e verbas.

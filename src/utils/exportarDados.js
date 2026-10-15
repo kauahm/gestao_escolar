@@ -8,6 +8,8 @@ import { situacaoConta } from './calcularStatus';
 
 /** Coleções do sistema, na ordem das abas do Excel. */
 export const COLECOES = [
+  { id: 'municipios', rotulo: 'Municípios' },
+  { id: 'contratos', rotulo: 'Contratos' },
   { id: 'escolas', rotulo: 'Escolas' },
   { id: 'manutencoes', rotulo: 'Manutenções' },
   { id: 'prestadores', rotulo: 'Prestadores' },
@@ -82,6 +84,10 @@ const ROTULOS = {
   afastamentoRetorno: 'Data retorno afast.',
   afastamentoTipo: 'Tipo de afastamento',
   dataRescisao: 'Data de rescisão',
+  uf: 'UF',
+  numero: 'Número',
+  objeto: 'Objeto',
+  valorGlobal: 'Valor global (R$)',
   verbaMensal: 'Verba mensal (R$)',
   rubricaNome: 'Rubrica',
   fornecedor: 'Fornecedor',
@@ -95,7 +101,7 @@ const ROTULOS = {
 };
 
 // Colunas que não ajudam a ler a planilha (identificadores internos).
-const OCULTAS_NO_EXCEL = new Set(['escolaId', 'unidadeId', 'solicitadaPor', 'criadoPor', 'uid', 'importacaoId', 'rubricaId']);
+const OCULTAS_NO_EXCEL = new Set(['escolaId', 'unidadeId', 'solicitadaPor', 'criadoPor', 'uid', 'importacaoId', 'rubricaId', 'municipioId', 'contratoId']);
 
 const rotuloDaColuna = (chave) =>
   ROTULOS[chave] ||
