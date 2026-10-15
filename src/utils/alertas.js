@@ -4,7 +4,7 @@
 // do menu e pelo início da diretora. As regras (prazos, antecedência) ficam aqui
 // em cima, para ajustar num lugar só. Ver docs/17-alertas.md.
 
-import { diasAte, diasEmAberto, situacaoConta } from './calcularStatus.js';
+import { diasAte, situacaoConta } from './calcularStatus.js';
 import { formatarMoeda } from './formatters.js';
 import { situacaoDoFuncionario, DIAS_AVISO_ASO } from './funcionarios.js';
 import { calcularSaldo, mesDe, mesesDoPeriodo, rotuloDoMes } from './saldo.js';
@@ -50,7 +50,9 @@ export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], fu
 
     const motivos = [];
     let gravidade = null;
-    const aberto = diasEmAberto(m.criadoEm);
+    // Dias em aberto contados até "hoje" do cálculo (não o relógio do computador).
+    const criado = msDe(m.criadoEm);
+    const aberto = criado === null ? 0 : Math.max(0, Math.floor((agora - criado) / 86400000));
     const limite = prazoDoPendente(m.prioridade);
     const urgente = m.prioridade === 'Alta' || m.prioridade === 'Urgente';
 

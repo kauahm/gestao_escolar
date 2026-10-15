@@ -7,7 +7,7 @@
 
 | Perfil | Ao entrar | O que vê e faz |
 |---|---|---|
-| **Sede** (novo) | Visão da sede (todos os municípios) | Escolhe um município com **Entrar** e trabalha como a administração dele. No topo aparece "Hortolândia · Trocar". Cadastra municípios e contratos e cria a administração de cada município. |
+| **Sede** (novo) | Visão da sede (todos os municípios) | Escolhe um município com **Entrar** e trabalha como a administração dele. Dentro do município, o menu é igual ao da administração (sem a Visão da sede); para voltar à lista, o botão "Hortolândia · Trocar" no topo. Cadastra municípios e contratos e cria a administração de cada município. |
 | **Administração do município** | Painel do município | Tudo do sistema, **só do próprio município**. Cria diretoras e RH do próprio município. Não cria outro administrador e não vê a Visão da sede. |
 | **RH** | Funcionários | Funcionários, Banco de Talentos e Processo seletivo, **só do próprio município**. |
 | **Diretora** | Início | Como antes: só a própria escola. |

@@ -44,11 +44,13 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     { to: '/diretora/manutencoes', icon: <Wrench size={20} />, label: TELAS['/diretora/manutencoes'] },
   ];
 
-  const sedeLink = { to: '/admin/sede', icon: <Landmark size={20} />, label: 'Todos os municípios' };
+  const sedeLink = { to: '/admin/sede', icon: <Landmark size={20} />, label: TELAS['/admin/sede'] };
 
   let links = [];
-  if (ehSede && !municipioAtivo) links = [{ ...sedeLink, label: TELAS['/admin/sede'] }];
-  else if (ehSede) links = [sedeLink, ...adminLinks];
+  // Dentro de um município, a sede tem o mesmo menu da administração; para voltar
+  // à lista de municípios usa o botão "Trocar" no topo.
+  if (ehSede && !municipioAtivo) links = [sedeLink];
+  else if (ehSede) links = adminLinks;
   else if (isAdmin) links = adminLinks;
   else if (isAdministrativo) links = administrativoLinks;
   else links = diretoraLinks;
