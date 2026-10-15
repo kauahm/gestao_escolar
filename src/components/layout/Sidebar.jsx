@@ -10,15 +10,15 @@ import {
 } from 'lucide-react';
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
-  const { userProfile, logout } = useAuth();
+  const { userProfile, logout, ehSede, municipioAtivo, municipio } = useAuth();
   const { pendencias } = useAlertas();
   
-  const isAdmin = userProfile?.perfil === 'admin';
+  // A sede, dentro de um município, vê o mesmo menu da administração.
+  const isAdmin = userProfile?.perfil === 'admin' || (ehSede && municipioAtivo);
   const isAdministrativo = userProfile?.perfil === 'administrativo';
 
   const adminLinks = [
     { to: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: TELAS['/admin/dashboard'] },
-    { to: '/admin/sede', icon: <Landmark size={20} />, label: TELAS['/admin/sede'] },
     { to: '/admin/escolas', icon: <School size={20} />, label: TELAS['/admin/escolas'] },
     { to: '/admin/manutencoes', icon: <Wrench size={20} />, label: TELAS['/admin/manutencoes'] },
     { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: TELAS['/admin/prestadores'] },
@@ -44,8 +44,12 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     { to: '/diretora/manutencoes', icon: <Wrench size={20} />, label: TELAS['/diretora/manutencoes'] },
   ];
 
+  const sedeLink = { to: '/admin/sede', icon: <Landmark size={20} />, label: 'Todos os municípios' };
+
   let links = [];
-  if (isAdmin) links = adminLinks;
+  if (ehSede && !municipioAtivo) links = [{ ...sedeLink, label: TELAS['/admin/sede'] }];
+  else if (ehSede) links = [sedeLink, ...adminLinks];
+  else if (isAdmin) links = adminLinks;
   else if (isAdministrativo) links = administrativoLinks;
   else links = diretoraLinks;
 
@@ -109,6 +113,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
           <div className="mb-4 px-4">
             <p className="text-sm font-medium">{userProfile?.nome}</p>
             <p className="text-[10px] text-blue-200 uppercase tracking-widest">{ROTULO_DO_PERFIL[userProfile?.perfil] || ''}</p>
+            {municipio?.nome && <p className="text-xs text-blue-100 mt-0.5">{municipio.nome}{municipio.uf ? ` · ${municipio.uf}` : ''}</p>}
           </div>
           <button onClick={logout} className="flex items-center gap-3 px-4 py-2 w-full text-left text-blue-100 hover:bg-primary-light rounded-lg transition-colors">
             <LogOut size={20} /> Sair

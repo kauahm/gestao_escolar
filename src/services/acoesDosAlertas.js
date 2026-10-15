@@ -2,13 +2,14 @@
 //
 // O que mexe em dados do trabalho (ciclos, chamados, contas) passa pela camada
 // services/db.js, com histórico. "Ciente, lembrar depois" é só uma preferência
-// de exibição e vai direto para a coleção alertasAdiados.
+// de exibição e vai direto para municipios/{id}/alertasAdiados.
 
 import {
   collection, deleteDoc as fbDeleteDoc, doc, getDoc, serverTimestamp, setDoc as fbSetDoc,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { addDoc, updateDoc } from './db';
+import { docDoMunicipio } from './consulta';
 import { somarDias } from '../importacao/normalizar';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -63,7 +64,7 @@ export async function marcarContaComoEnviada(conta) {
 /** "Ciente, lembrar depois": o alerta some do quadro até a data (volta a cobrar nesse dia). */
 export async function adiarAlerta(chave, dias) {
   const ate = somarDias(hojeYmd(), dias);
-  await fbSetDoc(doc(db, 'alertasAdiados', chave), {
+  await fbSetDoc(docDoMunicipio('alertasAdiados', chave), {
     ate,
     porUid: auth.currentUser?.uid || null,
     porEmail: auth.currentUser?.email || null,
@@ -73,5 +74,5 @@ export async function adiarAlerta(chave, dias) {
 }
 
 export async function voltarACobrar(chave) {
-  await fbDeleteDoc(doc(db, 'alertasAdiados', chave));
+  await fbDeleteDoc(docDoMunicipio('alertasAdiados', chave));
 }

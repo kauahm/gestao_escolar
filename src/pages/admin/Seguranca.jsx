@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { collection, doc, orderBy, query, limit } from 'firebase/firestore';
+import { orderBy, limit } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio, docDoMunicipio } from '../../services/consulta';
 import { db } from '../../services/firebase';
 import { restaurarDaLixeira, COLECAO_LIXEIRA, COLECAO_HISTORICO } from '../../services/db';
 import { baixarExcel, baixarJson, rotuloDaColecao } from '../../utils/exportarDados';
 import { EH_DEMO } from '../../services/ambiente';
+import { useAuth } from '../../hooks/useAuth';
 
 import Toast from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -45,6 +47,7 @@ const textoDoValor = (v) => {
 };
 
 export default function Seguranca() {
+  const { ehSede } = useAuth();
   const [backup, setBackup] = useState(null);
   const [lixeira, setLixeira] = useState([]);
   const [historico, setHistorico] = useState([]);
@@ -64,20 +67,26 @@ export default function Seguranca() {
   useEffect(() => {
     const parar = [];
 
-    parar.push(ouvir(doc(db, 'config', 'backup'),
+    parar.push(ouvir(docDoMunicipio('config', 'backup'),
       (s) => setBackup(s.exists() ? s.data() : null),
       () => setBackup(null)));
 
-    parar.push(ouvir(query(collection(db, COLECAO_LIXEIRA), orderBy('excluidoEm', 'desc')),
-      (s) => { setLixeira(s.docs.map((d) => ({ id: d.id, ...d.data() }))); setCarregando(false); },
+    // Lixeira do município, mais recentes primeiro (ordenada aqui, sem índice extra).
+    parar.push(ouvir(doMunicipio(COLECAO_LIXEIRA),
+      (s) => {
+        const ms = (x) => x.excluidoEm?.toMillis?.() ?? 0;
+        setLixeira(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b) - ms(a)));
+        setCarregando(false);
+      },
       (e) => { console.warn('[lixeira]', e?.code); setCarregando(false); }));
 
-    parar.push(ouvir(query(collection(db, COLECAO_HISTORICO), orderBy('em', 'desc'), limit(150)),
+    // Usa o índice municipioId + em (firestore.indexes.json).
+    parar.push(ouvir(doMunicipio(COLECAO_HISTORICO, orderBy('em', 'desc'), limit(150)),
       (s) => setHistorico(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
       (e) => console.warn('[historico]', e?.code)));
 
     // Para mostrar o nome de quem fez, em vez do e-mail.
-    parar.push(ouvir(collection(db, 'usuarios'), (s) => {
+    parar.push(ouvir(doMunicipio('usuarios'), (s) => {
       const mapa = {};
       s.docs.forEach((d) => { mapa[d.id] = d.data().nome; });
       setUsuarios(mapa);
@@ -163,7 +172,8 @@ export default function Seguranca() {
         </p>
       </div>
 
-      {EH_DEMO && (
+      {/* Restaurar apaga todos os municípios: só a sede. */}
+      {EH_DEMO && ehSede && (
         <section className="bg-purple-50 rounded-xl border border-purple-200 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-lg bg-purple-100 text-purple-700"><FlaskConical size={24} /></div>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, serverTimestamp, query } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
+import { municipioAtivo } from '../../services/escopo';
+import { useAuth } from '../../hooks/useAuth';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { setDoc, updateDoc } from '../../services/db';
 import { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -33,6 +36,10 @@ const initialFormState = {
 };
 
 export default function Usuarios() {
+  // Cada município cuida da sua equipe. Só a sede cadastra (e edita) a
+  // administração de um município; as regras do banco garantem o mesmo.
+  const { ehSede, municipio } = useAuth();
+  const podeMexer = (u) => ehSede || ['diretora', 'administrativo'].includes(u.perfil);
   const [usuarios, setUsuarios] = useState([]);
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +66,7 @@ export default function Usuarios() {
 
   // 1. Buscar Escolas Ativas
   useEffect(() => {
-    const q = collection(db, 'escolas');
+    const q = doMunicipio('escolas');
     const unsubscribe = ouvir(q, (snapshot) => {
       const escolasData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -72,7 +79,7 @@ export default function Usuarios() {
 
   // 2. Buscar TODOS os Usuários
   useEffect(() => {
-    const q = collection(db, 'usuarios');
+    const q = doMunicipio('usuarios');
     const unsubscribe = ouvir(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
       
@@ -253,6 +260,7 @@ export default function Usuarios() {
             nome: formData.nome,
             email: formData.email,
             perfil: formData.perfil,
+            municipioId: municipioAtivo(),
             unidadeId: formData.perfil === 'diretora' ? formData.unidadeId : null,
             unidadeNome: formData.perfil === 'diretora' ? formData.unidadeNome : null,
             situacao: 'ativa',
@@ -337,7 +345,7 @@ export default function Usuarios() {
   };
 
   const getPerfilNome = (perfil) => {
-    if (perfil === 'admin') return 'Administrador';
+    if (perfil === 'admin') return 'Administração do município';
     if (perfil === 'administrativo') return 'Administrativo (RH)';
     return 'Diretora';
   };
@@ -365,7 +373,7 @@ export default function Usuarios() {
         <div className="w-full sm:w-48">
           <select aria-label="Filtrar por perfil" value={filterPerfil} onChange={(e) => setFilterPerfil(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary outline-none bg-white">
             <option value="Todos">Todos os perfis</option>
-            <option value="admin">Administrador</option>
+            <option value="admin">Administração do município</option>
             <option value="administrativo">Administrativo (RH)</option>
             <option value="diretora">Diretoras</option>
           </select>
@@ -410,7 +418,7 @@ export default function Usuarios() {
                     <Badge label={getPerfilNome(item.perfil)} color={getPerfilBadgeColor(item.perfil)} />
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                    {item.perfil === 'diretora' ? (item.unidadeNome || '-') : <span className="text-gray-500 italic">Acesso geral</span>}
+                    {item.perfil === 'diretora' ? (item.unidadeNome || '-') : <span className="text-gray-500 italic">Todo o município</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge label={item.situacao === 'ativa' ? 'Ativo' : 'Inativo'} color={item.situacao === 'ativa' ? 'green' : 'gray'} />
@@ -420,12 +428,14 @@ export default function Usuarios() {
                       <button onClick={() => { setSelectedUsuario(item); setIsConfirmResetOpen(true); }} className="text-gray-500 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded-md transition-colors" title="Redefinir senha">
                         <Key size={18} />
                       </button>
-                      <button onClick={() => handleOpenForm(item)} className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 p-1.5 rounded-md transition-colors" title="Editar">
+                      {podeMexer(item) && (<>
+                      <button onClick={() => handleOpenForm(item)} className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 p-1.5 rounded-md transition-colors" title="Editar" aria-label={`Editar ${item.nome}`}>
                         <Edit2 size={18} />
                       </button>
-                      <button onClick={() => { setSelectedUsuario(item); setIsConfirmStatusOpen(true); }} className={`p-1.5 rounded-md transition-colors ${item.situacao === 'ativa' ? 'text-red-500 hover:bg-red-50 hover:text-red-700' : 'text-green-600 hover:bg-green-50 hover:text-green-800'}`} title={item.situacao === 'ativa' ? 'Desativar acesso' : 'Reativar acesso'}>
+                      <button aria-label={item.situacao === 'ativa' ? `Desativar ${item.nome}` : `Reativar ${item.nome}`} onClick={() => { setSelectedUsuario(item); setIsConfirmStatusOpen(true); }} className={`p-1.5 rounded-md transition-colors ${item.situacao === 'ativa' ? 'text-red-500 hover:bg-red-50 hover:text-red-700' : 'text-green-600 hover:bg-green-50 hover:text-green-800'}`} title={item.situacao === 'ativa' ? 'Desativar acesso' : 'Reativar acesso'}>
                         {item.situacao === 'ativa' ? <PowerOff size={18} /> : <Power size={18} />}
                       </button>
+                      </>)}
                     </div>
                   </td>
                 </tr>
@@ -464,7 +474,8 @@ export default function Usuarios() {
             >
               <option value="diretora">Diretora (Acesso à Escola)</option>
               <option value="administrativo">Administrativo (Apenas RH)</option>
-              <option value="admin">Administrador (Acesso Total)</option>
+              {/* Só a sede cria a administração de um município. */}
+              {(ehSede || formData.perfil === 'admin') && <option value="admin">Administração do município (acesso total{municipio?.nome ? ` a ${municipio.nome}` : ''})</option>}
             </select>
             {selectedUsuario && <p className="text-xs text-gray-500 mt-1">Não é possível alterar o perfil e e-mail de um usuário existente. Crie um novo se necessário.</p>}
           </div>

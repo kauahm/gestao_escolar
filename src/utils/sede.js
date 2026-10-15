@@ -76,14 +76,14 @@ function indicadoresDaEscola(escola, dados, hoje) {
 const somar = (lista, campo) => lista.reduce((s, x) => s + x[campo], 0);
 
 /**
- * Agrupa escolas por município (via contrato) com os indicadores de cada uma.
- * Escolas sem contrato ficam num grupo à parte (municipio = null).
+ * Agrupa escolas por município (campo municipioId) com os indicadores de cada uma.
+ * Escolas sem município (dados antigos) ficam num grupo à parte (municipio = null).
  */
 export function montarVisaoDaSede({
   municipios = [], contratos = [], escolas = [], manutencoes = [], contas = [], ciclos = [], funcionarios = [], hoje = new Date(),
 } = {}) {
   const dados = { manutencoes, contas, ciclos, funcionarios };
-  const contratoPorId = new Map(contratos.map((c) => [c.id, c]));
+  const idsDeMunicipio = new Set(municipios.map((m) => m.id));
   const porEscola = escolas.map((e) => indicadoresDaEscola(e, dados, hoje));
 
   const montarGrupo = (municipio, contratosDoGrupo, itens) => {
@@ -112,26 +112,26 @@ export function montarVisaoDaSede({
         criticos: somar(ativas, 'criticos'),
         atencao: somar(ativas, 'atencao'),
         contratosVigentes: situacoes.filter((s) => s.situacao.vigente).length,
+        // Escolas ativas que ainda não foram ligadas a um contrato do município.
+        semContrato: ativas.filter((i) => !contratosDoGrupo.some((c) => c.id === i.escola.contratoId)).length,
       },
     };
   };
 
+  // Cada escola é do município gravado nela (municipioId); o contrato só detalha.
   const grupos = municipios
-    .map((m) => {
-      const cs = contratos.filter((c) => c.municipioId === m.id);
-      const ids = new Set(cs.map((c) => c.id));
-      return montarGrupo(m, cs, porEscola.filter((i) => ids.has(i.escola.contratoId)));
-    })
+    .map((m) => montarGrupo(m, contratos.filter((c) => c.municipioId === m.id), porEscola.filter((i) => i.escola.municipioId === m.id)))
     .sort((a, b) => PESO[b.semaforo] - PESO[a.semaforo] || String(a.municipio.nome).localeCompare(String(b.municipio.nome), 'pt-BR'));
 
-  const semMunicipio = porEscola.filter((i) => !contratoPorId.has(i.escola.contratoId));
+  // Escolas antigas, de antes da divisão por município (ver "Dados antigos" na Visão da sede).
+  const semMunicipio = porEscola.filter((i) => !idsDeMunicipio.has(i.escola.municipioId));
   const todas = porEscola.filter((i) => i.ativa);
 
   return {
     grupos,
     semMunicipio: semMunicipio.length ? montarGrupo(null, [], semMunicipio) : null,
     totais: {
-      municipios: grupos.filter((g) => g.totais.contratosVigentes > 0).length,
+      municipios: grupos.filter((g) => g.totais.contratosVigentes > 0 || g.totais.escolas > 0).length,
       contratosVigentes: somar(grupos.map((g) => g.totais), 'contratosVigentes'),
       escolas: todas.length,
       alunos: somar(todas, 'alunos'),

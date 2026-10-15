@@ -469,20 +469,27 @@ const gastos = () => GASTOS.map(([r, meses, diaDoMes, fornecedor, notaFiscal, de
  * Cada registro traz o `id` do documento; o resto são os campos.
  */
 export function gerarDadosDemo() {
+  // Cada registro pertence a um município (ver docs/22-acesso-por-municipio.md):
+  // o da escola, quando o registro é de uma escola; Hortolândia, no resto
+  // (prestadores, agenda, currículos e controle de saldo).
+  const listaDeEscolas = escolas().map((e, i) => ({ ...e, municipioId: idMunicipio(CONTRATOS[CONTRATO_DA_ESCOLA[i]][0]) }));
+  const municipioDaEscola = new Map(listaDeEscolas.map((e) => [e.id, e.municipioId]));
+  const daEscola = (lista) => lista.map((r) => ({ ...r, municipioId: municipioDaEscola.get(r.escolaId) }));
+  const deHortolandia = (lista) => lista.map((r) => ({ ...r, municipioId: idMunicipio(0) }));
   return {
     municipios: municipios(),
     contratos: contratos(),
-    escolas: escolas(),
-    prestadores: prestadores(),
-    manutencoes: manutencoes(),
-    contas: contas(),
-    ciclos: ciclos(),
-    eventos: eventos(),
-    curriculos: curriculos(),
-    funcionarios: funcionarios(),
-    rubricas: rubricas(),
-    gastos: gastos(),
-    // config/saldo: o período do controle de saldo.
-    config: periodoDoSaldo(),
+    escolas: listaDeEscolas,
+    prestadores: deHortolandia(prestadores()),
+    manutencoes: daEscola(manutencoes()),
+    contas: daEscola(contas()),
+    ciclos: daEscola(ciclos()),
+    eventos: deHortolandia(eventos()),
+    curriculos: deHortolandia(curriculos()),
+    funcionarios: daEscola(funcionarios()),
+    rubricas: deHortolandia(rubricas()),
+    gastos: deHortolandia(gastos()),
+    // O período do controle de saldo fica dentro do município.
+    [`municipios/${idMunicipio(0)}/config`]: periodoDoSaldo(),
   };
 }

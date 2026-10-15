@@ -4,8 +4,9 @@ import {
   Search, Plus, Calendar, FileText, UserCheck, X, Clock, Edit, Trash2, 
   MessageCircle, Briefcase, Phone, Mail 
 } from 'lucide-react';
-import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, doc } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import Toast from '../../components/ui/Toast';
@@ -50,12 +51,15 @@ const abrirDetalhes = (curriculo) => {
 
   // 2. Buscar os dados no Firebase
   useEffect(() => {
-    const q = query(collection(db, 'curriculos'), orderBy('dataCadastro', 'desc'));
+    const q = doMunicipio('curriculos');
     const unsubscribe = ouvir(q, (snapshot) => {
       const curriculosData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      // Mais recentes primeiro.
+      const ms = (c) => c.dataCadastro?.toMillis?.() ?? 0;
+      curriculosData.sort((a, b) => ms(b) - ms(a));
       setCurriculos(curriculosData);
     });
     return () => unsubscribe();

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import AvisoDeConexao from '../shared/AvisoDeConexao';
 import { AlertasProvider, useAlertas } from '../../contexts/AlertasContext';
 import { NOME_DO_SISTEMA, nomeDaTela } from '../../config/telas';
@@ -9,8 +9,13 @@ import MobileNav from './MobileNav';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function DashboardLayout() {
+  const { ehSede, municipioAtivo } = useAuth();
+  const { pathname } = useLocation();
+  // A sede ainda sem município escolhido só vê a lista de municípios.
+  if (ehSede && !municipioAtivo && pathname !== '/admin/sede') return <Navigate to="/admin/sede" replace />;
+  // Trocar de município remonta tudo: cada tela volta a ler os dados do novo município.
   return (
-    <AlertasProvider>
+    <AlertasProvider key={municipioAtivo || 'todos'}>
       <Estrutura />
     </AlertasProvider>
   );

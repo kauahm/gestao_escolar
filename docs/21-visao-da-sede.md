@@ -5,6 +5,8 @@
 
 ## 1. Onde fica e quem vê
 
+> **Atualizado com [22](22-acesso-por-municipio.md):** a Visão da sede passou a ser a tela inicial do perfil **Sede**, a única que a vê. Cada cartão de município tem o botão **Entrar**, e as escolas pertencem ao município pelo próprio cadastro. A administração de cada município vê só o seu.
+
 - Menu **Visão da sede** (`/admin/sede`), logo abaixo do Painel. Só a administração.
 - **(a confirmar)** Um perfil próprio para a sede (vê todos os municípios, sem poder alterar) e um para coordenação regional (vê só os seus municípios). Fica para quando a sede for usar de verdade.
 

@@ -92,8 +92,9 @@ describe('saldo e teto do mês (mesma regra da planilha)', () => {
   });
 
   test('a demonstração tem período, áreas e gastos ligados a áreas existentes', () => {
-    const { rubricas: rs, gastos: gs, config } = gerarDadosDemo();
-    const per = config.find((c) => c.id === 'saldo');
+    const dados = gerarDadosDemo();
+    const { rubricas: rs, gastos: gs } = dados;
+    const per = dados['municipios/demo-municipio-01/config'].find((c) => c.id === 'saldo');
     assert.equal(per.meses, 12);
     const ids = new Set(rs.map((r) => r.id));
     assert.ok(gs.every((g) => ids.has(g.rubricaId)));

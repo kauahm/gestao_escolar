@@ -4,6 +4,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { db } from '../../services/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { updateDoc, deleteDoc } from '../../services/db';
 import { Calendar, Clock, User, Phone, CheckCircle, XCircle, ChevronRight, Edit, Trash2, X } from 'lucide-react';
@@ -29,7 +30,7 @@ const [candidatoAlvo, setCandidatoAlvo] = useState(null);
 
   // 1. Busca apenas quem tem entrevista marcada
   useEffect(() => {
-    const q = query(collection(db, 'curriculos'), where('status', '==', 'Entrevista Agendada'));
+    const q = doMunicipio('curriculos', where('status', '==', 'Entrevista Agendada'));
     const unsubscribe = ouvir(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEntrevistas(data.sort((a, b) => new Date(a.dataEntrevista) - new Date(b.dataEntrevista)));

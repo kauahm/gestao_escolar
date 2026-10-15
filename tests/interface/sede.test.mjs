@@ -34,12 +34,12 @@ describe('semáforo por município', () => {
     { id: 'c3', municipioId: 'm3', numero: 'TC 3', fim: ymd(10) }, // vence logo
   ];
   const escolas = [
-    { id: 'e1', nome: 'E1', contratoId: 'c1', situacao: 'Ativa', numeroAlunos: 100 },
-    { id: 'e2', nome: 'E2', contratoId: 'c1', situacao: 'Ativa', numeroAlunos: 50 },
-    { id: 'e3', nome: 'E3', contratoId: 'c2', situacao: 'Ativa', numeroAlunos: 80 },
-    { id: 'e4', nome: 'E4', contratoId: 'c3', situacao: 'Ativa', numeroAlunos: 30 },
+    { id: 'e1', nome: 'E1', municipioId: 'm1', contratoId: 'c1', situacao: 'Ativa', numeroAlunos: 100 },
+    { id: 'e2', nome: 'E2', municipioId: 'm1', contratoId: 'c1', situacao: 'Ativa', numeroAlunos: 50 },
+    { id: 'e3', nome: 'E3', municipioId: 'm2', contratoId: 'c2', situacao: 'Ativa', numeroAlunos: 80 },
+    { id: 'e4', nome: 'E4', municipioId: 'm3', contratoId: 'c3', situacao: 'Ativa', numeroAlunos: 30 },
     { id: 'e5', nome: 'E5', contratoId: '', situacao: 'Ativa', numeroAlunos: 10 },
-    { id: 'e6', nome: 'E6', contratoId: 'c2', situacao: 'Inativa', numeroAlunos: 999 },
+    { id: 'e6', nome: 'E6', municipioId: 'm2', contratoId: 'c2', situacao: 'Inativa', numeroAlunos: 999 },
   ];
   const dados = {
     municipios, contratos, escolas,
@@ -57,7 +57,7 @@ describe('semáforo por município', () => {
     assert.equal(v.grupos[0].municipio.nome, 'Alfa'); // mais grave primeiro
   });
 
-  test('totais por município, escolas inativas e escolas sem contrato', () => {
+  test('totais por município, escolas inativas e escolas sem município (dados antigos)', () => {
     const v = montarVisaoDaSede(dados);
     const alfa = v.grupos.find((g) => g.municipio.id === 'm1');
     assert.equal(alfa.totais.escolas, 2);

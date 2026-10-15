@@ -8,6 +8,7 @@ import {
 
 import { db } from '../../services/firebase';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 import { updateDoc, deleteDoc } from '../../services/db';
 import { formatarDataHora, formatarTelefone } from '../../utils/formatters';
 import { diasEmAberto, diasAte } from '../../utils/calcularStatus';
@@ -50,12 +51,12 @@ export default function ManutencaoDetalhe() {
   useEffect(() => {
     const parar = [
       ouvir(doc(db, 'manutencoes', id), (s) => setChamado(s.exists() ? { id: s.id, ...s.data() } : null), () => setChamado(null)),
-      ouvir(collection(db, 'prestadores'), (s) => setPrestadores(s.docs.map((d) => ({ id: d.id, ...d.data() })))),
+      ouvir(doMunicipio('prestadores'), (s) => setPrestadores(s.docs.map((d) => ({ id: d.id, ...d.data() })))),
       ouvir(
-        query(collection(db, 'historico'), where('colecao', '==', 'manutencoes'), where('docId', '==', id)),
+        doMunicipio('historico', where('colecao', '==', 'manutencoes'), where('docId', '==', id)),
         (s) => setHistorico(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
       ),
-      ouvir(collection(db, 'usuarios'), (s) => {
+      ouvir(doMunicipio('usuarios'), (s) => {
         const mapa = {};
         s.docs.forEach((d) => { mapa[d.id] = d.data().nome; });
         setNomes(mapa);

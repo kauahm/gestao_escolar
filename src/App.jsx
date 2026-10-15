@@ -28,7 +28,7 @@ import { EH_DEMO, DEMO_MAL_CONFIGURADA } from './services/ambiente';
 import FalhaNoPerfil from './components/shared/FalhaNoPerfil';
 
 function RootRedirect() {
-  const { currentUser, userProfile, loading, logout, erroDoPerfil } = useAuth();
+  const { currentUser, userProfile, loading, logout, erroDoPerfil, municipioAtivo } = useAuth();
 
   if (loading) return <div className="h-screen flex items-center justify-center">Verificando...</div>;
   if (!currentUser) return <Navigate to="/login" replace />;
@@ -55,6 +55,8 @@ function RootRedirect() {
     );
   }
   
+  // A sede começa na lista de municípios; depois de escolher um, no painel dele.
+  if (userProfile.perfil === 'sede') return <Navigate to={municipioAtivo ? '/admin/dashboard' : '/admin/sede'} replace />;
   if (userProfile.perfil === 'admin') return <Navigate to="/admin/dashboard" replace />;
   if (userProfile.perfil === 'administrativo') return <Navigate to="/admin/funcionarios" replace />;
   
@@ -80,24 +82,26 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<RootRedirect />} />
 
-          <Route path="/admin" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><DashboardLayout /></PrivateRoute>}>
+          <Route path="/admin" element={<PrivateRoute allowedRoles={['admin', 'sede', 'administrativo']}><DashboardLayout /></PrivateRoute>}>
             {/* O perfil 'administrativo' (RH) entra em /admin, mas só em Funcionários,
-                Banco de Talentos e Processo Seletivo. As demais telas são do admin. */}
-            <Route path="dashboard" element={<PrivateRoute allowedRoles={['admin']}><AdminDashboard /></PrivateRoute>} />
-            <Route path="sede" element={<PrivateRoute allowedRoles={['admin']}><VisaoDaSede /></PrivateRoute>} />
-            <Route path="escolas" element={<PrivateRoute allowedRoles={['admin']}><Escolas /></PrivateRoute>} />
-            <Route path="manutencoes" element={<PrivateRoute allowedRoles={['admin']}><AdminManutencoes /></PrivateRoute>} />
-            <Route path="manutencoes/:id" element={<PrivateRoute allowedRoles={['admin']}><ManutencaoDetalhe /></PrivateRoute>} />
-            <Route path="prestadores" element={<PrivateRoute allowedRoles={['admin']}><Prestadores /></PrivateRoute>} />
-            <Route path="contas" element={<PrivateRoute allowedRoles={['admin']}><Contas /></PrivateRoute>} />
-            <Route path="saldo" element={<PrivateRoute allowedRoles={['admin']}><ControleDeSaldo /></PrivateRoute>} />
-            <Route path="ciclos" element={<PrivateRoute allowedRoles={['admin']}><Ciclos /></PrivateRoute>} />
-            <Route path="agenda" element={<PrivateRoute allowedRoles={['admin']}><Agenda /></PrivateRoute>} />
-            <Route path="usuarios" element={<PrivateRoute allowedRoles={['admin']}><Usuarios /></PrivateRoute>} />
-            <Route path="seguranca" element={<PrivateRoute allowedRoles={['admin']}><Seguranca /></PrivateRoute>} />
-            <Route path="selecao" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><Selecao /></PrivateRoute>} />
-            <Route path="talentos" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><BancoTalentos /></PrivateRoute>} />
-            <Route path="funcionarios" element={<PrivateRoute allowedRoles={['admin', 'administrativo']}><Funcionarios /></PrivateRoute>} />
+                Banco de Talentos e Processo Seletivo. As demais telas são do admin.
+                A sede usa as telas do admin dentro do município que escolheu; a
+                Visão da sede (todos os municípios) é só dela. */}
+            <Route path="dashboard" element={<PrivateRoute allowedRoles={['admin', 'sede']}><AdminDashboard /></PrivateRoute>} />
+            <Route path="sede" element={<PrivateRoute allowedRoles={['sede']}><VisaoDaSede /></PrivateRoute>} />
+            <Route path="escolas" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Escolas /></PrivateRoute>} />
+            <Route path="manutencoes" element={<PrivateRoute allowedRoles={['admin', 'sede']}><AdminManutencoes /></PrivateRoute>} />
+            <Route path="manutencoes/:id" element={<PrivateRoute allowedRoles={['admin', 'sede']}><ManutencaoDetalhe /></PrivateRoute>} />
+            <Route path="prestadores" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Prestadores /></PrivateRoute>} />
+            <Route path="contas" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Contas /></PrivateRoute>} />
+            <Route path="saldo" element={<PrivateRoute allowedRoles={['admin', 'sede']}><ControleDeSaldo /></PrivateRoute>} />
+            <Route path="ciclos" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Ciclos /></PrivateRoute>} />
+            <Route path="agenda" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Agenda /></PrivateRoute>} />
+            <Route path="usuarios" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Usuarios /></PrivateRoute>} />
+            <Route path="seguranca" element={<PrivateRoute allowedRoles={['admin', 'sede']}><Seguranca /></PrivateRoute>} />
+            <Route path="selecao" element={<PrivateRoute allowedRoles={['admin', 'sede', 'administrativo']}><Selecao /></PrivateRoute>} />
+            <Route path="talentos" element={<PrivateRoute allowedRoles={['admin', 'sede', 'administrativo']}><BancoTalentos /></PrivateRoute>} />
+            <Route path="funcionarios" element={<PrivateRoute allowedRoles={['admin', 'sede', 'administrativo']}><Funcionarios /></PrivateRoute>} />
           </Route>
 
           <Route path="/diretora" element={<PrivateRoute allowedRoles={['diretora']}><DashboardLayout /></PrivateRoute>}>

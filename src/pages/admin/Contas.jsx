@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 import { useEstadoDasLeituras } from '../../hooks/useEstadoDasLeituras';
 import {
   MESES, chave, partesDaCompetencia, competenciaDe, ordemDaCompetencia,
@@ -113,7 +114,7 @@ export default function Contas() {
 
   // 1. Buscar Escolas
   useEffect(() => {
-    const q = collection(db, 'escolas');
+    const q = doMunicipio('escolas');
     const unsubscribe = ouvir(q, (snapshot) => {
       const todas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const escolasData = todas
@@ -133,7 +134,7 @@ export default function Contas() {
   // Agora o status guardado é só "A enviar" ou "Enviada", e "vencida" é
   // calculado na hora (ver utils/calcularStatus.js).
   useEffect(() => {
-    const q = collection(db, 'contas');
+    const q = doMunicipio('contas');
     const unsubscribe = ouvir(q, (snapshot) => {
       const contasData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 

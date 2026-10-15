@@ -1,5 +1,5 @@
 // Prepara os emuladores locais do Firebase para testar o sistema no computador:
-// cria três usuários de teste, marca o ambiente como demonstração e grava os
+// cria os usuários de teste (sede, duas administrações, diretora e RH), marca o ambiente como demonstração e grava os
 // dados fictícios (a mesma restauração do botão "Restaurar dados de demonstração").
 //
 // Uso (com `npm run emulador` rodando em outro terminal):
@@ -19,10 +19,14 @@ const AUTH = 'http://127.0.0.1:9099';
 const FIRESTORE = 'http://127.0.0.1:8080';
 
 /** Usuários de teste (só existem no emulador local). */
+// O primeiro (sede) é quem restaura os dados fictícios. Os municípios são os
+// da demonstração (src/demo/dadosDemo.js): 01 Hortolândia, 02 Jaguariúna.
 export const USUARIOS_DE_TESTE = [
-  { email: 'admin@demo.test', senha: 'demo-local-123', nome: 'Administração (teste)', perfil: 'admin', unidadeId: null, unidadeNome: null },
-  { email: 'diretora@demo.test', senha: 'demo-local-123', nome: 'Helena Barros (teste)', perfil: 'diretora', unidadeId: 'demo-escola-01', unidadeNome: 'CEI Pequenos Passos' },
-  { email: 'rh@demo.test', senha: 'demo-local-123', nome: 'RH (teste)', perfil: 'administrativo', unidadeId: null, unidadeNome: null },
+  { email: 'sede@demo.test', senha: 'demo-local-123', nome: 'Sede (teste)', perfil: 'sede', municipioId: null, unidadeId: null, unidadeNome: null },
+  { email: 'admin@demo.test', senha: 'demo-local-123', nome: 'Administração Hortolândia (teste)', perfil: 'admin', municipioId: 'demo-municipio-01', unidadeId: null, unidadeNome: null },
+  { email: 'admin.jaguariuna@demo.test', senha: 'demo-local-123', nome: 'Administração Jaguariúna (teste)', perfil: 'admin', municipioId: 'demo-municipio-02', unidadeId: null, unidadeNome: null },
+  { email: 'diretora@demo.test', senha: 'demo-local-123', nome: 'Helena Barros (teste)', perfil: 'diretora', municipioId: 'demo-municipio-01', unidadeId: 'demo-escola-01', unidadeNome: 'CEI Pequenos Passos' },
+  { email: 'rh@demo.test', senha: 'demo-local-123', nome: 'RH Hortolândia (teste)', perfil: 'administrativo', municipioId: 'demo-municipio-01', unidadeId: null, unidadeNome: null },
 ];
 
 const campo = (v) => (v === null ? { nullValue: null } : typeof v === 'boolean' ? { booleanValue: v } : { stringValue: String(v) });
@@ -56,7 +60,7 @@ try {
   for (const u of USUARIOS_DE_TESTE) {
     const uid = await criarOuEntrar(u);
     await gravarComoDono(`usuarios/${uid}`, {
-      uid, nome: u.nome, email: u.email, perfil: u.perfil,
+      uid, nome: u.nome, email: u.email, perfil: u.perfil, municipioId: u.municipioId,
       unidadeId: u.unidadeId, unidadeNome: u.unidadeNome, situacao: 'ativa',
     });
   }

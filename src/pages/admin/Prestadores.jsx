@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -35,7 +36,7 @@ export default function Prestadores() {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
-    const q = collection(db, 'prestadores');
+    const q = doMunicipio('prestadores');
     const unsubscribe = ouvir(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       data.sort((a, b) => a.nome.localeCompare(b.nome));

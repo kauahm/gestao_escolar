@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, doc, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -100,7 +101,7 @@ export default function Agenda() {
 
   // 1. Buscar Eventos manuais (Real-time)
   useEffect(() => {
-    const q = collection(db, 'eventos');
+    const q = doMunicipio('eventos');
     const unsubscribe = ouvir(q, (snapshot) => {
       const eventosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEventosManuais(eventosData);
@@ -121,7 +122,7 @@ export default function Agenda() {
       hoje.setHours(0, 0, 0, 0);
 
       // 2.1 Contas a Pagar
-      const contasSnap = await getDocs(collection(db, 'contas'));
+      const contasSnap = await getDocs(doMunicipio('contas'));
       contasSnap.forEach(doc => {
         const data = doc.data();
         // Pendente = tudo que ainda não foi enviado (inclui registros antigos gravados como 'Vencida')
@@ -145,7 +146,7 @@ export default function Agenda() {
       });
 
       // 2.2 Ciclos
-      const ciclosSnap = await getDocs(collection(db, 'ciclos'));
+      const ciclosSnap = await getDocs(doMunicipio('ciclos'));
       ciclosSnap.forEach(doc => {
         const data = doc.data();
         if (data.proximaExecucao) {
@@ -168,7 +169,7 @@ export default function Agenda() {
       });
 
       // 2.3 Manutenções
-      const manuSnap = await getDocs(collection(db, 'manutencoes'));
+      const manuSnap = await getDocs(doMunicipio('manutencoes'));
       manuSnap.forEach(doc => {
         const data = doc.data();
         if (data.prazo && data.status !== 'Concluído') {
@@ -187,7 +188,7 @@ export default function Agenda() {
       });
 
       // 2.4 Processo Seletivo (Novo!)
-      const rhSnap = await getDocs(collection(db, 'curriculos'));
+      const rhSnap = await getDocs(doMunicipio('curriculos'));
       rhSnap.forEach(doc => {
         const data = doc.data();
         if (data.status === 'Entrevista Agendada' && data.dataEntrevista) {

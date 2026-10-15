@@ -82,7 +82,7 @@ describe('nomes das telas', () => {
   });
 
   test('perfis aparecem em português', () => {
-    assert.deepEqual(ROTULO_DO_PERFIL, { admin: 'Administração', administrativo: 'RH', diretora: 'Diretora' });
+    assert.deepEqual(ROTULO_DO_PERFIL, { sede: 'Sede', admin: 'Administração', administrativo: 'RH', diretora: 'Diretora' });
   });
 
   test('toda rota do sistema tem nome na tabela', () => {

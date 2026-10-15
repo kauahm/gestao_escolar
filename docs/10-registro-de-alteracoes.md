@@ -69,6 +69,22 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Acesso por município (login da sede)
+
+- **Novo perfil Sede:** entra na lista de municípios e, com **Entrar**, trabalha como a administração do município escolhido ("Hortolândia · Trocar" no topo).
+- **A administração passa a ser de um município**, e o RH também. Cada um vê e altera só o próprio município; só a sede cria administradores.
+- **Proteção no banco, não só na tela:**
+  - todo registro carrega o município;
+  - as regras recusam ler, gravar ou "mudar de município" fora do próprio;
+  - consulta sem o filtro do município também é recusada.
+- **Dados antigos:** ferramenta da sede para atribuir a um município tudo o que foi cadastrado antes da divisão.
+- **Testes:** 90 e 72 de regras (reescritos com dois municípios), todos passando. A tela foi conferida no emulador com sede, duas administrações, diretora e RH.
+- **Ainda não publicado:** precisa ir ao ar junto com as regras e a organização dos dados, num momento combinado (ver [22](22-acesso-por-municipio.md), seção 5).
+
+Detalhes em [22](22-acesso-por-municipio.md).
+
+---
+
 ## 14/10/2026 — Visão da sede
 
 - **Novo nível acima da escola:** Município → Contrato (termo de colaboração) → Escola. A escola é ligada no próprio contrato, marcando as escolas que ele atende.

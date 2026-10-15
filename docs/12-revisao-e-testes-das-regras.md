@@ -6,7 +6,7 @@
 ## 1. Situação
 
 - **Revisão por leitura: concluída.** Não encontrei nenhuma tela que as regras bloqueiem por engano, nem acesso indevido entre perfis.
-- **Testes automatizados: 63 testes, todos passando** no emulador local (última execução em 14/10/2026, incluindo a importação de planilhas ([14](14-importacao-de-planilhas.md)) funcionários ([19](19-funcionarios.md)) controle de saldo ([20](20-controle-de-saldo.md)) e visão da sede ([21](21-visao-da-sede.md))); primeira execução em 13/10/2026, com Java 21 portátil em `%USERPROFILE%\.local\java`).
+- **Testes automatizados: 72 testes, todos passando** no emulador local (última execução em 14/10/2026, incluindo a importação de planilhas ([14](14-importacao-de-planilhas.md)) funcionários ([19](19-funcionarios.md)) controle de saldo ([20](20-controle-de-saldo.md)) visão da sede ([21](21-visao-da-sede.md)) e a divisão por município ([22](22-acesso-por-municipio.md)), num cenário com dois municípios); primeira execução em 13/10/2026, com Java 21 portátil em `%USERPROFILE%\.local\java`).
 - **Endurecimentos T1 e T2 aplicados** nas regras depois de os testes rodarem; T4 corrigido na tela de Usuários.
 
 ## 2. O que cada perfil lê e grava (código × regras)

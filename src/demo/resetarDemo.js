@@ -22,6 +22,9 @@ export const COLECOES_APAGADAS = [
   'eventos', 'curriculos', 'candidatos', 'funcionarios', 'rubricas', 'gastos', 'municipios', 'contratos', 'lixeira', 'historico', 'importacoes', 'alertasAdiados',
 ];
 
+/** Dentro de cada município (municipios/{id}/...). */
+const SUBCOLECOES_DO_MUNICIPIO = ['config', 'alertasAdiados'];
+
 const TAMANHO_DO_LOTE = 400; // o limite do Firestore é 500 operações por lote
 
 const emLotes = async (db, itens, aplicar) => {
@@ -51,8 +54,16 @@ export async function resetarDemo(db) {
     throw new Error('Recusado: este projeto não está marcado como ambiente de demonstração (config/ambiente).');
   }
 
-  // 1. Apaga o que existe.
+  // 1. Apaga o que existe. Primeiro o que fica dentro de cada município
+  //    (configurações e alertas adiados), que não sai junto com ele.
   let apagados = 0;
+  for (const m of (await getDocs(collection(db, 'municipios'))).docs) {
+    for (const sub of SUBCOLECOES_DO_MUNICIPIO) {
+      const snap = await getDocs(collection(db, 'municipios', m.id, sub));
+      await emLotes(db, snap.docs, (lote, d) => lote.delete(d.ref));
+      apagados += snap.size;
+    }
+  }
   for (const nome of COLECOES_APAGADAS) {
     const snap = await getDocs(collection(db, nome));
     await emLotes(db, snap.docs, (lote, d) => lote.delete(d.ref));
@@ -60,7 +71,8 @@ export async function resetarDemo(db) {
   }
   // A data da última cópia de segurança também volta ao início.
   const loteConfig = writeBatch(db);
-  loteConfig.delete(doc(db, 'config', 'backup'));
+  loteConfig.delete(doc(db, 'config', 'backup')); // antigos, de antes da divisão por município
+  loteConfig.delete(doc(db, 'config', 'saldo'));
   await loteConfig.commit();
 
   // 2. Grava os dados fictícios.

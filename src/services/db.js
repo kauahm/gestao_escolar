@@ -14,6 +14,10 @@
 // O histórico é gravado em seguida, em "melhor esforço": se ele falhar, a
 // operação principal já foi feita e o erro só aparece no console. Assim um
 // problema no registro nunca impede o trabalho do dia a dia.
+//
+// 3. TODO REGISTRO NOVO GANHA O MUNICÍPIO ATIVO (campo municipioId), e o
+//    histórico e a lixeira também, para cada município só ver o que é seu.
+//    Ver services/escopo.js e docs/22-acesso-por-municipio.md.
 
 import {
   collection,
@@ -27,6 +31,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { tituloDoRegistro } from '../utils/tituloDoRegistro.js';
+import { comMunicipio, municipioAtivo } from './escopo';
 
 export const COLECAO_LIXEIRA = 'lixeira';
 export const COLECAO_HISTORICO = 'historico';
@@ -83,10 +88,11 @@ const quemEsta = () => ({
 });
 
 /** Grava uma linha no histórico sem nunca derrubar a operação principal. */
-const registrar = async (entrada) => {
+const registrar = async ({ municipioId, ...entrada }) => {
   try {
     await fbAddDoc(collection(db, COLECAO_HISTORICO), {
       ...entrada,
+      municipioId: municipioId || municipioAtivo() || null,
       ...quemEsta(),
       em: serverTimestamp(),
     });
@@ -100,7 +106,7 @@ const registrar = async (entrada) => {
 // ---------------------------------------------------------------------------
 
 export async function addDoc(collectionRef, dadosRecebidos) {
-  const dados = semId(dadosRecebidos);
+  const dados = comMunicipio(nomeDaColecao(collectionRef), semId(dadosRecebidos));
   const ref = await fbAddDoc(collectionRef, dados);
   const limpo = limparParaHistorico(dados);
   registrar({
@@ -110,12 +116,13 @@ export async function addDoc(collectionRef, dadosRecebidos) {
     titulo: tituloDoRegistro(limpo),
     antes: null,
     depois: limpo,
+    municipioId: dados.municipioId,
   });
   return ref;
 }
 
 export async function setDoc(docRef, dadosRecebidos, opcoes) {
-  const dados = semId(dadosRecebidos);
+  const dados = comMunicipio(nomeDaColecao(docRef), semId(dadosRecebidos));
   let anterior = null;
   try {
     const snap = await getDoc(docRef);
@@ -135,6 +142,7 @@ export async function setDoc(docRef, dadosRecebidos, opcoes) {
     titulo: tituloDoRegistro({ ...(anterior || {}), ...limpo }),
     antes,
     depois,
+    municipioId: dados.municipioId || anterior?.municipioId,
   });
 }
 
@@ -162,6 +170,7 @@ export async function updateDoc(docRef, dadosRecebidos) {
     titulo: tituloDoRegistro({ ...anterior, ...limpo }),
     antes,
     depois,
+    municipioId: anterior.municipioId,
   });
 }
 
@@ -187,6 +196,7 @@ export async function deleteDoc(docRef) {
     excluidoEm: serverTimestamp(),
     excluidoPor: porUid,
     excluidoPorEmail: porEmail,
+    municipioId: dados.municipioId || municipioAtivo() || null,
   });
   lote.delete(docRef);
   await lote.commit();
@@ -198,6 +208,7 @@ export async function deleteDoc(docRef) {
     titulo,
     antes: limparParaHistorico(dados),
     depois: null,
+    municipioId: dados.municipioId,
   });
 }
 
@@ -224,5 +235,6 @@ export async function restaurarDaLixeira(itemLixeira) {
     titulo: itemLixeira.titulo || tituloDoRegistro(itemLixeira.dados),
     antes: null,
     depois: limparParaHistorico(itemLixeira.dados),
+    municipioId: itemLixeira.municipioId || itemLixeira.dados?.municipioId,
   });
 }

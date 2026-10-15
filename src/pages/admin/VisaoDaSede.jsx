@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import {
-  Plus, Edit2, Trash2, Landmark, School, Users, Wrench, Receipt, RefreshCcw, Baby, ChevronRight, Link2,
+  Plus, Edit2, Trash2, Landmark, School, Users, Wrench, Receipt, RefreshCcw, Baby, ChevronRight, Link2, LogIn, Archive,
 } from 'lucide-react';
 
 import { db } from '../../services/firebase';
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { useAlertas } from '../../contexts/AlertasContext';
+import { useAuth } from '../../hooks/useAuth';
+import { procurarDadosAntigos, atribuirDadosAntigos } from '../../services/dadosAntigos';
 import { formatarMoeda } from '../../utils/formatters';
 import {
   MUNICIPIOS_SUGERIDOS, OBJETOS_DE_CONTRATO, ROTULO_DO_SEMAFORO, SEMAFORO, montarVisaoDaSede, situacaoDoContrato,
@@ -67,6 +69,13 @@ export default function VisaoDaSede() {
   const aba = ABAS.some((a) => a.id === parametros.get('aba')) ? parametros.get('aba') : 'painel';
   const dados = useAlertas();
   const { municipios, contratos, escolas } = dados;
+  const { escolherMunicipio, currentUser } = useAuth();
+  const navigate = useNavigate();
+  // Entrar num município: a sede passa a trabalhar como a administração dele.
+  const entrar = (m) => {
+    escolherMunicipio(m.id);
+    navigate('/admin/dashboard');
+  };
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const avisar = (message, type = 'success') => setToast({ show: true, message, type });
@@ -92,7 +101,9 @@ export default function VisaoDaSede() {
 
   const pedirExclusaoDoMunicipio = (m) => {
     const n = contratos.filter((c) => c.municipioId === m.id).length;
+    const e = escolas.filter((x) => x.municipioId === m.id).length;
     if (n) avisar(`${m.nome} tem ${n} ${n === 1 ? 'contrato' : 'contratos'}. Exclua ou mude os contratos antes.`, 'error');
+    else if (e) avisar(`${m.nome} tem ${e} ${e === 1 ? 'escola' : 'escolas'}. Um município com dados não pode ser excluído.`, 'error');
     else setExcluir({ tipo: 'municipio', item: m });
   };
   const pedirExclusaoDoContrato = (c) => {
@@ -106,7 +117,7 @@ export default function VisaoDaSede() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Visão da sede</h1>
-          <p className="text-gray-500 text-sm mt-1">Todos os municípios numa tela: o que está em dia, o que pede atenção e o que é crítico.</p>
+          <p className="text-gray-500 text-sm mt-1">Todos os municípios numa tela. Para trabalhar num deles (contas, chamados, funcionários...), clique em <strong className="font-medium text-gray-700">Entrar</strong>.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setMunicipioAberto({})} className={botaoSecundario}><Plus size={18} /> Novo município</button>
@@ -127,7 +138,7 @@ export default function VisaoDaSede() {
         <EsqueletoDeCartoes quantidade={6} />
       ) : aba === 'contratos' ? (
         <MunicipiosEContratos
-          municipios={municipios} contratos={contratos} escolas={escolas}
+          municipios={municipios} contratos={contratos} escolas={escolas} usuario={currentUser} avisar={avisar}
           novoMunicipio={() => setMunicipioAberto({})} editarMunicipio={setMunicipioAberto} excluirMunicipio={pedirExclusaoDoMunicipio}
           novoContrato={(m) => setContratoAberto(m ? { municipioId: m.id } : {})} editarContrato={setContratoAberto} excluirContrato={pedirExclusaoDoContrato}
         />
@@ -139,7 +150,7 @@ export default function VisaoDaSede() {
           acoes={[{ rotulo: 'Novo município', onClick: () => setMunicipioAberto({}) }]}
         />
       ) : (
-        <Painel visao={visao} abrirGrupo={setGrupoAberto} irParaContratos={() => setParametros({ aba: 'contratos' })} />
+        <Painel visao={visao} abrirGrupo={setGrupoAberto} entrar={entrar} irParaContratos={() => setParametros({ aba: 'contratos' })} />
       )}
 
       {grupoAberto && <DetalheDoMunicipio grupo={grupoAberto} fechar={() => setGrupoAberto(null)} />}
@@ -182,14 +193,14 @@ function Indicador({ icone: Icone, rotulo: texto, valor, alerta }) {
   );
 }
 
-function CartaoDoMunicipio({ grupo, abrir }) {
+function CartaoDoMunicipio({ grupo, abrir, entrar }) {
   const { municipio, totais, contratos, semaforo } = grupo;
   return (
     <article className={`bg-white rounded-xl border ${COR[semaforo].borda} shadow-sm p-5 flex flex-col gap-4`}>
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-lg font-bold text-gray-900 truncate">{municipio ? municipio.nome : 'Escolas sem contrato'}</h3>
-          <p className="text-xs text-gray-500">{municipio ? `${municipio.uf} · ${contratos.length} ${contratos.length === 1 ? 'contrato' : 'contratos'}` : 'Ligue cada escola ao contrato do município'}</p>
+          <h3 className="text-lg font-bold text-gray-900 truncate">{municipio ? municipio.nome : 'Sem município'}</h3>
+          <p className="text-xs text-gray-500">{municipio ? `${municipio.uf} · ${contratos.length} ${contratos.length === 1 ? 'contrato' : 'contratos'}` : 'Dados de antes da divisão por município'}</p>
         </div>
         <Semaforo valor={semaforo} />
       </header>
@@ -213,6 +224,9 @@ function CartaoDoMunicipio({ grupo, abrir }) {
         <Indicador icone={Receipt} rotulo="Contas vencidas" valor={totais.contasVencidas ? formatarMoeda(totais.valorVencido) : '0'} alerta={totais.contasVencidas > 0} />
         <Indicador icone={RefreshCcw} rotulo="Ciclos vencidos" valor={numero(totais.ciclosVencidos)} alerta={totais.ciclosVencidos > 0} />
       </div>
+      {municipio && totais.semContrato > 0 && (
+        <p className="text-xs text-amber-800">{totais.semContrato} {totais.semContrato === 1 ? 'escola ativa ainda sem contrato' : 'escolas ativas ainda sem contrato'}</p>
+      )}
 
       <footer className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100 mt-auto">
         <span className="text-xs text-gray-600">
@@ -220,15 +234,22 @@ function CartaoDoMunicipio({ grupo, abrir }) {
             ? [totais.criticos && `${totais.criticos} ${totais.criticos === 1 ? 'pendência crítica' : 'pendências críticas'}`, totais.atencao && `${totais.atencao} de atenção`].filter(Boolean).join(' · ')
             : 'Nenhuma pendência'}
         </span>
-        <button type="button" onClick={abrir} className="text-sm font-medium text-primary hover:underline flex items-center gap-1 shrink-0">
-          Ver escolas <ChevronRight size={16} aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button type="button" onClick={abrir} className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+            Ver escolas <ChevronRight size={16} aria-hidden="true" />
+          </button>
+          {municipio && entrar && (
+            <button type="button" onClick={() => entrar(municipio)} className="text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-md px-3 py-1.5 flex items-center gap-1.5" aria-label={`Entrar em ${municipio.nome}`}>
+              <LogIn size={16} aria-hidden="true" /> Entrar
+            </button>
+          )}
+        </div>
       </footer>
     </article>
   );
 }
 
-function Painel({ visao, abrirGrupo, irParaContratos }) {
+function Painel({ visao, abrirGrupo, entrar, irParaContratos }) {
   const { totais, grupos, semMunicipio } = visao;
   return (
     <div className="space-y-6">
@@ -249,13 +270,13 @@ function Painel({ visao, abrirGrupo, irParaContratos }) {
 
       {semMunicipio && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-md p-3 text-sm">
-          <span className="flex items-start gap-2"><Link2 size={18} className="shrink-0 mt-0.5" aria-hidden="true" /> {semMunicipio.escolas.length} {semMunicipio.escolas.length === 1 ? 'escola ainda não está ligada' : 'escolas ainda não estão ligadas'} a um contrato e ficam fora da conta por município.</span>
-          <button type="button" onClick={irParaContratos} className="font-medium underline shrink-0">Ligar a um contrato</button>
+          <span className="flex items-start gap-2"><Link2 size={18} className="shrink-0 mt-0.5" aria-hidden="true" /> {semMunicipio.escolas.length} {semMunicipio.escolas.length === 1 ? 'escola é' : 'escolas são'} de antes da divisão por município e ainda não {semMunicipio.escolas.length === 1 ? 'pertence' : 'pertencem'} a nenhum. Ninguém além da sede as vê até serem atribuídas.</span>
+          <button type="button" onClick={irParaContratos} className="font-medium underline shrink-0">Organizar dados antigos</button>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
-        {grupos.map((g) => <CartaoDoMunicipio key={g.municipio.id} grupo={g} abrir={() => abrirGrupo(g)} />)}
+        {grupos.map((g) => <CartaoDoMunicipio key={g.municipio.id} grupo={g} abrir={() => abrirGrupo(g)} entrar={entrar} />)}
         {semMunicipio && <CartaoDoMunicipio grupo={semMunicipio} abrir={() => abrirGrupo(semMunicipio)} />}
       </div>
     </div>
@@ -263,12 +284,12 @@ function Painel({ visao, abrirGrupo, irParaContratos }) {
 }
 
 function DetalheDoMunicipio({ grupo, fechar }) {
-  const titulo = grupo.municipio ? `${grupo.municipio.nome} · escolas` : 'Escolas sem contrato';
+  const titulo = grupo.municipio ? `${grupo.municipio.nome} · escolas` : 'Escolas sem município';
   const itens = [...grupo.escolas].sort((a, b) => Number(b.ativa) - Number(a.ativa) || String(a.escola.nome).localeCompare(String(b.escola.nome), 'pt-BR'));
   return (
     <Modal isOpen onClose={fechar} title={titulo} size="lg">
       {itens.length === 0 ? (
-        <p className="text-sm text-gray-600">Nenhuma escola ligada aos contratos deste município. Edite um contrato e marque as escolas que ele atende.</p>
+        <p className="text-sm text-gray-600">Nenhuma escola neste município ainda. Entre no município e cadastre as escolas em Escolas (ou importe a planilha).</p>
       ) : (
         <div className="overflow-x-auto -mx-2" tabIndex={0} role="region" aria-label={`Situação das escolas: ${titulo}`}>
           <table className="min-w-full text-sm">
@@ -306,30 +327,29 @@ function DetalheDoMunicipio({ grupo, fechar }) {
 
 // ============================================= Municípios e contratos ====
 
-function MunicipiosEContratos({ municipios, contratos, escolas, novoMunicipio, editarMunicipio, excluirMunicipio, novoContrato, editarContrato, excluirContrato }) {
+function MunicipiosEContratos({ municipios, contratos, escolas, usuario, avisar, novoMunicipio, editarMunicipio, excluirMunicipio, novoContrato, editarContrato, excluirContrato }) {
   const ordenados = [...municipios].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
   const idsDeContrato = new Set(contratos.map((c) => c.id));
-  const semContrato = escolas.filter((e) => !idsDeContrato.has(e.contratoId) && e.situacao !== 'Inativa');
 
   if (!municipios.length) {
     return (
+      <div className="space-y-4">
+      <DadosAntigos municipios={municipios} usuario={usuario} avisar={avisar} />
       <EmptyState
         icone={Landmark}
         titulo="Nenhum município cadastrado"
         mensagem="Comece pelo município (os 16 com contrato ativo da AEMC aparecem como sugestão) e depois cadastre o contrato, marcando as escolas que ele atende."
         acoes={[{ rotulo: 'Novo município', onClick: novoMunicipio }]}
       />
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {semContrato.length > 0 && (
-        <p className="text-sm bg-amber-50 border border-amber-200 text-amber-900 rounded-md p-3">
-          Escolas ativas sem contrato: {semContrato.map((e) => e.nome).join(', ')}. Edite o contrato do município e marque essas escolas.
-        </p>
-      )}
+      <DadosAntigos municipios={municipios} usuario={usuario} avisar={avisar} />
       {ordenados.map((m) => {
+        const semContrato = escolas.filter((e) => e.municipioId === m.id && e.situacao !== 'Inativa' && !idsDeContrato.has(e.contratoId));
         const doMunicipio = contratos.filter((c) => c.municipioId === m.id).sort((a, b) => String(b.fim || '').localeCompare(String(a.fim || '')));
         return (
           <section key={m.id} className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -341,6 +361,9 @@ function MunicipiosEContratos({ municipios, contratos, escolas, novoMunicipio, e
                 <button onClick={() => excluirMunicipio(m)} className="p-1.5 text-red-600 hover:text-red-800" title={`Excluir ${m.nome}`} aria-label={`Excluir ${m.nome}`}><Trash2 size={18} /></button>
               </div>
             </header>
+            {semContrato.length > 0 && (
+              <p className="px-4 pt-3 text-sm text-amber-800">Sem contrato: {semContrato.map((e) => e.nome).join(', ')}. Edite o contrato e marque essas escolas.</p>
+            )}
             {doMunicipio.length === 0 ? (
               <p className="px-4 py-3 text-sm text-gray-600">Nenhum contrato. <button type="button" onClick={() => novoContrato(m)} className="text-primary hover:underline">Cadastrar o contrato</button></p>
             ) : (
@@ -369,6 +392,105 @@ function MunicipiosEContratos({ municipios, contratos, escolas, novoMunicipio, e
         );
       })}
     </div>
+  );
+}
+
+// ========================================================= Dados antigos ====
+
+const NOMES_DAS_COLECOES = {
+  escolas: 'escolas', manutencoes: 'chamados', contas: 'contas', ciclos: 'ciclos', prestadores: 'prestadores',
+  eventos: 'compromissos da agenda', curriculos: 'currículos', candidatos: 'candidatos', funcionarios: 'funcionários',
+  rubricas: 'áreas do controle de saldo', gastos: 'gastos', contratos: 'contratos', usuarios: 'usuários',
+  historico: 'linhas do histórico', lixeira: 'itens da lixeira', importacoes: 'importações',
+};
+
+// Registros de antes da divisão por município: a sede procura e atribui todos
+// a um município (no sistema real, hoje, tudo é de Hortolândia).
+function DadosAntigos({ municipios, usuario, avisar }) {
+  const [achados, setAchados] = useState(null);
+  const [procurando, setProcurando] = useState(false);
+  const [destino, setDestino] = useState('');
+  const [confirmar, setConfirmar] = useState(false);
+  const [gravando, setGravando] = useState(false);
+
+  const procurar = async () => {
+    setProcurando(true);
+    try {
+      setAchados(await procurarDadosAntigos(db));
+    } catch (erro) {
+      console.error(erro);
+      avisar('Não foi possível procurar os dados antigos.', 'error');
+    } finally {
+      setProcurando(false);
+    }
+  };
+
+  const atribuir = async () => {
+    setConfirmar(false);
+    setGravando(true);
+    try {
+      const { atualizados } = await atribuirDadosAntigos(db, destino, achados, { uid: usuario?.uid, email: usuario?.email });
+      const nome = municipios.find((m) => m.id === destino)?.nome || '';
+      avisar(`${numero(atualizados)} registros agora são de ${nome}.`);
+      setAchados(await procurarDadosAntigos(db));
+    } catch (erro) {
+      console.error(erro);
+      avisar('A atribuição parou no meio. Procure de novo e repita: o que já foi feito não se repete.', 'error');
+    } finally {
+      setGravando(false);
+    }
+  };
+
+  const nadaAchado = achados && !achados.total && !achados.configs.length && !achados.alertasAdiados.length;
+  const nomeDoDestino = municipios.find((m) => m.id === destino)?.nome || '';
+
+  return (
+    <section className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3" aria-labelledby="dados-antigos">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 id="dados-antigos" className="font-semibold text-gray-900 flex items-center gap-2"><Archive size={18} aria-hidden="true" /> Dados antigos</h2>
+          <p className="text-sm text-gray-600">Registros de antes da divisão por município. Enquanto não forem atribuídos a um município, só a sede os vê.</p>
+        </div>
+        <button type="button" onClick={procurar} disabled={procurando || gravando} className={`${botaoSecundario} justify-center shrink-0 disabled:opacity-50`}>
+          {procurando ? <LoadingSpinner size="sm" /> : 'Procurar'}
+        </button>
+      </div>
+
+      {nadaAchado && <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-md p-3">Nenhum registro sem município. Tudo organizado.</p>}
+
+      {achados && !nadaAchado && (
+        <div className="space-y-3">
+          <ul className="text-sm text-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+            {Object.entries(achados.porColecao).map(([nome, ids]) => (
+              <li key={nome} className="flex justify-between gap-2"><span>{NOMES_DAS_COLECOES[nome] || nome}</span><span className="tabular-nums font-medium">{numero(ids.length)}</span></li>
+            ))}
+            {achados.configs.length > 0 && <li className="flex justify-between gap-2"><span>configurações (cópia de segurança, controle de saldo)</span><span className="tabular-nums font-medium">{achados.configs.length}</span></li>}
+          </ul>
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1">
+              <label htmlFor="destino-dados-antigos" className={rotulo}>Atribuir tudo a</label>
+              <select id="destino-dados-antigos" value={destino} onChange={(e) => setDestino(e.target.value)} className={campo}>
+                <option value="">Escolha o município</option>
+                {[...municipios].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')).map((m) => <option key={m.id} value={m.id}>{m.nome} ({m.uf})</option>)}
+              </select>
+            </div>
+            <button type="button" onClick={() => setConfirmar(true)} disabled={!destino || gravando} className={`${botaoPrincipal} justify-center disabled:opacity-50`}>
+              {gravando ? <LoadingSpinner size="sm" color="text-white" /> : `Atribuir ${numero(achados.total)} registros`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmar}
+        tom="normal"
+        title="Atribuir dados antigos"
+        message={`Os ${numero(achados?.total || 0)} registros sem município passam a ser de ${nomeDoDestino}: a administração de ${nomeDoDestino} vai vê-los, e a dos outros municípios não. Nada além do município muda nos registros.`}
+        rotuloConfirmar="Atribuir"
+        onConfirm={atribuir}
+        onCancel={() => setConfirmar(false)}
+      />
+    </section>
   );
 }
 
@@ -485,7 +607,10 @@ function FormularioDeContrato({ contrato, municipios, contratos, escolas, fechar
 
   const contratoPorId = new Map(contratos.map((c) => [c.id, c]));
   const nomeDoMunicipio = new Map(municipios.map((m) => [m.id, m.nome]));
-  const ordenadas = [...escolas].sort((a, b) => Number(a.situacao === 'Inativa') - Number(b.situacao === 'Inativa') || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+  // Só as escolas do município do contrato: escola de um município não entra em contrato de outro.
+  const ordenadas = escolas
+    .filter((e) => dados.municipioId && e.municipioId === dados.municipioId)
+    .sort((a, b) => Number(a.situacao === 'Inativa') - Number(b.situacao === 'Inativa') || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
 
   const salvar = async (ev) => {
     ev.preventDefault();
@@ -513,7 +638,7 @@ function FormularioDeContrato({ contrato, municipios, contratos, escolas, fechar
       else id = (await addDoc(collection(db, 'contratos'), { ...registro, criadoEm: serverTimestamp() })).id;
 
       // Liga e desliga escolas (cada mudança entra no histórico da escola).
-      const mudancas = escolas.filter((es) => marcadas.has(es.id) !== (es.contratoId === id));
+      const mudancas = ordenadas.filter((es) => marcadas.has(es.id) !== (es.contratoId === id));
       for (const es of mudancas) {
         await updateDoc(doc(db, 'escolas', es.id), { contratoId: marcadas.has(es.id) ? id : '' });
       }
@@ -561,8 +686,8 @@ function FormularioDeContrato({ contrato, municipios, contratos, escolas, fechar
         <fieldset>
           <legend className="text-sm font-semibold text-gray-900">Escolas atendidas por este contrato</legend>
           <p className="text-xs text-gray-500 mt-0.5">Cada escola fica em um contrato só: marcar aqui tira a escola do contrato anterior.</p>
-          {escolas.length === 0 ? (
-            <p className="text-sm text-gray-600 mt-2">Nenhuma escola cadastrada ainda.</p>
+          {ordenadas.length === 0 ? (
+            <p className="text-sm text-gray-600 mt-2">{dados.municipioId ? 'Nenhuma escola cadastrada neste município ainda. Entre no município e cadastre as escolas.' : 'Escolha o município para ver as escolas dele.'}</p>
           ) : (
             <ul className="mt-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md divide-y divide-gray-100">
               {ordenadas.map((es) => {

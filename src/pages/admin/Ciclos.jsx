@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -67,7 +68,7 @@ export default function Ciclos() {
 
   // Buscar escolas
   useEffect(() => {
-    const q = collection(db, 'escolas');
+    const q = doMunicipio('escolas');
     const unsubscribe = ouvir(q, (snapshot) => {
       const todas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const escolasData = todas
@@ -81,7 +82,7 @@ export default function Ciclos() {
 
   // Buscar ciclos
   useEffect(() => {
-    const q = collection(db, 'ciclos');
+    const q = doMunicipio('ciclos');
     const unsubscribe = ouvir(q, (snapshot) => {
       const ciclosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCiclos(ciclosData);

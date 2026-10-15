@@ -3,12 +3,12 @@
 
 import { collection, getDocs, doc, setDoc as fbSetDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { doMunicipio, docDoMunicipio } from '../services/consulta';
 import { gerarXlsx } from './planilhaXlsx';
 import { situacaoConta } from './calcularStatus';
 
-/** Coleções do sistema, na ordem das abas do Excel. */
+/** Coleções do sistema, na ordem das abas do Excel (só as do município ativo). */
 export const COLECOES = [
-  { id: 'municipios', rotulo: 'Municípios' },
   { id: 'contratos', rotulo: 'Contratos' },
   { id: 'escolas', rotulo: 'Escolas' },
   { id: 'manutencoes', rotulo: 'Manutenções' },
@@ -156,7 +156,8 @@ export const deJson = (v) => {
 
 const lerColecao = async (id) => {
   try {
-    const snap = await getDocs(collection(db, id));
+    // Só o município ativo (a cópia de cada município é dele).
+    const snap = await getDocs(doMunicipio(id));
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (erro) {
     // Sem permissão ou coleção inexistente: segue com as outras.
@@ -208,7 +209,7 @@ const baixar = (blob, nomeArquivo) => {
 /** Marca no banco quando foi feita a última cópia (aparece no painel). */
 const registrarCopia = async (formato, totais) => {
   try {
-    await fbSetDoc(doc(db, 'config', 'backup'), {
+    await fbSetDoc(docDoMunicipio('config', 'backup'), {
       ultimoEm: serverTimestamp(),
       formato,
       totais,

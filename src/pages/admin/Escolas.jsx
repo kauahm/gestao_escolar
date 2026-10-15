@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAlertas } from '../../contexts/AlertasContext';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -50,14 +51,12 @@ export default function Escolas() {
   // Estados de Filtro e Busca
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSituacao, setFilterSituacao] = useState('Todas');
-  const [filterMunicipio, setFilterMunicipio] = useState('Todos');
-  // Município de cada escola, pelo contrato (ver Visão da sede).
-  const { municipios, contratos } = useAlertas();
-  const municipioDaEscola = useMemo(() => {
-    const nome = new Map(municipios.map((m) => [m.id, m]));
-    const porContrato = new Map(contratos.map((c) => [c.id, { contrato: c, municipio: nome.get(c.municipioId) }]));
-    return (escola) => porContrato.get(escola.contratoId) || null;
-  }, [municipios, contratos]);
+  // Contrato (termo de colaboração) de cada escola; quem liga é a sede, na Visão da sede.
+  const { contratos } = useAlertas();
+  const contratoDaEscola = useMemo(() => {
+    const porId = new Map(contratos.map((c) => [c.id, c]));
+    return (escola) => porId.get(escola.contratoId) || null;
+  }, [contratos]);
 
   // Estados de Modais
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -75,7 +74,7 @@ export default function Escolas() {
 
   // Buscar escolas em tempo real
   useEffect(() => {
-    const q = collection(db, 'escolas');
+    const q = doMunicipio('escolas');
     const unsubscribe = ouvir(q, (snapshot) => {
       const escolasData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       // Ordenar por nome em ordem alfabética
@@ -106,15 +105,9 @@ export default function Escolas() {
         filterSituacao === 'Ativas' ? escola.situacao === 'Ativa' :
         escola.situacao === 'Inativa';
 
-      const vinculo = municipioDaEscola(escola);
-      const matchMunicipio =
-        filterMunicipio === 'Todos' ? true :
-        filterMunicipio === 'sem' ? !vinculo?.municipio :
-        vinculo?.municipio?.id === filterMunicipio;
-
-      return matchSearch && matchStatus && matchMunicipio;
+      return matchSearch && matchStatus;
     });
-  }, [escolas, searchTerm, filterSituacao, filterMunicipio, municipioDaEscola]);
+  }, [escolas, searchTerm, filterSituacao]);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -295,19 +288,7 @@ export default function Escolas() {
             <option value="Inativas">Apenas inativas</option>
           </select>
         </div>
-        {municipios.length > 0 && (
-          <div className="w-full sm:w-56">
-            <select aria-label="Filtrar por município"
-              value={filterMunicipio}
-              onChange={(e) => setFilterMunicipio(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none bg-white"
-            >
-              <option value="Todos">Todos os municípios</option>
-              {[...municipios].sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')).map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-              <option value="sem">Sem contrato</option>
-            </select>
-          </div>
-        )}
+
       </div>
 
       {/* Conteúdo Principal */}
@@ -327,7 +308,7 @@ export default function Escolas() {
           <EmptyState
             titulo="Nenhuma escola com estes filtros"
             mensagem="Confira o texto da busca ou a situação escolhida."
-            acoes={[{ rotulo: 'Limpar filtros', onClick: () => { setSearchTerm(''); setFilterSituacao('Todas'); setFilterMunicipio('Todos'); } }]}
+            acoes={[{ rotulo: 'Limpar filtros', onClick: () => { setSearchTerm(''); setFilterSituacao('Todas'); } }]}
           />
         )
       ) : (
@@ -346,7 +327,7 @@ export default function Escolas() {
                   <div className="flex items-center text-xs text-gray-500 mt-1 font-medium">
                     <Hash size={12} className="mr-1" />
                     {escola.codigo || 'Sem código'}
-                    {municipioDaEscola(escola)?.municipio && <span className="ml-2 truncate">· {municipioDaEscola(escola).municipio.nome}</span>}
+                    {contratoDaEscola(escola) && <span className="ml-2 truncate" title={contratoDaEscola(escola).numero}>· {contratoDaEscola(escola).numero}</span>}
                   </div>
                 </div>
                 <div className="absolute top-5 right-5">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 // Gravações passam pela camada com histórico e lixeira (ver services/db.js)
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { db } from '../../services/firebase';
@@ -62,7 +63,7 @@ export default function AdminManutencoes() {
 
   // Busca Escolas
   useEffect(() => {
-    const q = collection(db, 'escolas');
+    const q = doMunicipio('escolas');
     const unsubscribe = ouvir(q, (snapshot) => {
       const escolasData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -75,7 +76,7 @@ export default function AdminManutencoes() {
 
   // NOVO: Busca Prestadores de Serviço
   useEffect(() => {
-    const q = collection(db, 'prestadores');
+    const q = doMunicipio('prestadores');
     const unsubscribe = ouvir(q, (snapshot) => {
       const prestadoresData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       prestadoresData.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -86,7 +87,7 @@ export default function AdminManutencoes() {
 
   // Busca Manutenções
   useEffect(() => {
-    const q = collection(db, 'manutencoes');
+    const q = doMunicipio('manutencoes');
     const unsubscribe = ouvir(q, (snapshot) => {
       const manutencoesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       manutencoesData.sort((a, b) => {

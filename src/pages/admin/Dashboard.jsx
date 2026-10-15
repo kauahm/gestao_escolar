@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, doc, query } from 'firebase/firestore';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio, docDoMunicipio } from '../../services/consulta';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlertas } from '../../contexts/AlertasContext';
@@ -30,17 +31,17 @@ export default function AdminDashboard() {
     // Escutar todas as coleções necessárias em tempo real
     const unsubs = [];
 
-    unsubs.push(ouvir(collection(db, 'curriculos'), snap => {
+    unsubs.push(ouvir(doMunicipio('curriculos'), snap => {
       setCurriculos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
-    unsubs.push(ouvir(collection(db, 'eventos'), snap => {
+    unsubs.push(ouvir(doMunicipio('eventos'), snap => {
       setEventos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       // Para fins de loading, consideramos que o último snapshot marca o fim do carregamento inicial
       setLoading(false);
     }));
 
     // Data da última cópia de segurança (lembrete no topo do painel)
-    unsubs.push(ouvir(doc(db, 'config', 'backup'),
+    unsubs.push(ouvir(docDoMunicipio('config', 'backup'),
       snap => setBackup(snap.exists() ? snap.data() : null),
       () => setBackup(null)));
 

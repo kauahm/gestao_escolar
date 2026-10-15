@@ -30,6 +30,7 @@ export const nomeDaTela = (caminho = '') => {
 };
 
 export const ROTULO_DO_PERFIL = {
+  sede: 'Sede',
   admin: 'Administração',
   administrativo: 'RH',
   diretora: 'Diretora',

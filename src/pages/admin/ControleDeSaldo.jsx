@@ -7,6 +7,7 @@ import {
 
 import { db } from '../../services/firebase';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio, docDoMunicipio } from '../../services/consulta';
 import { addDoc, updateDoc, deleteDoc, setDoc } from '../../services/db';
 import { formatarMoeda } from '../../utils/formatters';
 import {
@@ -94,15 +95,15 @@ export default function ControleDeSaldo() {
   useEffect(() => {
     const pronto = (k) => setCarregando((c) => ({ ...c, [k]: false }));
     const parar = [
-      ouvir(collection(db, 'rubricas'), (s) => {
+      ouvir(doMunicipio('rubricas'), (s) => {
         setRubricas(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')));
         pronto('rubricas');
       }, () => pronto('rubricas')),
-      ouvir(collection(db, 'gastos'), (s) => {
+      ouvir(doMunicipio('gastos'), (s) => {
         setGastos(s.docs.map((d) => ({ id: d.id, ...d.data() })));
         pronto('gastos');
       }, () => pronto('gastos')),
-      ouvir(doc(db, 'config', 'saldo'), (s) => {
+      ouvir(docDoMunicipio('config', 'saldo'), (s) => {
         setPeriodo(s.exists() ? s.data() : null);
         pronto('periodo');
       }, () => pronto('periodo')),
@@ -544,7 +545,7 @@ function AreasEVerbas({ rubricas, gastos, periodo, meses, avisar, novaArea, edit
     if (!valido) return;
     setSalvando(true);
     try {
-      await setDoc(doc(db, 'config', 'saldo'), { inicio, meses: Number(quantos), nome: nome.trim(), atualizadoEm: serverTimestamp() });
+      await setDoc(docDoMunicipio('config', 'saldo'), { inicio, meses: Number(quantos), nome: nome.trim(), atualizadoEm: serverTimestamp() });
       avisar('Período salvo. As contas foram refeitas.');
     } catch (erro) {
       console.error(erro);

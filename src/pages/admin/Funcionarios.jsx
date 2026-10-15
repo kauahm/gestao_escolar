@@ -7,6 +7,7 @@ import {
 
 import { db } from '../../services/firebase';
 import { ouvir } from '../../services/leitura';
+import { doMunicipio } from '../../services/consulta';
 import { addDoc, updateDoc, deleteDoc } from '../../services/db';
 import { formatarMoeda, formatarTelefone } from '../../utils/formatters';
 import {
@@ -81,11 +82,11 @@ export default function Funcionarios() {
 
   useEffect(() => {
     const parar = [
-      ouvir(collection(db, 'funcionarios'), (s) => {
+      ouvir(doMunicipio('funcionarios'), (s) => {
         setFuncionarios(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')));
         setCarregando(false);
       }, () => setCarregando(false)),
-      ouvir(collection(db, 'escolas'), (s) => {
+      ouvir(doMunicipio('escolas'), (s) => {
         setEscolas(s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')));
       }),
     ];
