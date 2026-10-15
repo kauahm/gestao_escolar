@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { collection } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { ouvir } from '../services/leitura';
 import { useAuth } from '../hooks/useAuth';
@@ -11,7 +11,7 @@ import { calcularAlertas, contarPendencias } from '../utils/alertas';
 
 const AlertasContext = createContext({ alertas: [], pendencias: 0, manutencoes: [], contas: [], ciclos: [], carregando: true });
 
-const VAZIO = { manutencoes: null, contas: null, ciclos: null, funcionarios: null, adiados: {} };
+const VAZIO = { manutencoes: null, contas: null, ciclos: null, funcionarios: null, rubricas: null, gastos: null, periodoDoSaldo: null, adiados: {} };
 
 export function AlertasProvider({ children }) {
   const { userProfile } = useAuth();
@@ -28,6 +28,10 @@ export function AlertasProvider({ children }) {
       ouvir(collection(db, 'ciclos'), lista('ciclos')),
       // Funcionários não seguram o carregamento: só somam os alertas de ASO.
       ouvir(collection(db, 'funcionarios'), lista('funcionarios')),
+      // Controle de saldo: também não segura o carregamento.
+      ouvir(collection(db, 'rubricas'), lista('rubricas')),
+      ouvir(collection(db, 'gastos'), lista('gastos')),
+      ouvir(doc(db, 'config', 'saldo'), (s) => setDados((d) => ({ ...d, periodoDoSaldo: s.exists() ? s.data() : null }))),
       ouvir(collection(db, 'alertasAdiados'), (s) => {
         const mapa = {};
         s.docs.forEach((x) => { mapa[x.id] = x.data(); });
@@ -46,7 +50,9 @@ export function AlertasProvider({ children }) {
   const valor = useMemo(() => {
     const carregando = !dados.manutencoes || !dados.contas || !dados.ciclos;
     const alertas = carregando ? [] : calcularAlertas({
-      manutencoes: dados.manutencoes, contas: dados.contas, ciclos: dados.ciclos, funcionarios: dados.funcionarios || [], adiados: dados.adiados, hoje: agora,
+      manutencoes: dados.manutencoes, contas: dados.contas, ciclos: dados.ciclos, funcionarios: dados.funcionarios || [],
+      saldo: dados.periodoDoSaldo ? { rubricas: dados.rubricas || [], gastos: dados.gastos || [], periodo: dados.periodoDoSaldo } : null,
+      adiados: dados.adiados, hoje: agora,
     });
     return {
       carregando,

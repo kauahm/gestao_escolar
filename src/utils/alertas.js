@@ -7,6 +7,7 @@
 import { diasAte, diasEmAberto, situacaoConta } from './calcularStatus.js';
 import { formatarMoeda } from './formatters.js';
 import { situacaoDoFuncionario, DIAS_AVISO_ASO } from './funcionarios.js';
+import { calcularSaldo, mesDe, mesesDoPeriodo, rotuloDoMes } from './saldo.js';
 
 /** Dias que um chamado pode ficar "Pendente" antes de cobrar, por prioridade. */
 export const PRAZO_POR_PRIORIDADE = { Urgente: 1, Alta: 2, 'Média': 5, Baixa: 10 };
@@ -31,12 +32,12 @@ const msDe = (t) => (t?.toMillis ? t.toMillis() : t instanceof Date ? t.getTime(
 const prazoDoPendente = (prioridade) => PRAZO_POR_PRIORIDADE[prioridade] ?? PRAZO_POR_PRIORIDADE['Média'];
 
 /**
- * @param {{ manutencoes?: object[], contas?: object[], ciclos?: object[], funcionarios?: object[], adiados?: Object<string,{ate:string}>, hoje?: Date }} dados
+ * @param {{ manutencoes?: object[], contas?: object[], ciclos?: object[], funcionarios?: object[], saldo?: {rubricas, gastos, periodo}, adiados?: Object<string,{ate:string}>, hoje?: Date }} dados
  * @returns {{ chave, tipo, gravidade, titulo, detalhe, escolaNome, link, alvo, adiadoAte? }[]}
  *   `chave` identifica o alerta para "ciente, lembrar depois"; alertas adiados
  *   (até uma data futura) vêm marcados com `adiadoAte`.
  */
-export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], funcionarios = [], adiados = {}, hoje = new Date() } = {}) {
+export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], funcionarios = [], saldo = null, adiados = {}, hoje = new Date() } = {}) {
   const alertas = [];
   const agora = hoje.getTime();
   const chamadosAbertosPorCiclo = new Map();
@@ -175,6 +176,38 @@ export function calcularAlertas({ manutencoes = [], contas = [], ciclos = [], fu
       escolaNome: '',
       link: '/admin/funcionarios?mostrar=aso',
       alvo: asoVencendo.map(({ f }) => f),
+    });
+  }
+
+  // ----------------------------------------------- controle de saldo ----
+  // Só no mês de hoje, e só se ele estiver dentro do período da verba.
+  const mesDeHoje = mesDe(hoje);
+  if (saldo?.periodo && mesesDoPeriodo(saldo.periodo).includes(mesDeHoje)) {
+    calcularSaldo({ ...saldo, mes: mesDeHoje }).linhas.forEach((l) => {
+      if (l.verba <= 0) return;
+      if (l.saldo < 0) {
+        alertas.push({
+          chave: `saldo-estourado:${l.rubrica.id}`,
+          tipo: 'saldo',
+          gravidade: GRAVIDADE.ATENCAO,
+          titulo: `Verba estourada: ${l.rubrica.nome}`,
+          detalhe: `${formatarMoeda(-l.saldo)} acima da verba do período (${formatarMoeda(l.verba)})`,
+          escolaNome: '',
+          link: '/admin/saldo',
+          alvo: l,
+        });
+      } else if (l.aindaPode < 0) {
+        alertas.push({
+          chave: `saldo-teto:${l.rubrica.id}:${mesDeHoje}`,
+          tipo: 'saldo',
+          gravidade: GRAVIDADE.AVISO,
+          titulo: `${l.rubrica.nome} passou do teto de ${rotuloDoMes(mesDeHoje)}`,
+          detalhe: `gasto ${formatarMoeda(l.gastoNoMes)} para um teto de ${formatarMoeda(l.teto)}; os próximos meses ficam com teto menor`,
+          escolaNome: '',
+          link: '/admin/saldo',
+          alvo: l,
+        });
+      }
     });
   }
 

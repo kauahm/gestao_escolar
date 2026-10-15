@@ -24,8 +24,8 @@ export const baixarArquivo = (blob, nome) => {
 
 const nomeSeguro = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '-').toLowerCase();
 
-/** Modelo em branco: uma aba para preencher, uma com instruções e, se precisar, a lista de escolas. */
-export const baixarModelo = (esquema, escolas = []) => {
+/** Modelo em branco: uma aba para preencher, uma com instruções e, se precisar, a lista de escolas ou de rubricas. */
+export const baixarModelo = (esquema, escolas = [], rubricas = []) => {
   const abas = [
     {
       nome: 'Preencha aqui',
@@ -50,6 +50,15 @@ export const baixarModelo = (esquema, escolas = []) => {
         .filter((e) => e.situacao !== 'Inativa')
         .sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'))
         .map((e) => [e.nome, e.codigo || '']),
+    });
+  }
+  if (esquema.precisaDeRubricas) {
+    abas.push({
+      nome: 'Rubricas cadastradas',
+      colunas: ['Rubrica'],
+      linhas: rubricas
+        .map((r) => [r.nome])
+        .sort((a, b) => String(a[0]).localeCompare(String(b[0]), 'pt-BR')),
     });
   }
   baixarArquivo(gerarXlsx(abas), `modelo-importacao-${nomeSeguro(esquema.titulo)}.xlsx`);

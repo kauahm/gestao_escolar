@@ -162,3 +162,28 @@ describe('ASO dos funcionários', () => {
     assert.equal(contarPendencias(alertas), 1);
   });
 });
+
+describe('controle de saldo', () => {
+  const mes = ymd(0).slice(0, 7);
+  const saldo = {
+    periodo: { inicio: mes, meses: 2 },
+    rubricas: [{ id: 'a', nome: 'Manutenção', verbaMensal: 1000 }, { id: 'b', nome: 'Enxoval', verbaMensal: 100 }, { id: 'c', nome: 'Livros', verbaMensal: 500 }],
+    gastos: [
+      { rubricaId: 'a', valorTotal: 1500, primeiraParcela: mes }, // passa do teto do mês (1000), dentro da verba (2000)
+      { rubricaId: 'b', valorTotal: 300, primeiraParcela: mes }, // estoura a verba (200)
+      { rubricaId: 'c', valorTotal: 100, primeiraParcela: mes },
+    ],
+  };
+
+  test('verba estourada cobra atenção; passar do teto do mês é aviso', () => {
+    const alertas = calcularAlertas({ saldo, hoje: HOJE });
+    assert.deepEqual(chaves(alertas).sort(), ['saldo-estourado:b', `saldo-teto:a:${mes}`]);
+    assert.equal(alertas.find((a) => a.chave === 'saldo-estourado:b').gravidade, GRAVIDADE.ATENCAO);
+    assert.equal(alertas.find((a) => a.chave.startsWith('saldo-teto')).gravidade, GRAVIDADE.AVISO);
+  });
+
+  test('fora do período não há alerta', () => {
+    const passado = { ...saldo, periodo: { inicio: '2020-01', meses: 2 } };
+    assert.deepEqual(calcularAlertas({ saldo: passado, hoje: HOJE }), []);
+  });
+});

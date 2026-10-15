@@ -289,3 +289,40 @@ describe('validação de funcionários (planilha "Colaboradores")', () => {
     assert.ok(rs[2].erros[0].includes('repete a linha'));
   });
 });
+
+describe('validação do controle de saldo (planilha "Controle de Saldo")', () => {
+  test('áreas: aba Orçamento, com linha de total e texto de instrução recusados', () => {
+    const linhas = [['Orçamento do projeto'], ['Nome do projeto', 'Creche'], [], ['Rubrica', 'Verba mensal', 'Verba do período', 'Observação'],
+      ['Mobiliário', 10000, 50000, ''], ['Enxoval', '1.500,00', 7500, 'repor no 2º semestre'], ['TOTAL', 11500, 57500, ''], ['Há linhas livres para cadastrar', '', '', '']];
+    const { indice, mapeamento } = encontrarCabecalho(linhas, ESQUEMAS.rubricas);
+    assert.equal(indice, 3);
+    assert.deepEqual(Object.values(mapeamento), ['nome', 'verbaMensal', 'observacao']);
+    const rs = validarLinhas(linhas, indice, mapeamento, ESQUEMAS.rubricas, {}).registros;
+    assert.deepEqual(rs.map((r) => r.situacao), ['ok', 'ok', 'erro', 'erro']);
+    assert.equal(rs[1].dados.verbaMensal, 1500);
+    assert.ok(rs[2].erros[0].includes('total'));
+  });
+
+  test('gastos: aba Lançamentos com colunas calculadas ao lado; parcelado, mês e área', () => {
+    const rubricas = [{ id: 'r1', nome: 'Manutenção civil, hidráulica, elétrica, pintura' }, { id: 'r2', nome: 'Enxoval' }];
+    const titulos = ['Data do gasto', 'Fornecedor', 'Nota fiscal', 'Descrição do gasto', 'Rubrica', 'Valor total', 'Parcelado', 'Parcelas', 'Primeira parcela em', 'Observação', 'Como ficou', 'Valor da parcela', 'Mês inicial'];
+    const linhas = [['Lançamentos'], [], titulos,
+      [new Date(2026, 7, 17), 'Loja A', 1, 'Portões', 'Manutenção civil, hidráulica, elétrica, pintura', 16700, 'Sim', 2, new Date(2026, 7, 1), '', '2x', 8350, ''],
+      ['12/08/2026', 'Loja B', '25', 'Gás', 'manutencao civil', '3.770,00', 'Não', '', '', '', '', '', ''],
+      ['', 'Loja C', '', 'Lençóis', 'Enxoval', 300, '', '', '10/2026', '', '', '', ''],
+      ['01/09/2026', 'Loja D', '', 'Algo', 'Informática', 100, '', '', '', '', '', '', ''],
+      ['', '', '', '', 'Enxoval', '', '', '', '', '', '', '', ''],
+    ];
+    const { indice, mapeamento } = encontrarCabecalho(linhas, ESQUEMAS.gastos);
+    assert.equal(indice, 2);
+    assert.equal(Object.keys(mapeamento).length, 10);
+    const [a, b, c, d, e] = validarLinhas(linhas, indice, mapeamento, ESQUEMAS.gastos, { rubricas }).registros;
+    assert.equal(a.situacao, 'ok');
+    assert.deepEqual([a.dados.rubricaId, a.dados.valorTotal, a.dados.parcelas, a.dados.primeiraParcela, a.dados.data], ['r1', 16700, 2, '2026-08', '2026-08-17']);
+    assert.equal(b.situacao, 'aviso'); // rubrica pelo pedaço do nome
+    assert.deepEqual([b.dados.parcelas, b.dados.primeiraParcela, b.dados.valorTotal], [1, '2026-08', 3770]);
+    assert.deepEqual([c.situacao, c.dados.primeiraParcela], ['ok', '2026-10']);
+    assert.ok(d.erros[0].includes('não está cadastrada'));
+    assert.ok(e.erros.includes('Valor total é obrigatório'));
+  });
+});

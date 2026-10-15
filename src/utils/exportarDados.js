@@ -16,6 +16,8 @@ export const COLECOES = [
   { id: 'eventos', rotulo: 'Agenda' },
   { id: 'curriculos', rotulo: 'Currículos' },
   { id: 'funcionarios', rotulo: 'Funcionários' },
+  { id: 'rubricas', rotulo: 'Áreas e verbas' },
+  { id: 'gastos', rotulo: 'Gastos lançados' },
   { id: 'usuarios', rotulo: 'Usuários' },
 ];
 
@@ -80,12 +82,20 @@ const ROTULOS = {
   afastamentoRetorno: 'Data retorno afast.',
   afastamentoTipo: 'Tipo de afastamento',
   dataRescisao: 'Data de rescisão',
+  verbaMensal: 'Verba mensal (R$)',
+  rubricaNome: 'Rubrica',
+  fornecedor: 'Fornecedor',
+  notaFiscal: 'Nota fiscal',
+  valorTotal: 'Valor total (R$)',
+  parcelas: 'Parcelas',
+  primeiraParcela: 'Primeira parcela em',
+  observacao: 'Observação',
   criadoEm: 'Criado em',
   atualizadoEm: 'Atualizado em',
 };
 
 // Colunas que não ajudam a ler a planilha (identificadores internos).
-const OCULTAS_NO_EXCEL = new Set(['escolaId', 'unidadeId', 'solicitadaPor', 'criadoPor', 'uid', 'importacaoId']);
+const OCULTAS_NO_EXCEL = new Set(['escolaId', 'unidadeId', 'solicitadaPor', 'criadoPor', 'uid', 'importacaoId', 'rubricaId']);
 
 const rotuloDaColuna = (chave) =>
   ROTULOS[chave] ||

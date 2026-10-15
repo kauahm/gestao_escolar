@@ -18,6 +18,8 @@ No painel da administração, o quadro **"Precisa de atenção hoje"** substitui
 | Conta perto de vencer | Até 3 dias (hoje e amanhã = atenção) | Atenção / aviso | Marcar como enviada |
 | ASO vencido ([19](19-funcionarios.md)) | Exame periódico de funcionário ativo vencido (um alerta só, com os primeiros nomes) | Atenção | Ver funcionários (já filtrada) |
 | ASO perto de vencer | Até 30 dias (um alerta só) | Aviso | Ver funcionários (já filtrada) |
+| Verba estourada ([20](20-controle-de-saldo.md)) | O lançado numa área passou da verba do período | Atenção | Ver controle de saldo |
+| Área acima do teto do mês | O gasto do mês atual passou do teto (os meses seguintes se ajustam sozinhos) | Aviso | Ver controle de saldo |
 
 Vários motivos no mesmo chamado (prazo estourado e pendente há muito tempo) viram um alerta só, com os dois motivos.
 

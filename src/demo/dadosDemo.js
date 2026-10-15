@@ -356,6 +356,81 @@ const funcionarios = () => FUNCIONARIOS.map(([nome, e, cargo, admitidoHa, x], i)
   };
 });
 
+// Controle de saldo: período de 12 meses que começou há 3 meses, áreas com
+// verba mensal e gastos inventados. Uma área passa do teto no mês atual e
+// outra fica perto dele, para o painel ter o que mostrar.
+const mesRelativo = (meses) => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + meses);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+};
+
+const periodoDoSaldo = () => [{ id: 'saldo', inicio: mesRelativo(-3), meses: 12, atualizadoEm: carimbo(-90) }];
+
+// [nome, verba mensal]
+const RUBRICAS = [
+  ['Mobiliário', 6000],
+  ['Material de Escritório', 1500],
+  ['Brinquedos e Livros pedagógicos', 3000],
+  ['Material de Higiene, Limpeza/uniforme', 9000],
+  ['Material Pedagógico', 3000],
+  ['Material de Informática', 2500],
+  ['Enxoval', 1000],
+  ['Manutenção de Mobiliário e Equipamentos', 2500],
+  ['Manutenção civil, hidráulica, elétrica, pintura', 8300],
+];
+const idRubrica = (i) => `demo-rubrica-${pad(i + 1)}`;
+
+const rubricas = () => RUBRICAS.map(([nome, verbaMensal], i) => ({
+  id: idRubrica(i),
+  nome,
+  verbaMensal,
+  observacao: '',
+  criadoEm: carimbo(-95),
+  atualizadoEm: carimbo(-95),
+}));
+
+// [área, meses em relação a hoje (0 = este mês), dia, fornecedor, NF, descrição, valor total, parcelas]
+const GASTOS = [
+  [8, -3, 8, 'Construtora Exemplo', '1021', 'Troca de calhas e rufos', 7400, 1],
+  [8, -2, 14, 'Hidráulica Modelo', '553', 'Reparo da rede de esgoto', 12600, 2],
+  [8, -1, 5, 'Pinturas Fictícias', '78', 'Pintura das salas do berçário', 9800, 1],
+  [8, 0, 3, 'Elétrica Demonstração', '2290', 'Troca do quadro de distribuição', 14200, 1],
+  [3, -3, 2, 'Distribuidora Limpa Bem', '4410', 'Material de limpeza do trimestre', 8100, 1],
+  [3, -2, 1, 'Distribuidora Limpa Bem', '4502', 'Fraldas e lenços', 9300, 1],
+  [3, -1, 3, 'Uniformes Exemplo', '311', 'Uniformes da equipe', 10800, 3],
+  [3, 0, 2, 'Distribuidora Limpa Bem', '4688', 'Material de limpeza', 4200, 1],
+  [0, -2, 20, 'Móveis Escolares Modelo', '9012', 'Mesas e cadeiras infantis', 18000, 3],
+  [2, -1, 11, 'Livraria Exemplo', '880', 'Livros de histórias', 2600, 1],
+  [2, 0, 6, 'Brinquedos Fictícios', '145', 'Brinquedos de encaixe', 2950, 1],
+  [4, -3, 15, 'Papelaria Modelo', '3321', 'Tinta guache e papel', 2100, 1],
+  [4, -1, 19, 'Papelaria Modelo', '3460', 'Massinha e pincéis', 1750, 1],
+  [5, -2, 9, 'Informática Exemplo', '77', 'Notebook da secretaria', 6900, 3],
+  [1, -1, 7, 'Papelaria Modelo', '3502', 'Papel sulfite e toner', 980, 1],
+  [6, -3, 25, 'Enxovais Demonstração', '204', 'Lençóis e toalhas', 2400, 1],
+  [7, -1, 22, 'Manutenção Exemplo', '61', 'Conserto da geladeira', 1350, 1],
+];
+
+const gastos = () => GASTOS.map(([r, meses, diaDoMes, fornecedor, notaFiscal, descricao, valorTotal, parcelas], i) => {
+  const mes = mesRelativo(meses);
+  return {
+    id: `demo-gasto-${pad(i + 1)}`,
+    data: `${mes}-${pad(diaDoMes)}`,
+    fornecedor,
+    notaFiscal,
+    descricao,
+    rubricaId: idRubrica(r),
+    rubricaNome: RUBRICAS[r][0],
+    valorTotal,
+    parcelas,
+    primeiraParcela: mes,
+    observacao: '',
+    criadoEm: carimbo(meses * 30),
+    atualizadoEm: carimbo(meses * 30),
+  };
+});
+
 /**
  * Tudo o que entra no ambiente de demonstração, por coleção.
  * Cada registro traz o `id` do documento; o resto são os campos.
@@ -370,5 +445,9 @@ export function gerarDadosDemo() {
     eventos: eventos(),
     curriculos: curriculos(),
     funcionarios: funcionarios(),
+    rubricas: rubricas(),
+    gastos: gastos(),
+    // config/saldo: o período do controle de saldo.
+    config: periodoDoSaldo(),
   };
 }

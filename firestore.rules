@@ -137,6 +137,16 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin() || isAdministrativo();
     }
 
+    // Controle de saldo das verbas: áreas (rubricas) com verba mensal e os
+    // gastos lançados em cada uma. Somente administração. O período (mês
+    // inicial e nº de meses) fica em config/saldo. Ver docs/20-controle-de-saldo.md.
+    match /rubricas/{id} {
+      allow read, create, update, delete: if isAdmin();
+    }
+    match /gastos/{id} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
     // Agenda: somente administração.
     match /eventos/{id} {
       allow read, create, update, delete: if isAdmin();
@@ -188,7 +198,7 @@ service cloud.firestore {
       allow read: if isAdmin() ||
                      (isAdministrativo() && resource.data.colecao in ['curriculos', 'funcionarios']);
       allow create: if podeImportar(request.resource.data.colecao)
-                    && request.resource.data.colecao in ['escolas', 'contas', 'ciclos', 'curriculos', 'funcionarios']
+                    && request.resource.data.colecao in ['escolas', 'contas', 'ciclos', 'curriculos', 'funcionarios', 'rubricas', 'gastos']
                     && request.resource.data.porUid == request.auth.uid
                     && request.resource.data.status == 'em andamento'
                     && request.resource.data.em == request.time;

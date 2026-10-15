@@ -6,7 +6,7 @@ import { TELAS, ROTULO_DO_PERFIL } from '../../config/telas';
 import { useAlertas } from '../../contexts/AlertasContext';
 import { 
   LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
-  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck, Contact 
+  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck, Contact, Wallet 
 } from 'lucide-react';
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
@@ -22,6 +22,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     { to: '/admin/manutencoes', icon: <Wrench size={20} />, label: TELAS['/admin/manutencoes'] },
     { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: TELAS['/admin/prestadores'] },
     { to: '/admin/contas', icon: <Receipt size={20} />, label: TELAS['/admin/contas'] },
+    { to: '/admin/saldo', icon: <Wallet size={20} />, label: TELAS['/admin/saldo'] },
     { to: '/admin/ciclos', icon: <RefreshCcw size={20} />, label: TELAS['/admin/ciclos'] },
     { to: '/admin/funcionarios', icon: <Contact size={20} />, label: TELAS['/admin/funcionarios'] },
     { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },

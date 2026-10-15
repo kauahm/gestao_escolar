@@ -369,4 +369,111 @@ const funcionarios = {
   carimbos: (agora) => ({ criadoEm: agora, atualizadoEm: agora }),
 };
 
-export const ESQUEMAS = { escolas, contas, ciclos, curriculos, funcionarios };
+// ------------------------------------------------------ controle de saldo ----
+
+/** Acha a rubrica pelo nome (sem ligar para acento e maiúsculas); parte do nome só se for única. */
+export const acharRubrica = (valor, rubricas) => {
+  const k = n.chave(valor);
+  if (!k) return { erro: 'rubrica não informada' };
+  const exata = rubricas.find((r) => n.chave(r.nome) === k);
+  if (exata) return { rubrica: exata };
+  const parecidas = rubricas.filter((r) => n.chave(r.nome).includes(k) || k.includes(n.chave(r.nome)));
+  if (parecidas.length === 1) return { rubrica: parecidas[0], aviso: `rubrica "${valor}" entendida como "${parecidas[0].nome}"` };
+  if (parecidas.length > 1) return { erro: `rubrica "${valor}" combina com mais de uma área cadastrada` };
+  return { erro: `rubrica "${valor}" não está cadastrada (cadastre em Áreas e verbas)` };
+};
+
+const rubricas = {
+  id: 'rubricas',
+  colecao: 'rubricas',
+  titulo: 'Áreas e verbas',
+  nomeDoRegistro: 'área',
+  // A aba "Orçamento" da planilha "Controle de Saldo" é reconhecida como está.
+  campos: [
+    { chave: 'nome', rotulo: 'Rubrica', obrigatorio: true, exemplo: 'Material Pedagógico', ajuda: 'Nome da área de gasto.', sinonimos: ['area', 'nome', 'categoria'] },
+    { chave: 'verbaMensal', rotulo: 'Verba mensal', obrigatorio: true, exemplo: '5.000,00', ajuda: 'Quanto pode ser gasto por mês. A verba do período é este valor vezes o número de meses.', sinonimos: ['valor mensal', 'verba por mes', 'orcamento mensal'] },
+    { chave: 'observacao', rotulo: 'Observação', exemplo: '', sinonimos: ['observacoes', 'obs'] },
+  ],
+  converter(linha) {
+    const r = novoResultado();
+    r.dados.nome = n.texto(linha.nome);
+    exigir(r, 'nome', 'Rubrica');
+    if (/^(total|totais|soma)\b/.test(n.chave(r.dados.nome))) r.erros.push('linha de total, não é uma área');
+    const v = n.dinheiro(linha.verbaMensal);
+    if (v.erro) r.erros.push(`Verba mensal: ${v.erro}`);
+    else if (v.valor === null) r.erros.push('Verba mensal é obrigatória');
+    else if (v.valor < 0) r.erros.push('Verba mensal não pode ser negativa');
+    else r.dados.verbaMensal = v.valor;
+    r.dados.observacao = n.texto(linha.observacao);
+    return r;
+  },
+  chavesDeDuplicidade: (d) => [`nome:${n.chave(d.nome)}`],
+  resumo: (d) => [d.nome, d.verbaMensal != null ? `R$ ${Number(d.verbaMensal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} por mês` : ''].filter(Boolean).join(' · '),
+  carimbos: (agora) => ({ criadoEm: agora, atualizadoEm: agora }),
+};
+
+const gastos = {
+  id: 'gastos',
+  colecao: 'gastos',
+  titulo: 'Lançamentos de gastos',
+  nomeDoRegistro: 'lançamento',
+  precisaDeRubricas: true,
+  // A aba "Lançamentos" da planilha "Controle de Saldo" é reconhecida como está.
+  campos: [
+    { chave: 'data', rotulo: 'Data do gasto', exemplo: '12/08/2026', ajuda: 'Se não houver "Primeira parcela em", o gasto conta no mês desta data.', sinonimos: ['data', 'data da compra', 'data da nota', 'emissao'] },
+    { chave: 'fornecedor', rotulo: 'Fornecedor', exemplo: 'Loja Exemplo', sinonimos: ['empresa', 'prestador', 'favorecido'] },
+    { chave: 'notaFiscal', rotulo: 'Nota fiscal', exemplo: '1234', sinonimos: ['nf', 'n nf', 'numero da nota', 'nota', 'documento'] },
+    { chave: 'descricao', rotulo: 'Descrição do gasto', exemplo: 'Tinta para a sala 3', sinonimos: ['descricao', 'item', 'o que foi comprado', 'historico'] },
+    { chave: 'rubrica', rotulo: 'Rubrica', obrigatorio: true, exemplo: 'Material Pedagógico', ajuda: 'Igual ao nome cadastrado em Áreas e verbas.', sinonimos: ['area', 'categoria'] },
+    { chave: 'valorTotal', rotulo: 'Valor total', obrigatorio: true, exemplo: '9.000,00', ajuda: 'Compra parcelada: o valor TOTAL; o sistema divide pelas parcelas.', sinonimos: ['valor', 'valor (r$)', 'total'] },
+    { chave: 'parcelado', rotulo: 'Parcelado', exemplo: 'Não', ajuda: 'Sim ou Não. Em branco = à vista (ou parcelado, se houver nº de parcelas maior que 1).', sinonimos: [] },
+    { chave: 'parcelas', rotulo: 'Parcelas', exemplo: '1', sinonimos: ['n de parcelas', 'numero de parcelas', 'qtd de parcelas'] },
+    { chave: 'primeiraParcela', rotulo: 'Primeira parcela em', exemplo: '08/2026', ajuda: 'Mês em que o gasto (ou a 1ª parcela) conta. Em branco = mês da data do gasto.', sinonimos: ['mes da primeira parcela', '1a parcela', 'mes de referencia', 'competencia'] },
+    { chave: 'observacao', rotulo: 'Observação', exemplo: '', sinonimos: ['observacoes', 'obs'] },
+  ],
+  converter(linha, contexto) {
+    const r = novoResultado();
+    const achada = acharRubrica(linha.rubrica, contexto.rubricas || []);
+    if (achada.erro) r.erros.push(achada.erro);
+    else {
+      if (achada.aviso) r.avisos.push(achada.aviso);
+      r.dados.rubricaId = achada.rubrica.id;
+      r.dados.rubricaNome = achada.rubrica.nome;
+    }
+    const v = n.dinheiro(linha.valorTotal);
+    if (v.erro) r.erros.push(`Valor total: ${v.erro}`);
+    else if (v.valor === null) r.erros.push('Valor total é obrigatório');
+    else if (v.valor <= 0) r.erros.push('Valor total precisa ser maior que zero');
+    else r.dados.valorTotal = v.valor;
+
+    aplicar(r, 'data', 'Data do gasto', n.data, linha.data);
+    if (r.dados.data === undefined) r.dados.data = '';
+    aplicar(r, 'primeiraParcela', 'Primeira parcela em', n.mes, linha.primeiraParcela);
+    if (!r.dados.primeiraParcela) r.dados.primeiraParcela = r.dados.data ? r.dados.data.slice(0, 7) : '';
+    if (!r.dados.primeiraParcela && !r.erros.length) r.erros.push('Informe a data do gasto ou o mês da primeira parcela');
+
+    const parcelado = n.simNao(linha.parcelado);
+    if (parcelado.erro) r.avisos.push(`Parcelado "${linha.parcelado}" não reconhecido; considerado pelo nº de parcelas`);
+    const qtd = n.inteiro(linha.parcelas);
+    let parcelas = qtd.valor && qtd.valor > 0 ? qtd.valor : 1;
+    if (qtd.erro) r.avisos.push(`Parcelas: ${qtd.erro}; considerado à vista`);
+    if (parcelado.valor === false) parcelas = 1;
+    if (parcelado.valor === true && parcelas < 2) r.avisos.push('marcado como parcelado, mas sem nº de parcelas; considerado à vista');
+    if (parcelas > 60) { r.erros.push('mais de 60 parcelas'); parcelas = 60; }
+    r.dados.parcelas = parcelas;
+
+    r.dados.fornecedor = n.texto(linha.fornecedor);
+    r.dados.notaFiscal = n.texto(typeof linha.notaFiscal === 'number' ? String(Math.round(linha.notaFiscal)) : linha.notaFiscal);
+    r.dados.descricao = n.texto(linha.descricao);
+    r.dados.observacao = n.texto(linha.observacao);
+    return r;
+  },
+  // Mesmo lançamento = mesma rubrica, fornecedor, nota, valor e mês.
+  chavesDeDuplicidade: (d) => [
+    `gasto:${d.rubricaId}|${n.chave(d.fornecedor)}|${n.chave(d.notaFiscal)}|${Number(d.valorTotal).toFixed(2)}|${d.primeiraParcela}|${n.chave(d.descricao)}`,
+  ],
+  resumo: (d) => [d.descricao || d.fornecedor, d.rubricaNome, d.valorTotal != null ? `R$ ${Number(d.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', d.parcelas > 1 ? `${d.parcelas}x` : ''].filter(Boolean).join(' · '),
+  carimbos: (agora) => ({ criadoEm: agora, atualizadoEm: agora }),
+};
+
+export const ESQUEMAS = { escolas, contas, ciclos, curriculos, funcionarios, rubricas, gastos };

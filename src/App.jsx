@@ -16,6 +16,7 @@ import Agenda from './pages/admin/Agenda';
 import Usuarios from './pages/admin/Usuarios';
 import BancoTalentos from './pages/admin/BancoTalentos';
 import Funcionarios from './pages/admin/Funcionarios';
+import ControleDeSaldo from './pages/admin/ControleDeSaldo';
 import Prestadores from './pages/admin/Prestadores';
 import Seguranca from './pages/admin/Seguranca';
 import ManutencaoDetalhe from './pages/admin/ManutencaoDetalhe';
@@ -87,6 +88,7 @@ export default function App() {
             <Route path="manutencoes/:id" element={<PrivateRoute allowedRoles={['admin']}><ManutencaoDetalhe /></PrivateRoute>} />
             <Route path="prestadores" element={<PrivateRoute allowedRoles={['admin']}><Prestadores /></PrivateRoute>} />
             <Route path="contas" element={<PrivateRoute allowedRoles={['admin']}><Contas /></PrivateRoute>} />
+            <Route path="saldo" element={<PrivateRoute allowedRoles={['admin']}><ControleDeSaldo /></PrivateRoute>} />
             <Route path="ciclos" element={<PrivateRoute allowedRoles={['admin']}><Ciclos /></PrivateRoute>} />
             <Route path="agenda" element={<PrivateRoute allowedRoles={['admin']}><Agenda /></PrivateRoute>} />
             <Route path="usuarios" element={<PrivateRoute allowedRoles={['admin']}><Usuarios /></PrivateRoute>} />

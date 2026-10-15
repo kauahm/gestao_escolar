@@ -69,6 +69,21 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 14/10/2026 — Controle de saldo
+
+- **Nova aba Controle de saldo** (só administração), baseada na planilha "Controle de Saldo", em versão mais simples. Tem quatro partes: Painel, Lançamentos, Mês a mês e Áreas e verbas.
+- **Áreas e verbas:** período (mês inicial e nº de meses) e áreas com verba mensal ou do período (um campo calcula o outro), com as 9 áreas da planilha como sugestão.
+- **Lançar gasto:** à vista ou parcelado (uma parcela por mês). Antes de salvar, mostra quanto ainda sobra para a área no mês e avisa se passar do teto ou estourar a verba.
+- **Conta automática igual à da planilha:** teto do mês = (verba − o que caiu nos outros meses) ÷ meses que faltam. Mês acima do teto reduz o teto dos seguintes sozinho. Conferido centavo por centavo com a planilha real.
+- **Importação** das abas Orçamento e Lançamentos da planilha, sem ajuste (9 áreas e 15 gastos, nenhum erro). **Exportar Excel** dos lançamentos.
+- **Alertas:** verba estourada (atenção) e área acima do teto do mês (aviso).
+- **Regras:** coleções `rubricas` e `gastos` só da administração; período em `config/saldo`. **Demonstração:** período, áreas e 17 gastos fictícios.
+- **Testes:** 85 (`npm test`) e 61 de regras, todos passando. A tela foi conferida no emulador (inclusive no celular), e a auditoria de acessibilidade não achou violações.
+
+Detalhes em [20](20-controle-de-saldo.md).
+
+---
+
 ## 14/10/2026 — Funcionários
 
 - **Nova aba Funcionários** (administração e RH), com a mesma estrutura da planilha "Colaboradores": situação, unidade, nome, nascimento, cargo, PCD, admissão, salário, CPF, RG, PIS, fone, endereço, cidade, ASO, afastamento e rescisão.

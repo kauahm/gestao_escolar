@@ -478,6 +478,11 @@ describe('ambiente de demonstração', () => {
     assert.equal(resultado.criados, totalEsperado);
 
     for (const [colecao, lista] of Object.entries(esperado)) {
+      if (colecao === 'config') {
+        // config também guarda o marcador "ambiente", que não faz parte dos dados.
+        for (const { id } of lista) assert.ok((await getDoc(doc(bd, 'config', id))).exists(), `config/${id}`);
+        continue;
+      }
       const snap = await getDocs(collection(bd, colecao));
       assert.equal(snap.size, lista.length, `coleção ${colecao}`);
     }
@@ -590,6 +595,44 @@ describe('importação de planilhas', () => {
     await importarRegistros({ db: bd, esquema: ESQUEMAS.escolas, registros: [escolaNova('CEI Um')], arquivo: 'x', usuario: usuario('admin') });
     await resetarDemo(bd);
     assert.equal((await getDocs(collection(bd, 'importacoes'))).size, 0);
+  });
+});
+
+describe('controle de saldo', () => {
+  const rubrica = { nome: 'Material Pedagógico', verbaMensal: 5000, observacao: '' };
+  const gasto = { rubricaId: 'r1', rubricaNome: 'Material Pedagógico', valorTotal: 900, parcelas: 3, primeiraParcela: '2026-10', data: '2026-10-05' };
+
+  test('administração lê e grava áreas, gastos e o período', async () => {
+    const bd = como('admin');
+    const r = await assertSucceeds(addDoc(collection(bd, 'rubricas'), rubrica));
+    const g = await assertSucceeds(addDoc(collection(bd, 'gastos'), { ...gasto, rubricaId: r.id }));
+    await assertSucceeds(updateDoc(g, { valorTotal: 1000 }));
+    await assertSucceeds(setDoc(doc(bd, 'config', 'saldo'), { inicio: '2026-08', meses: 5 }));
+    await assertSucceeds(getDocs(collection(bd, 'gastos')));
+    await assertSucceeds(getDoc(doc(bd, 'config', 'saldo')));
+  });
+
+  test('RH, diretora, conta desativada e visitante não leem nem gravam', async () => {
+    await ambiente.withSecurityRulesDisabled(async (ctx) => {
+      const f = ctx.firestore();
+      await setDoc(doc(f, 'rubricas', 'r1'), rubrica);
+      await setDoc(doc(f, 'gastos', 'g1'), gasto);
+    });
+    for (const bd of [como('rh'), como('diretoraA'), como('diretoraInativa'), anonimo()]) {
+      await assertFails(getDoc(doc(bd, 'rubricas', 'r1')));
+      await assertFails(getDocs(collection(bd, 'gastos')));
+      await assertFails(addDoc(collection(bd, 'gastos'), gasto));
+      await assertFails(setDoc(doc(bd, 'config', 'saldo'), { inicio: '2026-08', meses: 5 }));
+    }
+  });
+
+  test('administração importa e desfaz áreas e gastos', async () => {
+    const bd = como('admin');
+    for (const [esquema, dados] of [[ESQUEMAS.rubricas, rubrica], [ESQUEMAS.gastos, gasto]]) {
+      const { importacaoId } = await importarRegistros({ db: bd, esquema, registros: [{ dados }], arquivo: 'controle-de-saldo.xlsx', usuario: { uid: 'admin', email: emailDe('admin') } });
+      await assert.doesNotReject(desfazerImportacao({ db: bd, importacao: { id: importacaoId, colecao: esquema.colecao }, usuario: { uid: 'admin', email: emailDe('admin') } }));
+    }
+    await assert.rejects(importarRegistros({ db: como('rh'), esquema: ESQUEMAS.gastos, registros: [{ dados: gasto }], arquivo: 'x', usuario: { uid: 'rh', email: emailDe('rh') } }));
   });
 });
 

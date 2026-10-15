@@ -78,6 +78,7 @@ Sem isso, nada mais importa: um erro de segurança numa demo com dados reais cus
 | 2.10 | **Log de auditoria** (quem mudou o quê e quando) | Confiança e conformidade | M |
 | 2.11 | Perfis ampliados: coordenação regional, diretor educacional, supervisor | Estruturas reais da AEMC | M |
 | 2.12 | ✅ **Feito (14/10)** ([19](19-funcionarios.md)) — **Cadastro de funcionários** com a estrutura da planilha da AEMC, filtros, PCD, afastamentos, ASO com alerta, importação e exportação em Excel | A planilha de colaboradores é o controle de pessoal de hoje | M |
+| 2.13 | ✅ **Feito (14/10)** ([20](20-controle-de-saldo.md)) — **Controle de saldo das verbas** por área: verba do período, gastos à vista e parcelados, teto do mês recalculado sozinho, alertas e importação da planilha | Substitui a planilha "Controle de Saldo"; é o começo do relatório de prestação de contas (1.4) | M |
 
 ### Fase 3 — Diferenciais (o que o mercado quase não faz)
 | # | Item | Por quê | Esforço |

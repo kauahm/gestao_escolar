@@ -33,11 +33,12 @@ const textoDaCelula = (v) => {
 
 /**
  * Importar planilha (Excel ou CSV) para um módulo.
- * @param {'escolas'|'contas'|'ciclos'|'curriculos'} tipo
+ * @param {'escolas'|'contas'|'ciclos'|'curriculos'|'funcionarios'|'rubricas'|'gastos'} tipo
  * @param escolas  escolas cadastradas (para achar a escola de cada linha)
+ * @param rubricas  áreas do controle de saldo (para achar a rubrica de cada gasto)
  * @param existentes  registros que já existem (para não duplicar)
  */
-export default function ImportarPlanilha({ isOpen, onClose, tipo, escolas = NENHUM, existentes = NENHUM }) {
+export default function ImportarPlanilha({ isOpen, onClose, tipo, escolas = NENHUM, existentes = NENHUM, rubricas = NENHUM }) {
   const esquema = ESQUEMAS[tipo];
   const { currentUser } = useAuth();
   const entrada = useRef(null);
@@ -77,8 +78,8 @@ export default function ImportarPlanilha({ isOpen, onClose, tipo, escolas = NENH
     // Só na pré-visualização: depois de importar, os registros novos passam a
     // existir e a mesma planilha apareceria inteira como "repetida".
     if (etapa !== 'previa') return null;
-    return validarLinhas(linhas, indiceCabecalho, mapeamento, esquema, { escolas, existentes });
-  }, [etapa, linhas, indiceCabecalho, mapeamento, esquema, escolas, existentes]);
+    return validarLinhas(linhas, indiceCabecalho, mapeamento, esquema, { escolas, existentes, rubricas });
+  }, [etapa, linhas, indiceCabecalho, mapeamento, esquema, escolas, existentes, rubricas]);
 
   const totais = validacao ? resumir(validacao.registros) : null;
 
@@ -194,7 +195,7 @@ export default function ImportarPlanilha({ isOpen, onClose, tipo, escolas = NENH
 
           <button
             type="button"
-            onClick={() => baixarModelo(esquema, escolas)}
+            onClick={() => baixarModelo(esquema, escolas, rubricas)}
             className="text-primary hover:underline text-sm font-medium flex items-center gap-1.5"
           >
             <Download size={16} /> Baixar modelo em Excel

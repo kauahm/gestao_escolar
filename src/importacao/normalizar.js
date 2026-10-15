@@ -181,6 +181,14 @@ export const partesDaCompetencia = (valor) => {
 
 export const competenciaDe = (mes, ano) => `${MESES[mes - 1]}/${ano}`;
 
+/** Mês -> "AAAA-MM". Aceita data (01/10/2026, célula de data), 10/2026, out/2026, Outubro/2026. */
+export const mes = (valor) => {
+  if (vazio(valor)) return { valor: '' };
+  const p = partesDaCompetencia(valor);
+  if (!p) return { erro: `"${valor}" não é um mês (use mês/ano, por exemplo 10/2026)` };
+  return { valor: `${p.ano}-${String(p.mes).padStart(2, '0')}` };
+};
+
 /** Número para ordenar competências por data (as que não forem reconhecidas vão para o fim). */
 export const ordemDaCompetencia = (valor) => {
   const p = partesDaCompetencia(valor);
