@@ -71,7 +71,7 @@ export default function Usuarios() {
       const escolasData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(e => e.situacao === 'Ativa')
-        .sort((a, b) => a.nome.localeCompare(b.nome));
+        .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')));
       setEscolas(escolasData);
     });
     return () => unsubscribe();
@@ -87,7 +87,7 @@ export default function Usuarios() {
       data.sort((a, b) => {
         if (a.situacao === 'ativa' && b.situacao === 'inativa') return -1;
         if (a.situacao === 'inativa' && b.situacao === 'ativa') return 1;
-        return a.nome.localeCompare(b.nome);
+        return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
       });
       
       setUsuarios(data);
@@ -109,7 +109,7 @@ export default function Usuarios() {
   const filteredUsuarios = useMemo(() => {
     return usuarios.filter(u => {
       const term = searchTerm.toLowerCase();
-      const matchBusca = u.nome.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+      const matchBusca = String(u.nome || '').toLowerCase().includes(term) || String(u.email || '').toLowerCase().includes(term);
       const matchSituacao = filterSituacao === 'Todas' ? true : u.situacao === filterSituacao.toLowerCase().slice(0, -1);
       const matchPerfil = filterPerfil === 'Todos' ? true : u.perfil === filterPerfil;
       return matchBusca && matchSituacao && matchPerfil;
@@ -120,7 +120,7 @@ export default function Usuarios() {
   const handleOpenForm = (usuario = null) => {
     if (usuario) {
       setFormData({
-        nome: usuario.nome,
+        nome: usuario.nome || '',
         email: usuario.email,
         senha: '',
         perfil: usuario.perfil || 'diretora',
@@ -411,7 +411,7 @@ export default function Usuarios() {
               {filteredUsuarios.map((item) => (
                 <tr key={item.uid} className={`hover:bg-gray-50 transition-colors ${item.situacao === 'inativa' ? 'opacity-70 bg-gray-50/50' : ''}`}>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-bold text-gray-900">{item.nome}</div>
+                    <div className="text-sm font-bold text-gray-900">{item.nome || <span className="italic text-gray-500">Cadastro sem nome</span>}</div>
                     <div className="text-xs text-gray-500">{item.email}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
