@@ -79,7 +79,14 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
   - consulta sem o filtro do município também é recusada.
 - **Dados antigos:** ferramenta da sede para atribuir a um município tudo o que foi cadastrado antes da divisão.
 - **Testes:** 90 e 72 de regras (reescritos com dois municípios), todos passando. A tela foi conferida no emulador com sede, duas administrações, diretora e RH.
-- **Ainda não publicado:** precisa ir ao ar junto com as regras e a organização dos dados, num momento combinado (ver [22](22-acesso-por-municipio.md), seção 5).
+- **Publicado em 15/10/2026**, primeiro na demonstração e depois no sistema real:
+  - conta da sede criada e regras novas publicadas nos dois projetos, conferidas por hash;
+  - índice do histórico criado e código no ar;
+  - no sistema real, Hortolândia cadastrada e 594 registros antigos atribuídos a ela (entre eles 266 funcionários e as contas de usuário);
+  - as 13 telas foram conferidas sem recusa de permissão.
+- Dois ajustes feitos durante a publicação:
+  - a ferramenta de dados antigos passou a ignorar o histórico da própria sede;
+  - a lista de Usuários deixou de travar com um cadastro sem nome que já existia no banco.
 
 Detalhes em [22](22-acesso-por-municipio.md).
 
