@@ -352,6 +352,8 @@ describe('sede', () => {
 describe('dados antigos (organizar depois da divisão por município)', () => {
   test('a sede acha tudo o que não tem município e atribui a um município', async () => {
     const bd = como('sede');
+    // Linha do histórico gravada pela própria sede (município vazio de propósito): não é dado antigo.
+    await assertSucceeds(addDoc(collection(bd, 'historico'), linhaDeHistorico('sede', { colecao: 'municipios' })));
     const achados = await procurarDadosAntigos(bd);
     assert.deepEqual(achados.porColecao.escolas, ['escolaAntiga']);
     assert.deepEqual(achados.porColecao.historico, ['hAntigo']);

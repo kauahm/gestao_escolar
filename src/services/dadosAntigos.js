@@ -28,7 +28,9 @@ export async function procurarDadosAntigos(db) {
   for (const nome of COLECOES_DO_MUNICIPIO) {
     const snap = await getDocs(collection(db, nome));
     const ids = snap.docs
-      .filter((d) => !d.data().municipioId)
+      // Só o que NÃO tem o campo. Campo presente e vazio (null) é registro da própria
+      // sede (ex.: o histórico de cadastrar um município), que não é de município nenhum.
+      .filter((d) => !('municipioId' in d.data()))
       // A conta da sede não pertence a município nenhum.
       .filter((d) => !(nome === 'usuarios' && d.data().perfil === 'sede'))
       .map((d) => d.id);
