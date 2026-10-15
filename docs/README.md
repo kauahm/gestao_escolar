@@ -26,5 +26,6 @@ Toda a documentação do projeto fica nesta pasta.
 | [20-controle-de-saldo.md](20-controle-de-saldo.md) | Controle de saldo das verbas por área (base: planilha "Controle de Saldo"): tela simples com um cartão por área, gastos à vista e parcelados, limite do mês recalculado sozinho, importação da planilha, alertas e testes |
 | [21-visao-da-sede.md](21-visao-da-sede.md) | Visão da sede: Município → Contrato → Escola, painel com semáforo por município e por escola, cadastro de municípios e contratos, alertas de vigência e o que depende de você |
 | [22-acesso-por-municipio.md](22-acesso-por-municipio.md) | Login da sede e administração por município: perfis, como as regras impedem um município de ver o outro, dados antigos, passo a passo da publicação e contas de teste |
+| [23-revisao-completa-do-sistema.md](23-revisao-completa-do-sistema.md) | Revisão de ponta a ponta antes da apresentação à sede: como foi testado (emulador, 4 perfis, 162 testes, acessibilidade), o que funciona bem, o que precisa de melhoria (com causa e correção) e o que falta para a apresentação |
 
 **Convenção:** arquivos numerados em ordem de criação (`NN-assunto.md`), escritos em português, com "(a confirmar)" onde houver inferência.

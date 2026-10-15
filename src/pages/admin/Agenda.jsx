@@ -559,7 +559,10 @@ export default function Agenda() {
               droppable={true}
               selectable={true}
               selectMirror={true}
-              dayMaxEvents={true}
+              /* Número fixo de eventos por dia, e não "o que couber" (true):
+                 dentro deste contêiner o calendário media a altura errado e
+                 escondia TODOS os eventos atrás de "mais +N". */
+              dayMaxEvents={3}
               dateClick={handleDateClick}
               eventClick={handleEventClick}
               eventDrop={handleEventDropOrResize}

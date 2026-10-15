@@ -67,8 +67,14 @@ service cloud.firestore {
     // A sede passa sempre; a administração só no próprio município.
 
     // Ler ou apagar um registro existente.
+    //
+    // Registro que NÃO existe (resource == null) passa: é o que acontece ao
+    // restaurar da lixeira, quando o app confere se já há algo no lugar antes
+    // de recriar (services/db.js). Ler o que não existe não revela nada, e
+    // apagar o que não existe não faz nada. Sem isso, a comparação com um
+    // valor nulo dá erro e a restauração falha para a administração e o RH.
     function administraAtual() {
-      return isSede() || (isAdmin() && resource.data.municipioId == meuMunicipio());
+      return isSede() || (isAdmin() && (resource == null || resource.data.municipioId == meuMunicipio()));
     }
 
     // Criar um registro.
@@ -83,9 +89,9 @@ service cloud.firestore {
                           && request.resource.data.municipioId == meuMunicipio());
     }
 
-    // O mesmo, para o RH do município.
+    // O mesmo, para o RH do município (inclusive o registro que não existe).
     function rhAtual() {
-      return isAdministrativo() && resource.data.municipioId == meuMunicipio();
+      return isAdministrativo() && (resource == null || resource.data.municipioId == meuMunicipio());
     }
     function rhNovo() {
       return isAdministrativo() && request.resource.data.municipioId == meuMunicipio();
@@ -187,7 +193,7 @@ service cloud.firestore {
     // Escolas: os usuários do município leem (nome da escola nas telas);
     // só a administração escreve.
     match /escolas/{id} {
-      allow read: if isSede() || (isAtiva() && resource.data.municipioId == meuMunicipio());
+      allow read: if administraAtual() || (isAtiva() && resource != null && resource.data.municipioId == meuMunicipio());
       allow create: if administraNovo();
       allow update: if administraAlteracao();
       allow delete: if administraAtual();
@@ -196,7 +202,7 @@ service cloud.firestore {
     // Manutenções: a diretora abre e acompanha os chamados da própria escola.
     match /manutencoes/{id} {
       allow read: if administraAtual() ||
-                     (isDiretora() && minhaEscola(resource.data.escolaId));
+                     (isDiretora() && resource != null && minhaEscola(resource.data.escolaId));
       allow create: if administraNovo() ||
                        (isDiretora() && solicitacaoDaDiretoraValida());
       allow update: if administraAlteracao();
@@ -206,7 +212,7 @@ service cloud.firestore {
     // Contas a pagar: a diretora só lê as da própria escola.
     match /contas/{id} {
       allow read: if administraAtual() ||
-                     (isDiretora() && minhaEscola(resource.data.escolaId));
+                     (isDiretora() && resource != null && minhaEscola(resource.data.escolaId));
       allow create: if administraNovo();
       allow update: if administraAlteracao();
       allow delete: if administraAtual();
@@ -215,7 +221,7 @@ service cloud.firestore {
     // Ciclos periódicos: a diretora só lê os da própria escola.
     match /ciclos/{id} {
       allow read: if administraAtual() ||
-                     (isDiretora() && minhaEscola(resource.data.escolaId));
+                     (isDiretora() && resource != null && minhaEscola(resource.data.escolaId));
       allow create: if administraNovo();
       allow update: if administraAlteracao();
       allow delete: if administraAtual();
@@ -292,7 +298,7 @@ service cloud.firestore {
     // Restaurar (apagar daqui e recriar no original) é da administração do município.
     match /lixeira/{id} {
       allow read: if administraAtual() ||
-                     (rhAtual() && resource.data.colecao in ['curriculos', 'candidatos', 'funcionarios']);
+                     (rhAtual() && resource != null && resource.data.colecao in ['curriculos', 'candidatos', 'funcionarios']);
       allow create: if request.resource.data.excluidoPor == request.auth.uid
                     && (administraNovo() ||
                         (rhNovo() && request.resource.data.colecao in ['curriculos', 'candidatos', 'funcionarios']));

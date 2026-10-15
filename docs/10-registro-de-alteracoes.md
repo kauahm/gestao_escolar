@@ -69,6 +69,31 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 15/10/2026 — Revisão completa: dois defeitos corrigidos
+
+Revisão de ponta a ponta antes da apresentação à sede, tela por tela e perfil
+por perfil ([23](23-revisao-completa-do-sistema.md)). Dois defeitos encontrados
+e corrigidos:
+
+- **Restaurar da lixeira falhava para a administração e para o RH** (só a sede
+  conseguia). Antes de restaurar, o app lê o destino para não passar por cima de
+  um registro existente; como o registro não existe, a regra comparava um valor
+  nulo e negava a leitura. Nas regras, ler um registro que **não existe** passou
+  a ser permitido para quem administra o município (`administraAtual()`,
+  `rhAtual()` e a leitura de escolas), e as leituras da diretora e do RH ganharam
+  proteção contra valor nulo, para negar sem erro. O teste das regras passou a
+  reproduzir o caminho real do app (com a leitura prévia) e ganhou um caso novo:
+  **73 testes, todos passando**.
+- **A Agenda não mostrava nenhum evento na visão de mês**: só "mais +1", "mais
+  +2", mesmo com espaço sobrando. O `dayMaxEvents={true}` dentro do contêiner da
+  tela media a altura errado; virou `dayMaxEvents={3}`.
+
+**Falta fazer (você, uma vez):** publicar as regras nos dois projetos —
+`firebase deploy --only firestore:rules` (a correção da Agenda vai junto com o
+site, no próximo envio).
+
+---
+
 ## 15/10/2026 — Controle de saldo mais simples
 
 Pedido: a tela estava complicada para o dia a dia. A conta e os dados não mudaram, só a tela e as palavras ([20](20-controle-de-saldo.md)).

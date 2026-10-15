@@ -641,9 +641,15 @@ describe('lixeira e restauração', () => {
     await assertFails(getDoc(doc(como('rh'), 'lixeira', 'lx_escola')));
   });
 
-  /** Reproduz o restaurarDaLixeira de src/services/db.js. */
-  const restaurar = (uid, idLixeira, colecao, docId, dados) => {
+  /**
+   * Reproduz o restaurarDaLixeira de src/services/db.js, INCLUSIVE a leitura do
+   * destino que ele faz antes de gravar (para não passar por cima de um
+   * registro existente). Era essa leitura que faltava aqui: como o destino não
+   * existe, o teste passava enquanto a tela falhava.
+   */
+  const restaurar = async (uid, idLixeira, colecao, docId, dados) => {
     const bd = como(uid);
+    await getDoc(doc(bd, colecao, docId)); // confere se já existe algo no lugar
     const lote = writeBatch(bd);
     lote.set(doc(bd, colecao, docId), dados);
     lote.delete(doc(bd, 'lixeira', idLixeira));
@@ -653,6 +659,18 @@ describe('lixeira e restauração', () => {
   test('a administração restaura o que é do município', async () => {
     await assertSucceeds(restaurar('admin', 'lx_escola', 'escolas', 'escolaZ', { nome: 'Escola Z', municipioId: 'mA' }));
     await assertSucceeds(restaurar('admin', 'lx_cv', 'curriculos', 'cvZ', { nome: 'Currículo Z', municipioId: 'mA' }));
+  });
+
+  test('ler o destino que ainda não existe é permitido (é o que a restauração faz)', async () => {
+    for (const colecao of ['escolas', 'contas', 'ciclos', 'manutencoes', 'prestadores', 'eventos', 'rubricas', 'gastos', 'curriculos', 'funcionarios']) {
+      await assertSucceeds(getDoc(doc(como('admin'), colecao, 'nao-existe')));
+      await assertSucceeds(getDoc(doc(como('sede'), colecao, 'nao-existe')));
+    }
+    for (const colecao of ['curriculos', 'candidatos', 'funcionarios']) {
+      await assertSucceeds(getDoc(doc(como('rh'), colecao, 'nao-existe')));
+    }
+    // Continua valendo o que já valia: a diretora não lê essas coleções.
+    await assertFails(getDoc(doc(como('diretoraA'), 'funcionarios', 'nao-existe')));
   });
 
   test('restaurar é só da administração do município', async () => {
