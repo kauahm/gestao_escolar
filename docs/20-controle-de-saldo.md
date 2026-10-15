@@ -8,31 +8,56 @@
 - Menu **Controle de saldo** (`/admin/saldo`), logo abaixo de Contas a pagar.
 - **Só a administração.** RH e diretoras não veem nem pelo menu nem pelo banco (regras testadas).
 
-## 2. As quatro abas da tela
+## 2. A tela
 
-| Aba | Para quê | Na planilha era |
-|---|---|---|
-| **Painel** | Escolhe o mês e mostra: verba do período, já lançado, saldo, % usada e "pode gastar neste mês". Para cada área: teto do mês, gasto no mês, quanto ainda pode gastar e a situação (dentro, perto do teto, passou do teto, verba estourada) | Painel |
-| **Lançamentos** | Lista de gastos com busca (fornecedor, nota, descrição) e filtros por área e por mês. Clicar numa área no Painel abre a lista dela (o antigo "Extrato"). Exportar e importar Excel | Lançamentos + Extrato |
-| **Mês a mês** | Grade área × mês com o que caiu em cada mês e o teto daquele mês; em vermelho, o mês que passou do teto | Mês a Mês |
-| **Áreas e verbas** | O período (mês inicial e nº de meses) e as áreas com a verba mensal. Cadastrar, editar, excluir e importar | Orçamento |
+> Simplificada em 15/10/2026: a primeira versão tinha 4 abas e uma tabela de 10 colunas, como a planilha, e ficou complicada para o dia a dia. A conta é a mesma.
 
-O que saiu por ser complicação da planilha: as abas Início e Apoio, as colunas automáticas da lista (agora o sistema calcula sozinho) e a proteção de células.
+**Entrada (resumo):**
+- o mês, com setas ‹ › (começa no mês de hoje);
+- dois números: **quanto ainda dá para gastar no mês**, somando as áreas, e **quanto sobra da verba** até o fim do período;
+- **um cartão por área**:
+  - "Ainda pode gastar em outubro: R$ X", em verde, amarelo ou vermelho;
+  - a barra "gasto em outubro: R$ Y de R$ limite";
+  - a sobra da verba da área;
+  - a situação, em palavras simples: Tudo certo, Quase no limite, Passou do limite do mês, A verba acabou ou Sem verba;
+  - os botões **Lançar gasto** (com a área já escolhida) e **Ver gastos**;
+- "Como o sistema calcula o limite de cada mês?", explicação que abre ao clicar.
+
+**Ver gastos (uma área):** resumo da área, lista dos gastos dela (editar e excluir) e uma tabela mês a mês com o gasto e o limite de cada mês. Em vermelho fica o mês que passou do limite.
+
+**Botões no alto:**
+- **Todos os gastos:** procurar (o que foi, loja, nota), filtrar por área e por mês, **Baixar em Excel** e **Trazer de uma planilha**;
+- **Configurar:**
+  - 1. quando a verba começa e quantos meses vale;
+  - 2. as áreas, com a verba de cada uma (cadastrar, editar, excluir e importar).
+
+Cada parte tem endereço próprio (`?ver=area&area=…`, `?ver=gastos`, `?ver=configurar`), então o botão Voltar do navegador funciona.
+
+| Na planilha era | No sistema |
+|---|---|
+| Painel | Resumo (cartões por área) |
+| Lançamentos + Extrato | Todos os gastos / Ver gastos de uma área |
+| Mês a Mês | Tabela mês a mês dentro de cada área |
+| Orçamento | Configurar |
 
 ## 3. Lançar um gasto
 
-Campos: **área**, **valor total**, **data do gasto** e **mês em que conta** (obrigatórios); fornecedor, nota fiscal, descrição e observação (opcionais).
+**Na frente:** área, o que foi comprado (opcional), valor, data e "Foi parcelado em N vezes".
+**Em "Mais detalhes (opcional)":** loja ou fornecedor, nota fiscal, o mês em que o gasto conta e observação. Essa parte já vem aberta ao editar um gasto que tenha algo preenchido nela.
 
-- **Compra parcelada:** marca "Compra parcelada" e informa o nº de parcelas. O valor total é dividido igualmente, uma parcela por mês a partir do mês da 1ª parcela. Os centavos que sobram da divisão vão para a última parcela (igual à planilha).
-- O mês em que o gasto conta segue a data do gasto até que alguém o mude (para o caso de a nota ser de um mês e o vencimento de outro).
-- **Antes de salvar**, a janela mostra como o gasto fica ("3x de R$ 3.000,00, de out/26 a dez/26") e o efeito no saldo: "Depois deste gasto, Manutenção ainda pode gastar R$ X em outubro". Se passar do teto ou estourar a verba, avisa em vermelho.
-- Parcelas que caem depois do fim do período não entram na conta. A janela avisa, e o Painel mostra o total delas em amarelo.
+- **Parcelado:** o valor total é dividido igualmente, uma parcela por mês a partir do mês da 1ª parcela. Os centavos que sobram da divisão vão para a última parcela (igual à planilha).
+- O mês em que o gasto conta segue a data, a menos que alguém o mude (para o caso de a nota ser de um mês e o vencimento de outro).
+- **Antes de salvar**, a janela mostra:
+  - como o gasto fica ("2x de R$ 500,00 (out/26 a nov/26)");
+  - o efeito no mês: "Depois deste gasto, Manutenção ainda pode gastar R$ X em outubro".
+  Se passar do limite, o aviso fica em vermelho e diz que dá para lançar mesmo assim.
+- Parcelas que caem depois do fim do período só contam na próxima verba. A janela e o resumo avisam.
 - Excluir manda para a lixeira (dá para restaurar em Segurança dos dados), e o saldo é refeito na hora.
 
 ## 4. A conta (a mesma da planilha)
 
 - **Verba do período** = verba mensal × nº de meses do período.
-- **Teto do mês** = (verba do período − tudo o que caiu nos *outros* meses, inclusive parcelas já assumidas para os meses seguintes) ÷ meses que faltam, contando o mês escolhido. Nunca fica negativo.
+- **Limite do mês** (na conta, "teto") = (verba do período − tudo o que caiu nos *outros* meses, inclusive parcelas já assumidas para os meses seguintes) ÷ meses que faltam, contando o mês escolhido. Nunca fica negativo.
 - **Ainda pode gastar no mês** = teto do mês − gasto no mês.
 - **Se um mês passa do teto, o teto dos meses seguintes diminui sozinho; se sobra, aumenta.** Ninguém precisa recalcular nada.
 - **Situação:**
@@ -86,7 +111,7 @@ No mês atual, uma área passa do teto e outras ficam perto dele, para mostrar a
 
 | Arquivo | O quê |
 |---|---|
-| `src/pages/admin/ControleDeSaldo.jsx` | A tela (4 abas, formulários de gasto e de área, exportar e importar) |
+| `src/pages/admin/ControleDeSaldo.jsx` | A tela (resumo por área, gastos de uma área, todos os gastos, configurar, formulários, exportar e importar) |
 | `src/utils/saldo.js` | A conta: meses do período, parcelas, teto, saldo e situação |
 | `src/importacao/esquemas.js` | Importação de áreas (`rubricas`) e de gastos (`gastos`) |
 | `src/utils/alertas.js` | Alertas de verba estourada e de teto do mês |
@@ -106,3 +131,4 @@ No mês atual, uma área passa do teto e outras ficam perto dele, para mostrar a
   - alerta no Painel;
   - celular sem rolagem lateral.
 - Auditoria de acessibilidade (axe): sem violações nas quatro abas e nos dois formulários.
+- Depois da simplificação (15/10/2026), no emulador: lançar à vista e parcelado com a prévia, excluir, todos os gastos, configurar e celular sem rolagem lateral; axe sem violações no resumo, na área e no formulário.

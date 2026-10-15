@@ -23,7 +23,7 @@ Toda a documentação do projeto fica nesta pasta.
 | [17-alertas.md](17-alertas.md) | Alertas que cobram: quadro "Precisa de atenção hoje" com ações, prazos por prioridade, ciclo vencido → chamado → ciclo em dia, "Ciente, lembrar depois", contador no menu e na aba, alertas da diretora |
 | [18-design.md](18-design.md) | Design: base visual (Inter, cinzas azulados, textos), telas de impacto, celular da diretora, sistema instalável (PWA), auditoria de acessibilidade e prints de antes e depois em `design/` |
 | [19-funcionarios.md](19-funcionarios.md) | Aba Funcionários com a estrutura da planilha "Colaboradores": campos, cargos sugeridos, filtros, ASO e afastamento, alertas, importação da planilha real, cuidados de LGPD e testes |
-| [20-controle-de-saldo.md](20-controle-de-saldo.md) | Controle de saldo das verbas por área (base: planilha "Controle de Saldo"): período, áreas, lançamentos à vista e parcelados, teto do mês recalculado sozinho, mês a mês, importação da planilha, alertas e testes |
+| [20-controle-de-saldo.md](20-controle-de-saldo.md) | Controle de saldo das verbas por área (base: planilha "Controle de Saldo"): tela simples com um cartão por área, gastos à vista e parcelados, limite do mês recalculado sozinho, importação da planilha, alertas e testes |
 | [21-visao-da-sede.md](21-visao-da-sede.md) | Visão da sede: Município → Contrato → Escola, painel com semáforo por município e por escola, cadastro de municípios e contratos, alertas de vigência e o que depende de você |
 | [22-acesso-por-municipio.md](22-acesso-por-municipio.md) | Login da sede e administração por município: perfis, como as regras impedem um município de ver o outro, dados antigos, passo a passo da publicação e contas de teste |
 

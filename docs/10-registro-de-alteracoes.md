@@ -69,6 +69,25 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 15/10/2026 — Controle de saldo mais simples
+
+Pedido: a tela estava complicada para o dia a dia. A conta e os dados não mudaram, só a tela e as palavras ([20](20-controle-de-saldo.md)).
+
+- **As 4 abas saíram.** A entrada mostra:
+  - o mês, com setas ‹ ›;
+  - dois números: quanto ainda dá para gastar no mês e quanto sobra da verba;
+  - um cartão por área com "Ainda pode gastar em outubro: R$ X", uma barra e os botões **Lançar gasto** e **Ver gastos**.
+- **A tabela de 10 colunas saiu.** "Teto" virou "limite do mês". "% usada", "já assumido" e a fórmula saíram da tela; a explicação ficou num "Como o sistema calcula?" que abre ao clicar.
+- **Situação em palavras simples:** Tudo certo, Quase no limite, Passou do limite do mês, A verba acabou.
+- **Ver gastos de uma área:** mostra o resumo da área, os gastos dela (editar e excluir) e uma tabela simples de mês a mês (gasto e limite). Ela substitui a antiga aba "Mês a mês".
+- **Lançar gasto ficou mais curto.** Na frente ficam área (já escolhida quando vem do cartão), o que foi comprado, valor, data e "Foi parcelado em N vezes". Loja, nota fiscal, observação e o mês em que conta ficam em "Mais detalhes (opcional)".
+- **O resto ficou atrás de botões:**
+  - "Todos os gastos": procurar, filtrar, baixar em Excel e trazer de uma planilha;
+  - "Configurar": período e áreas com a verba.
+- Testado no emulador: lançar à vista e parcelado, prévia, excluir, celular sem rolagem lateral e axe sem violações. Os 90 testes passam.
+
+---
+
 ## 15/10/2026 — Menu lateral em grupos
 
 - As 13 telas da administração viraram 6 entradas:
