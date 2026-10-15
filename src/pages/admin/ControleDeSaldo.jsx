@@ -66,7 +66,7 @@ const SITUACAO_SIMPLES = {
 
 function Selo({ situacao }) {
   const s = SITUACAO_SIMPLES[situacao];
-  return <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${s.cor}`}>{s.texto}</span>;
+  return <span className={`inline-flex px-2.5 py-0.5 rounded-full text-sm font-medium whitespace-nowrap ${s.cor}`}>{s.texto}</span>;
 }
 
 /** Barra "gastou X de Y". */
@@ -188,6 +188,7 @@ export default function ControleDeSaldo() {
         saldo={saldo} meses={meses} mes={mes} setMes={setMesEscolhido}
         lancar={(rubricaId) => setGastoAberto(rubricaId ? { rubricaId } : {})}
         abrirArea={(r) => irPara('area', { area: r.id })}
+        configurar={() => irPara('configurar')}
       />
     );
   }
@@ -214,10 +215,9 @@ export default function ControleDeSaldo() {
           )}
         </div>
         {configurado && visao === 'inicio' && (
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            <button onClick={() => setGastoAberto({})} className={`${botaoPrincipal} col-span-2 justify-center`}><Plus size={20} /> Lançar gasto</button>
-            <button onClick={() => irPara('gastos')} className={`${botaoSecundario} justify-center px-3`}><List size={18} /> Todos os gastos</button>
-            <button onClick={() => irPara('configurar')} className={`${botaoSecundario} justify-center px-3`}><Settings2 size={18} /> Configurar</button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button onClick={() => setGastoAberto({})} className={`${botaoPrincipal} justify-center`}><Plus size={20} /> Lançar gasto</button>
+            <button onClick={() => irPara('gastos')} className={`${botaoSecundario} justify-center`}><List size={18} /> Todos os gastos</button>
           </div>
         )}
         {configurado && visao === 'gastos' && (
@@ -286,28 +286,25 @@ function PodeGastar({ linha, mes, grande }) {
   const cor = passou ? 'text-red-700' : linha.situacao === SITUACAO.PERTO ? 'text-amber-700' : 'text-green-700';
   return (
     <div>
-      <p className="text-sm text-gray-600">{passou ? `Passou do limite de ${nomeDoMes(mes)} em` : `Ainda pode gastar em ${nomeDoMes(mes)}`}</p>
+      <p className="text-base text-gray-600">{passou ? `Passou do limite de ${nomeDoMes(mes)} em` : `Ainda pode gastar em ${nomeDoMes(mes)}`}</p>
       <p className={`${grande ? 'text-3xl' : 'text-2xl'} font-bold tabular-nums ${cor}`}>{formatarMoeda(Math.abs(linha.aindaPode))}</p>
     </div>
   );
 }
 
-function Inicio({ saldo, meses, mes, setMes, lancar, abrirArea }) {
+function Inicio({ saldo, meses, mes, setMes, lancar, abrirArea, configurar }) {
   const { totais, linhas } = saldo;
   const ultimo = meses[meses.length - 1];
   return (
     <div className="space-y-6">
       <SeletorDeMes meses={meses} mes={mes} setMes={setMes} />
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-sm text-gray-600">Somando todas as áreas, ainda dá para gastar em {nomeDoMes(mes)}</p>
-          <p className="text-3xl font-bold text-primary tabular-nums">{formatarMoeda(totais.aindaPode)}</p>
-        </div>
-        <div className="sm:border-l sm:border-gray-200 sm:pl-5">
-          <p className="text-sm text-gray-600">Sobra da verba até {porExtenso(ultimo)}</p>
-          <p className={`text-3xl font-bold tabular-nums ${totais.saldo < 0 ? 'text-red-700' : 'text-gray-900'}`}>{formatarMoeda(totais.saldo)}</p>
-        </div>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 space-y-1">
+        <p className="text-base text-gray-700">Somando todas as áreas, ainda dá para gastar em {nomeDoMes(mes)}</p>
+        <p className="text-4xl font-bold text-primary tabular-nums">{formatarMoeda(totais.aindaPode)}</p>
+        <p className="text-sm text-gray-600 pt-1">
+          Sobra da verba até {porExtenso(ultimo)}: <strong className={`tabular-nums ${totais.saldo < 0 ? 'text-red-700' : 'text-gray-900'}`}>{formatarMoeda(totais.saldo)}</strong>
+        </p>
       </div>
 
       {totais.foraDoPeriodo > 0 && (
@@ -333,16 +330,13 @@ function Inicio({ saldo, meses, mes, setMes, lancar, abrirArea }) {
             <PodeGastar linha={l} mes={mes} />
             <div className="space-y-1">
               <Barra gasto={l.gastoNoMes} limite={l.teto} />
-              <p className="text-sm text-gray-600">Gasto em {nomeDoMes(mes)}: <strong className="text-gray-900 tabular-nums">{formatarMoeda(l.gastoNoMes)}</strong> de {formatarMoeda(l.teto)}</p>
+              <p className="text-base text-gray-600">Gastou <strong className="text-gray-900 tabular-nums">{formatarMoeda(l.gastoNoMes)}</strong> de {formatarMoeda(l.teto)}</p>
             </div>
-            <p className="text-sm text-gray-600">
-              Sobra da verba até {porExtenso(ultimo)}: <strong className={`tabular-nums ${l.saldo < 0 ? 'text-red-700' : 'text-gray-900'}`}>{formatarMoeda(l.saldo)}</strong>
-            </p>
-            <div className="flex flex-wrap gap-2 mt-auto pt-1">
-              <button type="button" onClick={() => lancar(l.rubrica.id)} className={`${botaoPrincipal} text-sm`} aria-label={`Lançar gasto em ${l.rubrica.nome}`}>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-auto pt-1">
+              <button type="button" onClick={() => lancar(l.rubrica.id)} className={botaoPrincipal} aria-label={`Lançar gasto em ${l.rubrica.nome}`}>
                 <Plus size={18} aria-hidden="true" /> Lançar gasto
               </button>
-              <button type="button" onClick={() => abrirArea(l.rubrica)} className={`${botaoSecundario} text-sm`} aria-label={`Ver os gastos de ${l.rubrica.nome}`}>
+              <button type="button" onClick={() => abrirArea(l.rubrica)} className="text-base font-medium text-primary hover:underline" aria-label={`Ver os gastos de ${l.rubrica.nome}`}>
                 Ver gastos
               </button>
             </div>
@@ -358,6 +352,11 @@ function Inicio({ saldo, meses, mes, setMes, lancar, abrirArea }) {
           <p>Compra parcelada conta um pedaço em cada mês.</p>
         </div>
       </details>
+
+      <p className="text-sm text-gray-600">
+        Mudar o período ou a verba de cada área?{' '}
+        <button type="button" onClick={configurar} className="font-medium text-primary hover:underline">Configurar o controle de saldo</button>
+      </p>
     </div>
   );
 }
@@ -381,13 +380,13 @@ function DetalheDaArea({ linha, gastos, meses, mes, setMes, lancar, editar, excl
         </div>
         <div className="space-y-1">
           <Barra gasto={linha.gastoNoMes} limite={linha.teto} />
-          <p className="text-sm text-gray-600">Gasto em {nomeDoMes(mes)}: <strong className="text-gray-900 tabular-nums">{formatarMoeda(linha.gastoNoMes)}</strong> de {formatarMoeda(linha.teto)}</p>
+          <p className="text-base text-gray-600">Gastou em {nomeDoMes(mes)} <strong className="text-gray-900 tabular-nums">{formatarMoeda(linha.gastoNoMes)}</strong> de {formatarMoeda(linha.teto)}</p>
         </div>
-        <p className="text-sm text-gray-600">
-          Verba até {porExtenso(ultimo)}: <strong className="text-gray-900 tabular-nums">{formatarMoeda(linha.verba)}</strong>
-          {' · '}já gasto: <strong className="text-gray-900 tabular-nums">{formatarMoeda(linha.lancado)}</strong>
-          {' · '}sobra: <strong className={`tabular-nums ${linha.saldo < 0 ? 'text-red-700' : 'text-gray-900'}`}>{formatarMoeda(linha.saldo)}</strong>
-        </p>
+        <dl className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4 text-sm text-gray-600">
+          <div><dt>Verba até {nomeDoMes(ultimo)}</dt><dd className="text-base font-semibold text-gray-900 tabular-nums">{formatarMoeda(linha.verba)}</dd></div>
+          <div><dt>Já gasto</dt><dd className="text-base font-semibold text-gray-900 tabular-nums">{formatarMoeda(linha.lancado)}</dd></div>
+          <div><dt>Sobra</dt><dd className={`text-base font-semibold tabular-nums ${linha.saldo < 0 ? 'text-red-700' : 'text-gray-900'}`}>{formatarMoeda(linha.saldo)}</dd></div>
+        </dl>
         <button type="button" onClick={lancar} className={botaoPrincipal}><Plus size={20} aria-hidden="true" /> Lançar gasto aqui</button>
       </div>
 
@@ -398,9 +397,9 @@ function DetalheDaArea({ linha, gastos, meses, mes, setMes, lancar, editar, excl
           : <ListaDeGastos gastos={daArea} editar={editar} excluir={excluir} />}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Mês a mês</h2>
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <details className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+        <summary className="cursor-pointer text-base font-medium text-gray-900">Ver mês a mês</summary>
+        <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
           <table className="w-full text-sm tabular-nums">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
@@ -425,8 +424,8 @@ function DetalheDaArea({ linha, gastos, meses, mes, setMes, lancar, editar, excl
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-500">Em vermelho, o mês em que o gasto passou do limite.</p>
-      </section>
+        <p className="text-sm text-gray-600 mt-2">Em vermelho, o mês em que o gasto passou do limite.</p>
+      </details>
     </div>
   );
 }

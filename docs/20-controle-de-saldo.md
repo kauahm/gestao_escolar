@@ -14,20 +14,22 @@
 
 **Entrada (resumo):**
 - o mês, com setas ‹ › (começa no mês de hoje);
-- dois números: **quanto ainda dá para gastar no mês**, somando as áreas, e **quanto sobra da verba** até o fim do período;
+- um número grande: **quanto ainda dá para gastar no mês**, somando as áreas, e, em letra menor, quanto sobra da verba até o fim do período;
 - **um cartão por área**:
   - "Ainda pode gastar em outubro: R$ X", em verde, amarelo ou vermelho;
-  - a barra "gasto em outubro: R$ Y de R$ limite";
-  - a sobra da verba da área;
+  - a barra "Gastou R$ Y de R$ limite";
   - a situação, em palavras simples: Tudo certo, Quase no limite, Passou do limite do mês, A verba acabou ou Sem verba;
-  - os botões **Lançar gasto** (com a área já escolhida) e **Ver gastos**;
-- "Como o sistema calcula o limite de cada mês?", explicação que abre ao clicar.
+  - o botão **Lançar gasto** (com a área já escolhida) e o link **Ver gastos**;
+- "Como o sistema calcula o limite de cada mês?", explicação que abre ao clicar;
+- no pé, o link para **Configurar**.
 
-**Ver gastos (uma área):** resumo da área, lista dos gastos dela (editar e excluir) e uma tabela mês a mês com o gasto e o limite de cada mês. Em vermelho fica o mês que passou do limite.
+**Ver gastos (uma área):** resumo da área (pode gastar, barra, verba, já gasto e sobra), lista dos gastos dela (editar e excluir) e, recolhido em "Ver mês a mês", a tabela com o gasto e o limite de cada mês. Em vermelho fica o mês que passou do limite.
 
-**Botões no alto:**
+> Segunda limpeza em 15/10/2026: cartões com menos linhas (saiu "sobra da verba" de cada cartão, que continua na página da área), letras maiores, "Configurar" saiu do alto e "Mês a mês" ficou recolhido. A conta não mudou.
+
+**Botões no alto:** **Lançar gasto** e **Todos os gastos**.
 - **Todos os gastos:** procurar (o que foi, loja, nota), filtrar por área e por mês, **Baixar em Excel** e **Trazer de uma planilha**;
-- **Configurar:**
+- **Configurar (link no pé da tela):**
   - 1. quando a verba começa e quantos meses vale;
   - 2. as áreas, com a verba de cada uma (cadastrar, editar, excluir e importar).
 
