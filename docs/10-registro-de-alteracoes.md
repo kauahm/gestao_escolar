@@ -69,6 +69,21 @@ Na tela de Usuários, **ninguém consegue mais desativar a própria conta** (evi
 
 ---
 
+## 15/10/2026 — Menu lateral em grupos
+
+- As 13 telas da administração viraram 6 entradas:
+  - **Painel**;
+  - **Unidades** (Escolas, Manutenções, Ciclos, Prestadores);
+  - **Financeiro** (Contas a pagar, Controle de saldo);
+  - **Pessoas** (Funcionários, Banco de Talentos, Processo seletivo);
+  - **Agenda**;
+  - **Sistema** (Usuários, Segurança dos dados).
+- Cada grupo abre ao clicar. O grupo da tela aberta já vem aberto, e quais grupos ficam abertos é lembrado no navegador.
+- O RH e a diretora continuam com o menu direto, porque têm poucas telas.
+- Acessibilidade conferida com axe: sem violações. Funciona também no celular.
+
+---
+
 ## 14/10/2026 — Acesso por município (login da sede)
 
 - **Novo perfil Sede:** entra na lista de municípios e, com **Entrar**, trabalha como a administração do município escolhido ("Hortolândia · Trocar" no topo).

@@ -1,65 +1,102 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import logoImg from '../../assets/logo-topo.png'; 
+import logoImg from '../../assets/logo-topo.png';
 import { TELAS, ROTULO_DO_PERFIL } from '../../config/telas';
 import { useAlertas } from '../../contexts/AlertasContext';
-import { 
-  LayoutDashboard, School, Wrench, Receipt, RefreshCcw, 
-  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck, Contact, Wallet, Landmark 
+import {
+  LayoutDashboard, School, Wrench, Receipt, RefreshCcw,
+  Users, Calendar, UserCog, LogOut, FileText, X, Briefcase, ShieldCheck, Contact, Wallet, Landmark,
+  ChevronDown, Building2, Banknote, UsersRound, Settings,
 } from 'lucide-react';
+
+// Menu da administração em grupos de telas parecidas. Um grupo abre ao
+// clicar; o grupo da tela aberta já vem aberto; quais grupos ficam abertos é
+// lembrado neste navegador. Item avulso (Painel, Agenda) é um link direto.
+const link = (to, Icone) => ({ to, icon: <Icone size={18} />, label: TELAS[to] });
+
+const MENU_ADMIN = [
+  link('/admin/dashboard', LayoutDashboard),
+  {
+    id: 'escolas', label: 'Unidades', icon: <Building2 size={20} />,
+    itens: [link('/admin/escolas', School), link('/admin/manutencoes', Wrench), link('/admin/ciclos', RefreshCcw), link('/admin/prestadores', Briefcase)],
+  },
+  {
+    id: 'financeiro', label: 'Financeiro', icon: <Banknote size={20} />,
+    itens: [link('/admin/contas', Receipt), link('/admin/saldo', Wallet)],
+  },
+  {
+    id: 'pessoas', label: 'Pessoas', icon: <UsersRound size={20} />,
+    itens: [link('/admin/funcionarios', Contact), link('/admin/talentos', FileText), link('/admin/selecao', Users)],
+  },
+  link('/admin/agenda', Calendar),
+  {
+    id: 'sistema', label: 'Sistema', icon: <Settings size={20} />,
+    itens: [link('/admin/usuarios', UserCog), link('/admin/seguranca', ShieldCheck)],
+  },
+];
+
+// RH e diretora têm poucas telas: menu direto, sem grupos.
+const MENU_RH = [link('/admin/funcionarios', Contact), link('/admin/talentos', FileText), link('/admin/selecao', Users)];
+const MENU_DIRETORA = [link('/diretora/dashboard', LayoutDashboard), link('/diretora/manutencoes', Wrench)];
+const MENU_SEDE = [link('/admin/sede', Landmark)];
+
+const CHAVE_GRUPOS = 'gestaoEscolar.menuAberto';
+const lerAbertos = () => {
+  try { return JSON.parse(localStorage.getItem(CHAVE_GRUPOS)) || {}; } catch { return {}; }
+};
+
+const estiloDoLink = (sub) => ({ isActive }) =>
+  `flex items-center gap-3 ${sub ? 'pl-11 pr-4 py-2 text-sm' : 'px-4 py-2.5'} rounded-lg transition-colors ${
+    isActive ? 'bg-primary-dark text-white font-semibold' : 'text-blue-100 hover:bg-primary-light'
+  }`;
 
 export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
   const { userProfile, logout, ehSede, municipioAtivo, municipio } = useAuth();
   const { pendencias } = useAlertas();
-  
-  // A sede, dentro de um município, vê o mesmo menu da administração.
-  const isAdmin = userProfile?.perfil === 'admin' || (ehSede && municipioAtivo);
-  const isAdministrativo = userProfile?.perfil === 'administrativo';
+  const { pathname } = useLocation();
+  const [abertos, setAbertos] = useState(lerAbertos);
 
-  const adminLinks = [
-    { to: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: TELAS['/admin/dashboard'] },
-    { to: '/admin/escolas', icon: <School size={20} />, label: TELAS['/admin/escolas'] },
-    { to: '/admin/manutencoes', icon: <Wrench size={20} />, label: TELAS['/admin/manutencoes'] },
-    { to: '/admin/prestadores', icon: <Briefcase size={20} />, label: TELAS['/admin/prestadores'] },
-    { to: '/admin/contas', icon: <Receipt size={20} />, label: TELAS['/admin/contas'] },
-    { to: '/admin/saldo', icon: <Wallet size={20} />, label: TELAS['/admin/saldo'] },
-    { to: '/admin/ciclos', icon: <RefreshCcw size={20} />, label: TELAS['/admin/ciclos'] },
-    { to: '/admin/funcionarios', icon: <Contact size={20} />, label: TELAS['/admin/funcionarios'] },
-    { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },
-    { to: '/admin/selecao', icon: <Users size={20} />, label: TELAS['/admin/selecao'] },
-    { to: '/admin/agenda', icon: <Calendar size={20} />, label: TELAS['/admin/agenda'] },
-    { to: '/admin/usuarios', icon: <UserCog size={20} />, label: TELAS['/admin/usuarios'] },
-    { to: '/admin/seguranca', icon: <ShieldCheck size={20} />, label: TELAS['/admin/seguranca'] },
-  ];
-
-  const administrativoLinks = [
-    { to: '/admin/funcionarios', icon: <Contact size={20} />, label: TELAS['/admin/funcionarios'] },
-    { to: '/admin/talentos', icon: <FileText size={20} />, label: TELAS['/admin/talentos'] },
-    { to: '/admin/selecao', icon: <Users size={20} />, label: TELAS['/admin/selecao'] },
-  ];
-
-  const diretoraLinks = [
-    { to: '/diretora/dashboard', icon: <LayoutDashboard size={20} />, label: TELAS['/diretora/dashboard'] },
-    { to: '/diretora/manutencoes', icon: <Wrench size={20} />, label: TELAS['/diretora/manutencoes'] },
-  ];
-
-  const sedeLink = { to: '/admin/sede', icon: <Landmark size={20} />, label: TELAS['/admin/sede'] };
-
-  let links = [];
+  const perfil = userProfile?.perfil;
   // Dentro de um município, a sede tem o mesmo menu da administração; para voltar
   // à lista de municípios usa o botão "Trocar" no topo.
-  if (ehSede && !municipioAtivo) links = [sedeLink];
-  else if (ehSede) links = adminLinks;
-  else if (isAdmin) links = adminLinks;
-  else if (isAdministrativo) links = administrativoLinks;
-  else links = diretoraLinks;
+  let menu = MENU_DIRETORA;
+  if (ehSede) menu = municipioAtivo ? MENU_ADMIN : MENU_SEDE;
+  else if (perfil === 'admin') menu = MENU_ADMIN;
+  else if (perfil === 'administrativo') menu = MENU_RH;
+
+  const contem = (grupo) => grupo.itens.some((i) => pathname === i.to || pathname.startsWith(`${i.to}/`));
+
+  // Ao chegar numa tela, o grupo dela abre (sem fechar os outros).
+  useEffect(() => {
+    const grupo = menu.find((g) => g.itens && contem(g));
+    if (grupo && !abertos[grupo.id]) setAbertos((a) => ({ ...a, [grupo.id]: true }));
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    try { localStorage.setItem(CHAVE_GRUPOS, JSON.stringify(abertos)); } catch { /* sem armazenamento: só não lembra */ }
+  }, [abertos]);
+
+  const alternar = (id) => setAbertos((a) => ({ ...a, [id]: !a[id] }));
+  const fecharNoCelular = () => setIsMobileMenuOpen(false);
+
+  const Item = ({ item, sub }) => (
+    <NavLink to={item.to} onClick={fecharNoCelular} className={estiloDoLink(sub)}>
+      {sub ? item.icon : React.cloneElement(item.icon, { size: 20 })}
+      <span className="truncate">{item.label}</span>
+      {item.to === '/admin/dashboard' && pendencias > 0 && (
+        <span className="ml-auto min-w-6 h-6 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center" aria-label={`${pendencias} pendências`}>
+          {pendencias}
+        </span>
+      )}
+    </NavLink>
+  );
 
   return (
     <>
       {/* OVERLAY ESCURO (Mobile) */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-[60] md:hidden transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
@@ -71,7 +108,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
         md:translate-x-0
         ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
       `}>
-        
+
         {/* Botão de Fechar (Mobile) */}
         <div className="absolute top-4 right-4 md:hidden">
           <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Fechar o menu" className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-md">
@@ -81,34 +118,40 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
 
         {/* CONTAINER DA LOGO - Com padding e fundo garantido */}
         <div className="p-6 flex flex-col items-center border-b border-primary-light bg-primary">
-          <img 
-            src={logoImg} 
-            alt="Associação Educacional Maria do Carmo" 
-            className="h-16 w-auto object-contain mb-3 brightness-110" 
+          <img
+            src={logoImg}
+            alt="Associação Educacional Maria do Carmo"
+            className="h-16 w-auto object-contain mb-3 brightness-110"
           />
         </div>
 
         <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto pb-4 custom-scrollbar" aria-label="Menu principal">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                  isActive ? 'bg-primary-dark text-white font-semibold' : 'text-blue-100 hover:bg-primary-light'
-                }`
-              }
-            >
-              {link.icon}
-              {link.label}
-              {link.to === '/admin/dashboard' && pendencias > 0 && (
-                <span className="ml-auto min-w-6 h-6 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center" aria-label={`${pendencias} pendências`}>
-                  {pendencias}
-                </span>
-              )}
-            </NavLink>
-          ))}
+          {menu.map((entrada) => {
+            if (!entrada.itens) return <Item key={entrada.to} item={entrada} />;
+            const aberto = !!abertos[entrada.id];
+            const ativo = contem(entrada);
+            const idLista = `menu-${entrada.id}`;
+            return (
+              <div key={entrada.id}>
+                <button
+                  type="button"
+                  onClick={() => alternar(entrada.id)}
+                  aria-expanded={aberto}
+                  aria-controls={idLista}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-left ${
+                    ativo && !aberto ? 'bg-primary-dark text-white font-semibold' : 'text-blue-100 hover:bg-primary-light'
+                  }`}
+                >
+                  {entrada.icon}
+                  <span className="flex-1 leading-tight">{entrada.label}</span>
+                  <ChevronDown size={16} aria-hidden="true" className={`shrink-0 transition-transform ${aberto ? 'rotate-180' : ''}`} />
+                </button>
+                <div id={idLista} hidden={!aberto} className="mt-1 space-y-0.5">
+                  {entrada.itens.map((item) => <Item key={item.to} item={item} sub />)}
+                </div>
+              </div>
+            );
+          })}
         </nav>
 
         <div className="p-4 border-t border-primary-light shrink-0 bg-primary-dark/30">
